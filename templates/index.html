@@ -1,0 +1,47 @@
+{% extends "base.html" %}
+
+{% block title %}Frame Finder - Upload{% endblock %}
+
+{% block content %}
+<div class="row">
+    <div class="col-md-12">
+        <h1>Frame Finder</h1>
+        <p class="lead">Identify specific visual props in video files by comparing frames against reference images.</p>
+        
+        <div class="card">
+            <div class="card-body">
+                <form id="uploadForm" action="/upload" method="POST" enctype="multipart/form-data">
+                    <div class="mb-3">
+                        <label for="reference_images" class="form-label">Reference Images</label>
+                        <input class="form-control" type="file" id="reference_images" name="reference_images" multiple accept=".png,.jpg,.jpeg">
+                        <div class="form-text">Upload one or more reference images (PNG, JPG, JPEG)</div>
+                        <div id="referencePreview" class="mt-2"></div>
+                    </div>
+                    
+                    <div class="mb-3">
+                        <label for="videos" class="form-label">Video Files</label>
+                        <input class="form-control" type="file" id="videos" name="videos" multiple accept=".mp4">
+                        <div class="form-text">Upload one or more video files (MP4)</div>
+                        <div id="videoList" class="mt-2"></div>
+                    </div>
+                    
+                    <div class="mb-3">
+                        <label for="frameInterval" class="form-label">Frame Extraction Interval</label>
+                        <input type="number" class="form-control" id="frameInterval" name="frameInterval" value="1" min="1" max="60">
+                        <div class="form-text">Extract one frame every X seconds (default: 1)</div>
+                    </div>
+                    
+                    <div class="mb-3">
+                        <label for="confidenceThreshold" class="form-label">Confidence Threshold</label>
+                        <input type="range" class="form-range" id="confidenceThreshold" name="confidenceThreshold" min="0" max="100" value="50">
+                        <div class="form-text">Minimum confidence for matches: <span id="thresholdValue">50</span>%</div>
+                    </div>
+                    
+                    <button type="submit" class="btn btn-primary" id="analyzeBtn">Analyze Videos</button>
+                    <button type="reset" class="btn btn-secondary">Reset</button>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

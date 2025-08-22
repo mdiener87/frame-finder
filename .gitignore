@@ -1,0 +1,35 @@
+# Byte-compiled / cache
+__pycache__/
+*.py[cod]
+*.pyo
+*.pyd
+*.pkl
+
+# Virtual environments
+venv/
+.env/
+
+# Logs and temp files
+*.log
+*.tmp
+*.swp
+*.bak
+*.DS_Store
+*.~*
+
+# Flask/WSGI stuff
+instance/
+*.db
+*.sqlite3
+
+# IDE/editor files
+.vscode/
+.idea/
+*.sublime-project
+*.sublime-workspace
+
+# Uploads and generated assets
+uploads/
+static/thumbs/
+test_outputs/
+reference_output/

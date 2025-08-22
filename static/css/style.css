@@ -1,0 +1,74 @@
+/* Custom styles for Frame Finder */
+
+body {
+    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+}
+
+.navbar-brand {
+    font-weight: bold;
+}
+
+.card {
+    box-shadow: 0 0.125rem 0.25rem rgba(0, 0, 0, 0.075);
+    border: 1px solid rgba(0, 0, 0, 0.125);
+}
+
+.thumbnail-preview {
+    max-width: 100px;
+    max-height: 100px;
+    object-fit: cover;
+}
+
+.file-list {
+    max-height: 200px;
+    overflow-y: auto;
+}
+
+.result-card {
+    margin-bottom: 1.5rem;
+}
+
+.timestamp {
+    font-weight: bold;
+    color: #0d6efd;
+}
+
+.confidence {
+    font-weight: bold;
+    color: #198754;
+}
+
+.progress-bar-animated {
+    animation: progress-bar-stripes 1s linear infinite;
+}
+
+@keyframes progress-bar-stripes {
+    0% {
+        background-position-x: 1rem;
+    }
+}
+
+.alert-info {
+    background-color: #d1ecf1;
+    border-color: #b0d4dc;
+    color: #0c5460;
+}
+
+.alert-info .alert-link {
+    color: #08353c;
+}
+
+.btn-primary {
+    background-color: #0d6efd;
+    border-color: #0d6efd;
+}
+
+.btn-primary:hover {
+    background-color: #0b5ed7;
+    border-color: #0a58ca;
+}
+
+.form-control:focus {
+    border-color: #86b7fe;
+    box-shadow: 0 0 0 0.25rem rgba(13, 110, 253, 0.25);
+}
