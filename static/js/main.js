@@ -57,17 +57,117 @@ function listSelectedVideos() {
     }
 }
 
+// Preview negative reference images
+function previewNegativeReferences() {
+    const negativeInput = document.getElementById('negative_references');
+    const preview = document.getElementById('negativePreview');
+    
+    if (negativeInput && preview) {
+        preview.innerHTML = '';
+        
+        for (let i = 0; i < negativeInput.files.length; i++) {
+            const file = negativeInput.files[i];
+            if (file.type.startsWith('image/')) {
+                const reader = new FileReader();
+                reader.onload = function(e) {
+                    const img = document.createElement('img');
+                    img.src = e.target.result;
+                    img.className = 'thumbnail-preview img-thumbnail me-2 mb-2';
+                    img.alt = file.name;
+                    preview.appendChild(img);
+                };
+                reader.readAsDataURL(file);
+            }
+        }
+    }
+}
+
 // Handle form submission
 function handleFormSubmission() {
     const form = document.getElementById('uploadForm');
     const analyzeBtn = document.getElementById('analyzeBtn');
     
     if (form && analyzeBtn) {
-        form.addEventListener('submit', function() {
+        form.addEventListener('submit', function(e) {
+            e.preventDefault(); // Prevent default form submission
+            
             analyzeBtn.innerHTML = '<span class="spinner-border spinner-border-sm" role="status" aria-hidden="true"></span> Processing...';
             analyzeBtn.disabled = true;
+            
+            // Show progress container
+            const progressContainer = document.getElementById('progressContainer');
+            if (progressContainer) {
+                progressContainer.style.display = 'block';
+            }
+            
+            // Submit form via AJAX
+            const formData = new FormData(form);
+            fetch('/upload', {
+                method: 'POST',
+                body: formData
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.task_id) {
+                    // Start polling for task status
+                    pollTaskStatus(data.task_id);
+                } else {
+                    throw new Error('No task ID received');
+                }
+            })
+            .catch(error => {
+                console.error('Error:', error);
+                alert('Error starting processing: ' + error.message);
+                analyzeBtn.innerHTML = 'Analyze Videos';
+                analyzeBtn.disabled = false;
+                if (progressContainer) {
+                    progressContainer.style.display = 'none';
+                }
+            });
         });
     }
+}
+
+// Poll for task status
+function pollTaskStatus(taskId) {
+    const interval = setInterval(() => {
+        fetch(`/task_status/${taskId}`)
+        .then(response => response.json())
+        .then(data => {
+            // Update progress UI
+            const progressBar = document.getElementById('progressBar');
+            const progressPercent = document.getElementById('progressPercent');
+            const matchesFound = document.getElementById('matchesFound');
+            
+            if (progressBar && progressPercent) {
+                progressBar.style.width = data.progress + '%';
+                progressPercent.textContent = data.progress;
+            }
+            
+            // Handle different task statuses
+            if (data.status === 'completed') {
+                clearInterval(interval);
+                // Redirect to results page
+                window.location.href = `/results/${taskId}`;
+            } else if (data.status === 'error') {
+                clearInterval(interval);
+                alert('Error during processing: ' + data.error);
+                const analyzeBtn = document.getElementById('analyzeBtn');
+                if (analyzeBtn) {
+                    analyzeBtn.innerHTML = 'Analyze Videos';
+                    analyzeBtn.disabled = false;
+                }
+                const progressContainer = document.getElementById('progressContainer');
+                if (progressContainer) {
+                    progressContainer.style.display = 'none';
+                }
+            }
+            // For 'processing' status, continue polling
+        })
+        .catch(error => {
+            console.error('Error polling task status:', error);
+        });
+    }, 1000); // Poll every second
 }
 
 // Export results functionality
@@ -83,16 +183,21 @@ document.addEventListener('DOMContentLoaded', function() {
     if (thresholdInput) {
         thresholdInput.addEventListener('input', updateThresholdValue);
     }
-    
+
     const referenceInput = document.getElementById('reference_images');
     if (referenceInput) {
         referenceInput.addEventListener('change', previewReferenceImages);
     }
-    
+
+    const negativeInput = document.getElementById('negative_references');
+    if (negativeInput) {
+        negativeInput.addEventListener('change', previewNegativeReferences);
+    }
+
     const videoInput = document.getElementById('videos');
     if (videoInput) {
         videoInput.addEventListener('change', listSelectedVideos);
     }
-    
+
     handleFormSubmission();
 });

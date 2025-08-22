@@ -1,186 +1,202 @@
-# Frame Finder - Project Summary
+# Frame-Finder Analyzer Improvement Project Summary
 
 ## Project Overview
 
-Frame Finder is a Flask-based web application designed to identify specific visual props in video files by comparing extracted frames against reference images using image embedding similarity. While initially inspired by identifying the "Think Tank AI" prop from Star Trek: Voyager, the tool is built to work with arbitrary inputs.
+This project aims to significantly enhance the frame-finder analyzer's performance, accuracy, and user experience. The current implementation has been proven useful but has several areas for improvement identified through analysis and user feedback.
 
-## Key Features
+## Current State Analysis
 
-1. **Reference Image Management**: Upload and manage reference images (JPG/PNG)
-2. **Video Processing**: Handle MP4 video files or directories containing videos
-3. **Frame Extraction**: Extract frames at configurable intervals (default: 1 frame/second)
-4. **Image Similarity**: Compare frames against references using CLIP model
-5. **Results Display**: Show matches with timestamps, confidence scores, and thumbnails
-6. **Web Interface**: User-friendly UI for uploading, processing, and viewing results
-7. **Export Capability**: Optional export of results data
+The existing frame-finder analyzer has the following characteristics:
 
-## Technical Architecture
+### Strengths
+- Functional CLIP-based image comparison
+- Simple and intuitive web interface
+- Support for multiple reference images and videos
+- Basic frame extraction and comparison pipeline
 
-### Core Components
+### Weaknesses
+- No GPU acceleration utilization
+- Redundant computation of reference embeddings
+- No support for negative references
+- Fixed confidence threshold
+- No temporal clustering of detections
+- Limited preprocessing of images
+- No real-time feedback during processing
+- Integer-only frame interval selection
 
-1. **Flask Web Application** (`app.py`)
-   - Main application entry point
-   - HTTP request handling
-   - Template rendering
-   - File upload management
+## Improvement Areas
 
-2. **Analysis Engine** (`analyzer.py`)
-   - Video frame extraction using OpenCV
-   - Image preprocessing
-   - CLIP model integration for similarity comparison
-   - Results processing and formatting
+### Performance Enhancements
+1. **GPU Acceleration**
+   - Utilize available RTX 5090 32GB GPU
+   - Move model and computations to GPU when available
+   - Optimize memory usage for large batch processing
 
-3. **Web UI** (`templates/` and `static/`)
-   - HTML templates using Jinja2
-   - CSS styling
-   - JavaScript enhancements
-   - Responsive design
+2. **Reference Embedding Caching**
+   - Compute reference embeddings once at startup
+   - Reuse cached embeddings for all frame comparisons
+   - Reduce redundant computation by 90%+
 
-### Data Flow
+3. **Batch Frame Processing**
+   - Process frames in batches of 32+ for improved throughput
+   - Leverage GPU parallelization for batch encoding
+   - Reduce processing time by 50%+
 
-```
-User Uploads → File Validation → Video Processing → Frame Extraction → 
-Image Comparison → Results Generation → UI Display → Optional Export
-```
+### Accuracy Improvements
+1. **Image Normalization**
+   - Apply CLAHE on L channel of LAB color space
+   - Stabilize lighting and compression artifacts
+   - Improve consistency across different video sources
 
-### Technology Stack
+2. **Negative References + Delta Scoring**
+   - Add support for negative reference images
+   - Implement delta scoring: max(sim(positive)) - max(sim(negative))
+   - Reduce false positive rate by 30%+
 
-- **Backend**: Python 3.7+, Flask
-- **Video Processing**: OpenCV
-- **Image Processing**: PIL/Pillow, NumPy
-- **AI/ML**: Transformers (Hugging Face), PyTorch (CLIP model)
-- **Frontend**: HTML5, CSS3, JavaScript
-- **Storage**: File system (with optional SQLite extension)
+3. **Temporal Clustering**
+   - Cluster hits within ±1 second time windows
+   - Keep highest-scoring frame per cluster
+   - Reduce duplicate detections due to wobble
 
-## Implementation Approach
+4. **Adaptive Thresholding**
+   - Compute threshold per video based on background frames
+   - Use μ + 3σ or 99.5th percentile for threshold setting
+   - Eliminate need for manual threshold tuning
 
-### Phase 1: MVP Development
+### Advanced Features
+1. **Stronger Backbone Models**
+   - Support for CLIP-ViT-Large-Patch14
+   - Optional SigLIP support for finer discrimination
+   - 15%+ improvement in visual discrimination
 
-1. **Project Setup**
-   - Directory structure creation
-   - Requirements definition
-   - Basic Flask application
+2. **Two-Stage Filtering**
+   - Cheap OpenCV gate (NCC or ORB/AKAZE)
+   - CLIP re-check only for candidates
+   - Reduce CLIP processing by 70%+
 
-2. **Core Functionality**
-   - File upload handling
-   - Video frame extraction
-   - Basic image comparison
-   - Results display
+3. **Micro-Tuning Around Peaks**
+   - Rescan ±2s at higher FPS (4 fps) when candidate detected
+   - Keep frame with maximum score
+   - Improve temporal precision of detections
 
-3. **UI Development**
-   - Upload interface
-   - Results presentation
-   - Basic styling
+### User Experience Enhancements
+1. **Real-Time Progress Viewer**
+   - WebSocket or Server-Sent Events for live updates
+   - Show current video being processed
+   - Display progress percentage and matches found
 
-### Phase 2: Enhancement
+2. **UI Improvements**
+   - Change default confidence to 75%
+   - Support decimal values in frame interval selector
+   - Add negative reference upload field
+   - Advanced options section with feature toggles
 
-1. **Improved Processing**
-   - CLIP model integration
-   - Confidence scoring
-   - Performance optimization
+## Technical Implementation
 
-2. **Advanced UI**
-   - Enhanced styling
-   - Progress indicators
-   - Configuration options
+### Architecture Changes
+1. **Analyzer Module**
+   - GPU-aware model loading and processing
+   - Reference embedding caching system
+   - Batch processing pipeline
+   - Multiple similarity scoring methods
 
-### Phase 3: Advanced Features
+2. **Web Application**
+   - Real-time progress tracking
+   - Enhanced form controls
+   - Advanced options interface
+   - Improved results display
 
-1. **Database Integration**
-   - SQLite for result storage
-   - Query capabilities
+3. **Data Flow**
+   - Parallel processing pipelines
+   - Streaming results to UI
+   - Configurable processing stages
+   - Error handling and recovery
 
-2. **Performance Improvements**
-   - Multi-threaded processing
-   - Memory management
+### Dependencies
+1. **Python Libraries**
+   - Updated torch with CUDA support
+   - transformers library for CLIP models
+   - OpenCV with contrib modules
+   - Flask for web interface
 
-3. **Export Functionality**
-   - JSON/CSV export
-   - Thumbnail downloads
+2. **Hardware**
+   - CUDA-compatible GPU (RTX 5090 32GB)
+   - Sufficient RAM for batch processing
+   - Storage for temporary files
 
-## Project Structure
+## Expected Outcomes
 
-```
-frame-finder/
-├── app.py                 # Flask app entry point
-├── analyzer.py            # Core processing logic
-├── requirements.txt       # Python dependencies
-├── templates/             # HTML templates
-│   ├── base.html          # Base template
-│   ├── index.html         # Main upload page
-│   └── results.html       # Results display
-├── static/                # Static assets
-│   ├── css/               # Stylesheets
-│   ├── js/                # JavaScript files
-│   └── thumbnails/        # Generated thumbnails
-├── README.md              # Project documentation
-├── technical_spec.md      # Technical specifications
-├── implementation_plan.md  # Implementation approach
-├── requirements.md        # Dependency requirements
-├── ui_design.md           # UI/UX design
-└── roadmap.md             # Development roadmap
-```
+### Performance Metrics
+- 3-5x improvement in processing speed with GPU
+- 50%+ reduction in processing time with batching
+- 90%+ GPU utilization when available
+- 30%+ reduction in false positives with negative references
 
-## Development Roadmap
+### User Experience Metrics
+- Real-time feedback during processing
+- Intuitive interface for advanced features
+- 75% default confidence threshold
+- Decimal frame interval support
 
-### Short-term Goals (Week 1-2)
-- [ ] Complete basic Flask application structure
-- [ ] Implement video frame extraction
-- [ ] Create simple image comparison
-- [ ] Develop basic UI with upload and results pages
+### Technical Metrics
+- Modular, maintainable codebase
+- Comprehensive test coverage (>80%)
+- Detailed documentation
+- Backward compatibility maintained
 
-### Medium-term Goals (Week 2-3)
-- [ ] Integrate CLIP model for accurate similarity comparison
-- [ ] Enhance UI with better styling and user experience
-- [ ] Add configuration options for processing parameters
-- [ ] Implement basic error handling and validation
+## Implementation Timeline
 
-### Long-term Goals (Week 3-4)
-- [ ] Add database integration for result storage
-- [ ] Implement multi-threaded processing
-- [ ] Add export functionality
-- [ ] Comprehensive testing and optimization
+### Phase 1: Foundation (Weeks 1-2)
+- GPU acceleration
+- Reference embedding caching
+- Batch processing
+
+### Phase 2: Accuracy (Weeks 3-4)
+- Image normalization
+- Negative references and delta scoring
+- Temporal clustering
+
+### Phase 3: Advanced Features (Weeks 5-6)
+- Adaptive thresholding
+- Stronger backbone models
+- Two-stage filtering
+
+### Phase 4: UI/UX (Weeks 7-8)
+- Real-time progress viewer
+- UI enhancements
+- Micro-tuning implementation
+
+### Phase 5: Testing & Release (Weeks 9-10)
+- Comprehensive testing
+- Performance optimization
+- Documentation
 
 ## Success Criteria
 
-### Functional Requirements
-- Users can upload reference images and video files
-- System processes videos and extracts frames
-- Frames are compared against reference images
-- Results are displayed with timestamps and confidence scores
-- UI is intuitive and responsive
+### Primary Metrics
+- 50%+ reduction in processing time
+- 30%+ reduction in false positives
+- Real-time progress feedback
+- 95% user satisfaction rating
 
-### Performance Requirements
-- Frame extraction: 10+ frames/second
-- Image comparison: 1+ frames/second
-- Memory usage: < 2GB during processing
-- Processing time: < 2x video length for standard inputs
+### Secondary Metrics
+- Code coverage >80%
+- Memory efficiency improvement >30%
+- GPU utilization >90% when available
+- Backward compatibility maintained
 
-### Quality Requirements
-- Code coverage: > 80%
-- Error handling for all user inputs
-- Clear documentation and comments
-- Responsive UI across device sizes
-
-## Risk Mitigation
+## Risk Assessment
 
 ### Technical Risks
-- **CLIP model integration complexity**: Start with simpler models and add CLIP as an enhancement
-- **Video processing performance**: Implement progress tracking and batch processing
-- **Memory usage**: Process videos sequentially and implement memory cleanup
+- GPU memory limitations
+- Model compatibility issues
+- Performance degradation with new features
 
-### Schedule Risks
-- **Dependency on third-party libraries**: Identify fallback options and alternatives
-- **Hardware limitations**: Develop with performance constraints and optimization in mind
+### Mitigation Strategies
+- Automatic fallback to CPU processing
+- Feature flags for experimental functionality
+- Comprehensive testing before release
 
-## Next Steps
+## Conclusion
 
-1. Create the basic project structure and Flask application
-2. Implement video frame extraction functionality
-3. Develop the file upload interface
-4. Create basic image comparison logic
-5. Design and implement the user interface
-6. Test with sample data
-7. Iterate and enhance based on results
-
-This project provides a solid foundation for visual prop identification in videos while maintaining a modular architecture that allows for future enhancements and extensions.
+This improvement project will transform the frame-finder analyzer from a basic image comparison tool into a sophisticated video analysis platform. The enhancements will significantly improve both performance and accuracy while providing a better user experience. With the powerful RTX 5090 GPU available, we can leverage state-of-the-art machine learning techniques to deliver professional-grade results.

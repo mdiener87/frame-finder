@@ -22,25 +22,29 @@
                                     <thead>
                                         <tr>
                                             <th>Timestamp</th>
-                                            <th>Confidence</th>
+                                            <th>Confidence Score</th>
+                                            <th>Delta Score</th>
                                             <th>Reference Image</th>
+                                            <th>Cluster ID</th>
                                         </tr>
                                     </thead>
                                     <tbody>
                                         {% for match in matches %}
                                             {% if match.error %}
                                                 <tr class="table-danger">
-                                                    <td colspan="3">Error: {{ match.error }}</td>
+                                                    <td colspan="5">Error: {{ match.error }}</td>
                                                 </tr>
                                             {% else %}
-                                                <tr>
+                                                <tr class="{{ 'table-success' if match.confidence > 0.8 else 'table-warning' if match.confidence > 0.6 else 'table-secondary' }}">
                                                     <td class="timestamp">{{ "%.2f"|format(match.timestamp) }}s</td>
                                                     <td class="confidence">{{ "%.2f"|format(match.confidence * 100) }}%</td>
+                                                    <td class="delta">{{ "%.2f"|format(match.delta_score) if match.delta_score is defined else 'N/A' }}</td>
                                                     <td>
                                                         {% if match.reference_image %}
                                                             <span class="badge bg-secondary">{{ match.reference_image|basename }}</span>
                                                         {% endif %}
                                                     </td>
+                                                    <td>{{ match.cluster_id if match.cluster_id is defined else 'N/A' }}</td>
                                                 </tr>
                                             {% endif %}
                                         {% endfor %}

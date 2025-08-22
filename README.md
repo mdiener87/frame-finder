@@ -9,9 +9,16 @@ Frame Finder extracts frames from MP4 video files at regular intervals and compa
 ## Features
 
 - Upload reference images (JPG/PNG) and video files (MP4)
-- Extract frames from videos at configurable intervals
-- Compare frames against reference images using CLIP similarity
+- Upload negative reference images to reduce false positives
+- Extract frames from videos at configurable intervals (supports decimal values)
+- Compare frames against reference images using CLIP similarity with delta scoring
+- Apply image normalization (CLAHE on L channel) for consistent lighting
+- GPU acceleration for faster processing
+- Batch frame processing for improved throughput
+- Temporal clustering to reduce duplicate detections
+- Adaptive thresholding per video for better accuracy
 - Display results with timestamps, confidence scores, and thumbnails
+- Real-time progress viewer during analysis
 - Simple web interface for uploading and viewing results
 - Optional export of results data
 
@@ -45,13 +52,15 @@ Frame Finder extracts frames from MP4 video files at regular intervals and compa
 
 1. Navigate to the web interface
 2. Upload one or more reference images (JPG/PNG)
-3. Upload one or more video files (MP4) or a directory containing videos
-4. Adjust processing parameters if needed:
-   - Frame extraction interval (default: 1 frame/second)
-   - Confidence threshold (default: 50%)
-5. Click "Analyze" to start processing
-6. View results with timestamps, confidence scores, and thumbnails
-7. Optionally export results
+3. Optionally upload negative reference images (images that should NOT be detected)
+4. Upload one or more video files (MP4)
+5. Adjust processing parameters if needed:
+   - Frame extraction interval (default: 1.0 frame/second, supports decimal values)
+   - Confidence threshold (default: 75%)
+6. Click "Analyze" to start processing
+7. View real-time progress during analysis
+8. View results with timestamps, confidence scores, and thumbnails
+9. Optionally export results
 
 ## Technical Details
 
@@ -65,16 +74,20 @@ Frame Finder extracts frames from MP4 video files at regular intervals and compa
 
 ### Processing Workflow
 
-1. User uploads reference images and video files
-2. Videos are processed to extract frames at regular intervals (default: 1 frame/second)
-3. Each frame is compared against reference images using CLIP embeddings
-4. Matches above a confidence threshold are collected
-5. Results are displayed with timestamps, confidence scores, and thumbnails
+1. User uploads reference images, negative reference images (optional), and video files
+2. Reference embeddings are computed once and cached for efficiency
+3. Videos are processed to extract frames at regular intervals (supports decimal values)
+4. Each frame is normalized using CLAHE on L channel for consistent lighting
+5. Each frame is compared against reference images using CLIP embeddings with delta scoring
+6. Matches above a confidence threshold are collected
+7. Temporal clustering is applied to reduce duplicate detections
+8. Results are displayed with timestamps, confidence scores, and thumbnails
 
 ### Configuration
 
-- Frame extraction interval: Configurable in UI (1-60 seconds)
-- Confidence threshold: Adjustable slider (0-100%)
+- Frame extraction interval: Configurable in UI (0.1-60 seconds, supports decimal values)
+- Confidence threshold: Adjustable slider (0-100%, default: 75%)
+- Negative reference images: Optional upload to reduce false positives
 - Thumbnail size: Configurable in image processing functions
 
 ## Development
@@ -114,12 +127,12 @@ The modular architecture allows for easy extension:
 
 ## Future Enhancements
 
-- Multi-threaded processing for faster analysis
 - SQLite database for storing and querying results
-- UI progress bar during analysis
 - Support for additional video formats
-- Batch processing for multiple videos
 - Advanced filtering and sorting of results
+- Model selection (CLIP-ViT-Large, SigLIP)
+- Two-stage filtering (OpenCV gate → CLIP re-check)
+- Micro-tuning around peaks
 
 ## License
 

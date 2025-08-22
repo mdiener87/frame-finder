@@ -19,6 +19,14 @@ body {
     object-fit: cover;
 }
 
+#negativePreview .thumbnail-preview {
+    border: 2px solid #dc3545; /* Red border for negative references */
+}
+
+#referencePreview .thumbnail-preview {
+    border: 2px solid #28a745; /* Green border for positive references */
+}
+
 .file-list {
     max-height: 200px;
     overflow-y: auto;

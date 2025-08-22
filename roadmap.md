@@ -1,251 +1,256 @@
-# Frame Finder - Development Roadmap
+# Frame-Finder Improvement Roadmap
 
-## Phase 1: Basic Implementation (MVP)
+## Overview
+
+This document outlines the roadmap for implementing the analyzer improvements. The roadmap is organized into phases with specific milestones and deliverables.
+
+## Phase 1: Foundation Improvements (Weeks 1-2)
 
 ### Goals
-- Create working prototype with core functionality
-- Implement basic file upload and processing
-- Display results in simple UI
+- Establish GPU acceleration baseline
+- Implement core performance improvements
+- Maintain backward compatibility
 
-### Timeline
-- Estimated: 3-5 days
+### Milestones
 
-### Tasks
-1. Set up project structure
-   - Create directories (templates, static)
-   - Initialize requirements.txt
-   - Create basic Flask app
+**Week 1: GPU Acceleration & Reference Caching**
+- [ ] Implement GPU detection and utilization
+- [ ] Create ReferenceEmbeddings class
+- [ ] Modify analyzer to use cached embeddings
+- [ ] Benchmark performance improvements
 
-2. Implement core processing logic
-   - Video frame extraction
-   - Basic image comparison
-   - Results formatting
-
-3. Create basic UI
-   - Upload page
-   - Results display
-   - Simple styling
-
-4. Integration and testing
-   - End-to-end testing
-   - Basic error handling
-   - Documentation
+**Week 2: Batch Processing**
+- [ ] Implement batch frame extraction
+- [ ] Update comparison logic for batch processing
+- [ ] Optimize batch size for GPU memory
+- [ ] Document performance gains
 
 ### Deliverables
-- Working Flask application
-- Basic video processing capability
-- Simple web interface
-- README with setup instructions
+- 2x-3x performance improvement on GPU
+- Reference embeddings cached at startup
+- Batch processing support with configurable batch size
 
-## Phase 2: Enhanced Features
+## Phase 2: Accuracy Enhancements (Weeks 3-4)
 
 ### Goals
-- Improve processing accuracy and performance
-- Enhance user interface
-- Add configuration options
+- Reduce false positive rate
+- Improve detection precision
+- Add advanced scoring methods
 
-### Timeline
-- Estimated: 2-3 days
+### Milestones
 
-### Tasks
-1. Improve image comparison
-   - Integrate CLIP model
-   - Optimize similarity calculations
-   - Add confidence thresholding
+**Week 3: Image Normalization & Negative References**
+- [ ] Implement CLAHE-based image normalization
+- [ ] Add negative reference support
+- [ ] Implement delta scoring algorithm
+- [ ] Update UI for negative reference upload
 
-2. Enhance UI/UX
-   - Improved styling
-   - Better results display
-   - Progress indicators
-
-3. Add configuration options
-   - Frame extraction interval
-   - Confidence threshold
-   - Processing options
-
-4. Performance improvements
-   - Memory optimization
-   - Processing speed improvements
-   - Error handling
+**Week 4: Temporal Clustering**
+- [ ] Implement temporal clustering algorithm
+- [ ] Add clustering parameters to UI
+- [ ] Update results processing pipeline
+- [ ] Benchmark false positive reduction
 
 ### Deliverables
-- Accurate image comparison using CLIP
-- Enhanced user interface
-- Configurable processing options
-- Better performance
+- 30%+ reduction in false positives
+- Support for negative reference images
+- Temporal clustering of detections
+- Delta scoring for improved accuracy
 
-## Phase 3: Advanced Features
+## Phase 3: Advanced Features (Weeks 5-6)
 
 ### Goals
-- Add database storage
-- Implement multi-threading
-- Add export functionality
+- Add intelligent thresholding
+- Support stronger models
+- Implement performance optimization techniques
 
-### Timeline
-- Estimated: 3-4 days
+### Milestones
 
-### Tasks
-1. Database integration
-   - SQLite for result storage
-   - Query interface
-   - Data management
+**Week 5: Adaptive Thresholding**
+- [ ] Implement background sampling
+- [ ] Create adaptive threshold calculation
+- [ ] Add thresholding options to UI
+- [ ] Test threshold adaptation across video types
 
-2. Multi-threading support
-   - Parallel video processing
-   - Progress tracking
-   - Resource management
-
-3. Export functionality
-   - JSON export
-   - CSV export
-   - Thumbnail download
-
-4. Advanced UI features
-   - Sorting and filtering
-   - Detailed results view
-   - Batch processing
+**Week 6: Model Upgrades & Two-Stage Filter**
+- [ ] Add support for CLIP-ViT-Large
+- [ ] Implement SigLIP support (optional)
+- [ ] Create two-stage filtering pipeline
+- [ ] Benchmark accuracy improvements
 
 ### Deliverables
-- Persistent result storage
-- Multi-threaded processing
-- Export capabilities
-- Advanced UI features
+- Adaptive thresholding per video
+- Support for multiple model architectures
+- Two-stage filtering for performance
+- 15%+ improvement in accuracy
 
-## Phase 4: Polish and Optimization
+## Phase 4: UI/UX & Real-time Feedback (Weeks 7-8)
 
 ### Goals
-- Optimize performance
 - Improve user experience
-- Add comprehensive documentation
+- Add real-time processing feedback
+- Implement advanced UI controls
 
-### Timeline
-- Estimated: 2-3 days
+### Milestones
 
-### Tasks
-1. Performance optimization
-   - Caching strategies
-   - Memory management
-   - Processing efficiency
+**Week 7: UI Updates & Real-time Viewer**
+- [ ] Update form controls (decimal intervals, 75% default)
+- [ ] Implement real-time progress tracking
+- [ ] Add advanced options section
+- [ ] Update results display with enhanced information
 
-2. User experience improvements
-   - Intuitive workflows
-   - Better error messages
-   - Help documentation
-
-3. Documentation
-   - API documentation
-   - User guides
-   - Developer documentation
-
-4. Testing and quality assurance
-   - Comprehensive testing
-   - Edge case handling
-   - Security review
+**Week 8: Micro-tuning & Final Integration**
+- [ ] Implement micro-tuning around peaks
+- [ ] Integrate all features into processing pipeline
+- [ ] Add feature toggle controls
+- [ ] Final UI/UX polishing
 
 ### Deliverables
-- Optimized application
-- Comprehensive documentation
-- Thoroughly tested code
-- Production-ready release
+- Real-time progress feedback during analysis
+- Enhanced UI with advanced options
+- Micro-tuning for precise detection
+- Feature toggle controls for all new functionality
 
-## Technical Debt and Future Considerations
+## Phase 5: Testing & Optimization (Weeks 9-10)
 
-### Known Limitations
-1. Single-user environment only
-2. No authentication/authorization
-3. Limited video format support
-4. No cloud deployment options
+### Goals
+- Comprehensive testing of all features
+- Performance optimization
+- Documentation and user guides
 
-### Future Enhancements
-1. Multi-user support with authentication
-2. Cloud deployment scripts
-3. Additional video format support
-4. Mobile app interface
-5. API for programmatic access
-6. Machine learning model improvements
+### Milestones
+
+**Week 9: Comprehensive Testing**
+- [ ] Unit testing for all new components
+- [ ] Integration testing of full pipeline
+- [ ] Performance benchmarking
+- [ ] Accuracy validation
+
+**Week 10: Optimization & Documentation**
+- [ ] Performance optimization based on testing
+- [ ] Create user documentation
+- [ ] Update technical documentation
+- [ ] Prepare release notes
+
+### Deliverables
+- Comprehensive test suite
+- Performance optimization report
+- User documentation
+- Technical documentation
+
+## Key Performance Indicators
+
+### Performance Metrics
+- Processing time reduction: 50%+ improvement
+- GPU utilization: 90%+ when available
+- Memory efficiency: 30%+ reduction in peak usage
+
+### Accuracy Metrics
+- False positive reduction: 30%+ improvement
+- True positive rate: 20%+ improvement
+- Precision: 15%+ improvement with clustering
+
+### User Experience Metrics
+- Real-time feedback latency: <1 second
+- UI responsiveness: <100ms for interactions
+- User satisfaction rating: >4.5/5
+
+## Risk Management
+
+### Technical Risks
+1. **GPU Memory Limitations**
+   - Mitigation: Implement automatic batch size adjustment
+   - Contingency: Graceful fallback to CPU processing
+
+2. **Model Compatibility Issues**
+   - Mitigation: Thorough testing of all supported models
+   - Contingency: Maintain backward compatibility with base model
+
+3. **Performance Degradation**
+   - Mitigation: Feature flags for all new functionality
+   - Contingency: Option to disable any feature causing issues
+
+### Schedule Risks
+1. **Feature Implementation Delays**
+   - Mitigation: Prioritize critical features first
+   - Contingency: Flexible roadmap with buffer time
+
+2. **Testing and Bug Fixes**
+   - Mitigation: Continuous integration testing
+   - Contingency: Extended testing phase if needed
 
 ## Resource Requirements
 
-### Development Resources
-- 1 Python developer (full-stack)
-- 1 UI/UX designer (part-time)
-- 1 QA tester (part-time)
+### Hardware
+- Development machine with CUDA-compatible GPU
+- Test machines with various GPU configurations
+- Sample dataset for testing
 
-### Infrastructure
-- Development machine with:
-  - 8GB+ RAM
-  - Multi-core CPU
-  - GPU (recommended)
-  - 10GB+ free storage
+### Software
+- Updated Python environment with latest libraries
+- Testing frameworks (pytest, etc.)
+- Documentation tools
 
-### Third-party Services
-- Hugging Face model hub (free tier)
-- GitHub for version control (free tier)
+### Human Resources
+- Primary developer for implementation
+- QA engineer for testing
+- Technical writer for documentation
 
-## Risk Assessment
+## Success Criteria
 
-### Technical Risks
-1. CLIP model integration complexity
-   - Mitigation: Start with simpler models, add CLIP later
-2. Video processing performance issues
-   - Mitigation: Implement batching and progress tracking
-3. Memory usage during processing
-   - Mitigation: Process videos sequentially, clear memory
+### Minimum Viable Product (MVP)
+- GPU acceleration implemented
+- Reference embedding caching
+- Batch processing support
+- Negative reference support
+- Basic UI updates
 
-### Schedule Risks
-1. Dependency on third-party libraries
-   - Mitigation: Have fallback implementations
-2. Hardware limitations affecting development
-   - Mitigation: Develop with performance constraints in mind
+### Full Feature Set
+- All features from MVP plus:
+- Temporal clustering
+- Adaptive thresholding
+- Advanced models
+- Real-time feedback
+- Complete UI overhaul
 
-### Quality Risks
-1. Inaccurate image matching
-   - Mitigation: Thorough testing with various inputs
-2. Poor user experience
-   - Mitigation: Regular user feedback sessions
+### Quality Targets
+- Code coverage: >80%
+- Performance improvement: >50%
+- User satisfaction: >4.5/5
+- Bug rate: <1 critical bug per 1000 lines
 
-## Success Metrics
+## Release Plan
 
-### Technical Metrics
-- Processing speed (frames/second)
-- Accuracy of matches (manual verification)
-- Memory usage during processing
-- Error rate in file processing
+### Alpha Release (End of Phase 2)
+- Core performance improvements
+- Basic accuracy enhancements
+- Limited UI updates
 
-### User Experience Metrics
-- Time to complete analysis
-- User satisfaction score
-- Error message clarity
-- Interface intuitiveness
+### Beta Release (End of Phase 4)
+- Complete feature set
+- Real-time feedback
+- Advanced UI controls
+- Comprehensive documentation
 
-### Code Quality Metrics
-- Test coverage percentage
-- Code review feedback
-- Documentation completeness
+### Production Release (End of Phase 5)
+- Fully tested and optimized
+- Complete documentation
 - Performance benchmarks
+- User guides
 
-## Milestones
+## Feedback Loop
 
-### Milestone 1: Basic Functionality
-- Working file upload
-- Video frame extraction
-- Basic results display
-- Target Date: [TBD]
+### Internal Testing
+- Weekly demos for development team
+- Continuous integration testing
+- Performance monitoring
 
-### Milestone 2: Enhanced Processing
-- CLIP integration
-- Improved accuracy
-- Configuration options
-- Target Date: [TBD]
+### External Feedback
+- Beta tester program
+- User surveys
+- Analytics data collection
 
-### Milestone 3: Advanced Features
-- Database integration
-- Multi-threading
-- Export functionality
-- Target Date: [TBD]
-
-### Milestone 4: Production Ready
-- Performance optimization
-- Comprehensive testing
-- Full documentation
-- Target Date: [TBD]
+### Iterative Improvements
+- Monthly release cycles for non-breaking improvements
+- Quarterly major feature releases
+- Continuous performance optimization
