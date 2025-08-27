@@ -176,12 +176,6 @@ function handleFormSubmission() {
                 }
             }
             
-            // Debugging: Check FormData contents before sending
-            console.log("FormData contents before sending:", formData);
-            for (let pair of formData.entries()) {
-                console.log(pair[0] + ':', pair[1]);
-            }
-            
             fetch('/upload', {
                 method: 'POST',
                 body: formData,
@@ -236,11 +230,16 @@ function pollTaskStatus(taskId) {
             // Update progress UI
             const progressBar = document.getElementById('progressBar');
             const progressPercent = document.getElementById('progressPercent');
-            const matchesFound = document.getElementById('matchesFound');
+            const currentVideo = document.getElementById('currentVideo');
             
             if (progressBar && progressPercent) {
                 progressBar.style.width = data.progress + '%';
-                progressPercent.textContent = data.progress;
+                progressPercent.textContent = Math.round(data.progress);
+            }
+            
+            // Update current video name
+            if (currentVideo && data.current_video) {
+                currentVideo.textContent = data.current_video;
             }
             
             // Handle different task statuses

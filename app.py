@@ -50,6 +50,7 @@ def process_videos_background(task_id, reference_paths, video_paths, frame_inter
         processing_tasks[task_id] = {
             'status': 'processing',
             'progress': 0,
+            'current_video': '',
             'results': None,
             'reference_paths': reference_paths,
             'negative_paths': negative_paths,
@@ -61,8 +62,26 @@ def process_videos_background(task_id, reference_paths, video_paths, frame_inter
         
         print(f"Starting background video processing for task {task_id} with {len(video_paths)} videos...")
         
-        # Process videos (this will take time)
-        results = process_videos(reference_paths, video_paths, frame_interval, confidence_threshold, negative_paths)
+        # Define progress callback function
+        def progress_callback(progress_info):
+            if task_id in processing_tasks and not processing_tasks[task_id].get('cancelled', False):
+                # Calculate overall progress based on videos and frames
+                if progress_info['status'] == 'processing_video':
+                    # When starting a new video, update current video name
+                    processing_tasks[task_id]['current_video'] = progress_info['current_video']
+                    # Calculate progress based on video index
+                    video_progress = (progress_info['video_index'] / progress_info['total_videos']) * 100
+                    processing_tasks[task_id]['progress'] = max(0, min(100, video_progress))
+                elif progress_info['status'] == 'processing_frames':
+                    # Calculate progress within the current video based on frames processed
+                    video_progress = (progress_info['video_index'] / progress_info['total_videos']) * 100
+                    if progress_info['total_frames'] > 0:
+                        frame_progress = (progress_info['current_frame'] / progress_info['total_frames']) * (1 / progress_info['total_videos']) * 100
+                        total_progress = video_progress + frame_progress
+                        processing_tasks[task_id]['progress'] = max(0, min(100, total_progress))
+        
+        # Process videos (this will take time) with progress callback
+        results = process_videos(reference_paths, video_paths, frame_interval, confidence_threshold, negative_paths, progress_callback)
         
         # Check if task was cancelled during processing
         if task_id in processing_tasks and processing_tasks[task_id].get('cancelled', False):
