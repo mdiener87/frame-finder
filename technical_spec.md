@@ -1,87 +1,179 @@
-# Frame Finder - Technical Specification
+# Frame Finder UX Improvements - Technical Specification
 
-## Project Overview
-Frame Finder is a Flask-based web tool that identifies specific visual props in video files by comparing frames against reference images using image embedding similarity.
+## Overview
+This document details the technical implementation for three UX improvements:
+1. Display time index in hh:mm:ss format instead of seconds
+2. Persist previous run settings when returning to main page
+3. Implement dynamic confidence threshold filtering on results page
 
-## Core Features
-1. Upload reference images (JPG/PNG)
-2. Upload video files (MP4) or directories containing videos
-3. Extract frames at regular intervals from videos
-4. Compare frames to reference images using CLIP or similar
-5. Display results with timestamps, confidence scores, and thumbnails
-6. Simple web UI for interaction
-7. Optional export of results
+## 1. Time Display Format Improvement
 
-## Technology Stack
-- Backend: Python Flask
-- Image/Video Processing: OpenCV, PIL/Pillow
-- Image Similarity: CLIP (OpenAI's Contrastive Language-Image Pre-training)
-- Frontend: HTML/CSS/JavaScript with Flask templates
+### Current State
+- Timestamps displayed as seconds with 2 decimal places in `templates/results.html` line 39:
+  ```html
+  <td class="timestamp">{{ "%.2f"|format(match.timestamp) }}s</td>
+  ```
 
-## Project Structure
+### Implementation Plan
+- Create JavaScript function to convert seconds to hh:mm:ss format
+- Update results template to use formatted time
+- Ensure consistent formatting across all timestamp displays
+
+### Technical Details
+- Function signature: `formatTime(seconds)`
+- Format: `HH:MM:SS` (pad with leading zeros as needed)
+- Example: 3661.5 seconds → "01:01.500"
+
+## 2. Settings Persistence Improvement
+
+### Current State
+- No persistence of form settings between page visits
+- All settings reset when navigating away and back
+
+### Implementation Plan
+- Store form values in browser localStorage on form submission
+- Restore values from localStorage when main page loads
+- Handle edge cases (invalid values, missing storage)
+
+### Technical Details
+- Storage key: `frameFinderSettings`
+- Values to store:
+  - frameInterval (number)
+  - confidenceThreshold (number)
+- Functions needed:
+  - `saveSettings()` - called on form submission
+  - `restoreSettings()` - called on page load
+
+## 3. Dynamic Confidence Threshold Filtering
+
+### Current State Analysis
+- Threshold filtering occurs in `analyzer.py` line 298:
+  ```python
+  if s >= (vid_thr if vid_thr is not None else -1.0):
+  ```
+- Results below threshold are permanently discarded
+- No post-processing filtering capability
+
+### Implementation Plan
+- Modify analyzer to store ALL results regardless of threshold
+- Add max confidence tracking per video
+- Add dynamic filtering slider to results page
+- Implement real-time result filtering in JavaScript
+
+### Backend Changes (analyzer.py)
+
+#### Modify `process_videos` function:
+1. Remove threshold filtering when collecting matches (line 298)
+2. Store all matches in temporary list
+3. Track max confidence per video
+4. Pass threshold value to results for reference
+
+#### Updated Logic:
+```python
+# Instead of filtering during collection, collect all:
+for ts, s, ridx in zip(frame_ts, scores_np, ref_idx_np):
+    matches.append({
+        "timestamp": float(ts),
+        "confidence": float(s),
+        "reference_image": os.path.basename(reference_paths[ridx]) if len(reference_paths) else None
+    })
+
+# Then apply temporal clustering
+matches = cluster_peaks(matches, window_s=cluster_window)
+
+# Track max confidence for UI display
+max_confidence = max([m["confidence"] for m in matches], default=0.0)
 ```
-frame-finder/
-├── app.py                 # Flask app entry point
-├── analyzer.py            # Core image/video processing logic
-├── requirements.txt       # Python dependencies
-├── templates/             # HTML templates
-│   ├── base.html          # Base template
-│   ├── index.html         # Main upload page
-│   └── results.html       # Results display
-├── static/                # Static assets
-│   ├── css/               # Stylesheets
-│   ├── js/                # JavaScript files
-│   └── thumbnails/        # Generated thumbnails
-└── README.md              # Project documentation
+
+#### Updated Return Value:
+```python
+results[video_name] = {
+    "matches": matches,
+    "max_confidence": max_confidence,
+    "threshold_used": vid_thr
+}
 ```
 
-## Core Components
+### Frontend Changes
 
-### 1. Flask App (app.py)
-- Main application entry point
-- Routes for:
-  - Home page (upload interface)
-  - Upload handling
-  - Analysis processing
-  - Results display
+#### Results Template (templates/results.html):
+1. Add confidence threshold slider:
+   ```html
+   <div class="mb-3">
+       <label for="dynamicThreshold" class="form-label">Filter Results by Confidence</label>
+       <input type="range" class="form-range" id="dynamicThreshold" min="0" max="100" value="75">
+       <div class="form-text">Minimum confidence: <span id="dynamicThresholdValue">75</span>%</div>
+   </div>
+   ```
 
-### 2. Analyzer Module (analyzer.py)
-- Video frame extraction
-- Image preprocessing
-- Similarity comparison using CLIP
-- Results processing and formatting
+2. Add result count display:
+   ```html
+   <div id="resultStats" class="mb-3">
+       <span id="visibleCount">0</span> of <span id="totalCount">0</span> results displayed
+   </div>
+   ```
 
-### 3. Web UI
-- Simple, clean interface
-- Upload forms for reference images and videos
-- Progress indication during processing
-- Results display with thumbnails
+3. Add max confidence display per file:
+   ```html
+   <p class="text-muted">
+       {{ matches|length }} match(es) found | 
+       Max confidence: <span class="max-confidence">{{ "%.2f"|format(max_confidence * 100) }}%</span>
+   </p>
+   ```
 
-## Implementation Plan
+#### JavaScript (static/js/main.js):
+1. Add dynamic filtering functionality:
+   ```javascript
+   function filterResults(threshold) {
+       // Hide/show table rows based on confidence threshold
+       // Update visible count display
+   }
+   
+   function updateResultStats() {
+       // Update visible/total count display
+   }
+   ```
 
-### Phase 1: Basic Structure
-- Set up Flask app with basic routes
-- Create directory structure
-- Implement simple upload functionality
+2. Add event listeners for slider:
+   ```javascript
+   document.getElementById('dynamicThreshold').addEventListener('input', function() {
+       const threshold = this.value;
+       document.getElementById('dynamicThresholdValue').textContent = threshold;
+       filterResults(threshold / 100.0);
+   });
+   ```
 
-### Phase 2: Core Processing Logic
-- Implement video frame extraction
-- Integrate CLIP model for similarity comparison
-- Process and return results
+## File Modification Summary
 
-### Phase 3: UI Development
-- Create templates for upload and results pages
-- Add styling for a clean interface
-- Implement thumbnail generation
+### analyzer.py
+- Modify `process_videos` function to collect all results
+- Update return format to include max confidence and threshold used
+- Remove threshold filtering during match collection
 
-### Phase 4: Enhancement
-- Add progress tracking
-- Implement optional SQLite storage
-- Add export functionality
+### static/js/main.js
+- Add `formatTime(seconds)` function
+- Add `saveSettings()` and `restoreSettings()` functions
+- Add dynamic filtering functionality
+- Add event listeners for new UI elements
 
-## Dependencies
-- Flask: Web framework
-- OpenCV: Video processing
-- PIL/Pillow: Image processing
-- transformers: CLIP model integration
-- torch: PyTorch for CLIP
+### templates/results.html
+- Update timestamp display to use formatted time
+- Add confidence threshold slider
+- Add result statistics display
+- Add max confidence display per file
+- Add necessary JavaScript initialization
+
+### templates/index.html
+- Add settings restoration functionality (if needed)
+
+## Implementation Order
+1. Time formatting (least complex)
+2. Settings persistence (moderate complexity)
+3. Dynamic filtering (most complex, affects both frontend and backend)
+
+## Testing Considerations
+- Verify time formatting with various input values (0, 60, 3600, 3661.5)
+- Test settings persistence across page reloads
+- Verify dynamic filtering works with various threshold values
+- Ensure backward compatibility with existing functionality
+- Test edge cases (no results, single result, many results)
