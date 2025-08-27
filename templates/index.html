@@ -9,14 +9,22 @@
         <p class="lead">Identify specific visual props in video files by comparing frames against reference images.</p>
         
         <div class="card">
-            <div class="card-body">
-                <form id="uploadForm" action="/upload" method="POST" enctype="multipart/form-data">
-                    <div class="mb-3">
-                        <label for="reference_images" class="form-label">Reference Images</label>
-                        <input class="form-control" type="file" id="reference_images" name="reference_images" multiple accept=".png,.jpg,.jpeg">
-                        <div class="form-text">Upload one or more reference images (PNG, JPG, JPEG)</div>
-                        <div id="referencePreview" class="mt-2"></div>
-                    </div>
+            <div class="card-header" id="settingsHeading">
+                <h5 class="mb-0">
+                    <button class="btn btn-link" type="button" data-bs-toggle="collapse" data-bs-target="#settingsPanel" aria-expanded="true" aria-controls="settingsPanel">
+                        Settings
+                    </button>
+                </h5>
+            </div>
+            <div id="settingsPanel" class="collapse show" aria-labelledby="settingsHeading">
+                <div class="card-body">
+                    <form id="uploadForm" action="/upload" method="POST" enctype="multipart/form-data">
+                        <div class="mb-3">
+                            <label for="reference_images" class="form-label">Reference Images</label>
+                            <input class="form-control" type="file" id="reference_images" name="reference_images" multiple accept=".png,.jpg,.jpeg">
+                            <div class="form-text">Upload one or more reference images (PNG, JPG, JPEG)</div>
+                            <div id="referencePreview" class="mt-2"></div>
+                        </div>
                     
                     <div class="mb-3">
                         <label for="negative_references" class="form-label">Negative Reference Images</label>
@@ -45,37 +53,38 @@
                         <div class="form-text">Extract one frame every X seconds (default: 1.0)</div>
                     </div>
                     
-                    <div class="mb-3">
-                        <label for="confidenceThreshold" class="form-label">Confidence Threshold</label>
-                        <input type="range" class="form-range" id="confidenceThreshold" name="confidenceThreshold" min="0" max="100" value="75">
-                        <div class="form-text">Minimum confidence for matches: <span id="thresholdValue">75</span>%</div>
-                    </div>
-                    
                     <button type="submit" class="btn btn-primary" id="analyzeBtn">Analyze Videos</button>
                     <button type="reset" class="btn btn-secondary">Reset</button>
                 </form>
-                
-                <div id="progressContainer" class="mt-3" style="display: none;">
-                    <div class="card">
-                        <div class="card-header">
-                            <h5>Analysis Progress</h5>
-                        </div>
-                        <div class="card-body">
-                            <div class="mb-2">
-                                <strong>Current Video:</strong> <span id="currentVideo">-</span>
-                            </div>
-                            <div class="mb-2">
-                                <strong>Progress:</strong> <span id="progressPercent">0</span>%
-                            </div>
-                            <div class="progress">
-                                <div id="progressBar" class="progress-bar" role="progressbar" style="width: 0%"></div>
-                            </div>
-                            <div class="mt-2">
-                                <strong>Matches Found:</strong> <span id="matchesFound">0</span>
-                            </div>
-                        </div>
+            </div>
+        </div>
+        
+        <div class="card mt-3">
+            <div class="card-header" id="progressHeading">
+                <h5 class="mb-0">
+                    <button class="btn btn-link" type="button" data-bs-toggle="collapse" data-bs-target="#progressPanel" aria-expanded="false" aria-controls="progressPanel">
+                        Progress
+                    </button>
+                </h5>
+            </div>
+            <div id="progressPanel" class="collapse" aria-labelledby="progressHeading">
+                <div class="card-body">
+                    <div class="mb-2">
+                        <strong>Current Video:</strong> <span id="currentVideo">-</span>
+                    </div>
+                    <div class="mb-2">
+                        <strong>Progress:</strong> <span id="progressPercent">0</span>%
+                    </div>
+                    <div class="progress">
+                        <div id="progressBar" class="progress-bar" role="progressbar" style="width: 0%"></div>
+                    </div>
+                    <div class="mt-3">
+                        <button id="cancelBtn" class="btn btn-warning" style="display: none;">Cancel</button>
                     </div>
                 </div>
+            </div>
+        </div>
+                
             </div>
         </div>
     </div>

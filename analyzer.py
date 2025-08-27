@@ -211,14 +211,15 @@ def adaptive_threshold_from_frames(frames, ref_cache: EmbeddingsCache,
 # Public API: process_videos
 # ==============================
 def process_videos(reference_paths, video_paths, frame_interval=1.0,
-                   confidence_threshold=0.5, negative_paths=None):
+                   confidence_threshold=0.5, negative_paths=None, progress_callback=None):
     """
     Args:
         reference_paths (list[str]): paths to positive reference images
         video_paths     (list[str]): paths to mp4 files
         frame_interval  (float)    : seconds between frames
         confidence_threshold (float|None): if None in advanced mode, uses adaptive
-        negative_paths  (list[str]|None): optional background negatives (advanced)
+        negative_paths (list[str]|None): optional background negatives (advanced)
+        progress_callback (callable) : callback function to report progress (optional)
     Returns:
         dict[str, list[dict]]: { video_name: [ {timestamp, confidence, reference_image} ... ] }
     """
@@ -249,10 +250,22 @@ def process_videos(reference_paths, video_paths, frame_interval=1.0,
 
     results = {}
 
-    for video_path in video_paths:
+    # Calculate total number of videos for progress tracking
+    total_videos = len(video_paths)
+
+    for i, video_path in enumerate(video_paths):
         video_name = os.path.basename(video_path)
         matches = []
         try:
+            # Report which video is being processed
+            if progress_callback:
+                progress_callback({
+                    'current_video': video_name,
+                    'video_index': i,
+                    'total_videos': total_videos,
+                    'status': 'processing_video'
+                })
+            
             frames = extract_frames(video_path, interval=interval)
 
             # adaptive threshold (advanced, if None supplied)
@@ -294,12 +307,24 @@ def process_videos(reference_paths, video_paths, frame_interval=1.0,
             # Collect hits (top-1 per frame only)
             scores_np = scores.float().detach().cpu().numpy()
             ref_idx_np = ref_idx.detach().cpu().numpy()
-            for ts, s, ridx in zip(frame_ts, scores_np, ref_idx_np):
+            total_frames = len(frame_ts)
+            for j, (ts, s, ridx) in enumerate(zip(frame_ts, scores_np, ref_idx_np)):
                 matches.append({
                     "timestamp": float(ts),
                     "confidence": float(s),
                     "reference_image": os.path.basename(reference_paths[ridx]) if len(reference_paths) else None
                 })
+                
+                # Report progress within the video
+                if progress_callback and total_frames > 0:
+                    progress_callback({
+                        'current_video': video_name,
+                        'video_index': i,
+                        'total_videos': total_videos,
+                        'current_frame': j,
+                        'total_frames': total_frames,
+                        'status': 'processing_frames'
+                    })
 
             # Temporal clustering
             matches = cluster_peaks(matches, window_s=cluster_window)
