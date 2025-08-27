@@ -38,19 +38,36 @@ function previewReferenceImages() {
 // List selected videos
 function listSelectedVideos() {
     const videoInput = document.getElementById('videos');
+    const directoryInput = document.getElementById('videoDirectory');
     const list = document.getElementById('videoList');
     
-    if (videoInput && list) {
+    if (list) {
         list.innerHTML = '<h6>Selected Videos:</h6><ul class="list-group">';
         
-        for (let i = 0; i < videoInput.files.length; i++) {
-            const file = videoInput.files[i];
-            const fileSizeMB = (file.size / (1024*1024)).toFixed(2);
-            
-            list.innerHTML += `<li class="list-group-item d-flex justify-content-between align-items-center">
-                ${file.name}
-                <span class="badge bg-primary rounded-pill">${fileSizeMB} MB</span>
-            </li>`;
+        // Handle individual file selection
+        if (videoInput && videoInput.files.length > 0) {
+            for (let i = 0; i < videoInput.files.length; i++) {
+                const file = videoInput.files[i];
+                const fileSizeMB = (file.size / (1024*1024)).toFixed(2);
+                
+                list.innerHTML += `<li class="list-group-item d-flex justify-content-between align-items-center">
+                    ${file.name}
+                    <span class="badge bg-primary rounded-pill">${fileSizeMB} MB</span>
+                </li>`;
+            }
+        }
+        
+        // Handle directory selection
+        if (directoryInput && directoryInput.files.length > 0) {
+            for (let i = 0; i < directoryInput.files.length; i++) {
+                const file = directoryInput.files[i];
+                const fileSizeMB = (file.size / (1024*1024)).toFixed(2);
+                
+                list.innerHTML += `<li class="list-group-item d-flex justify-content-between align-items-center">
+                    ${file.webkitRelativePath || file.name}
+                    <span class="badge bg-primary rounded-pill">${fileSizeMB} MB</span>
+                </li>`;
+            }
         }
         
         list.innerHTML += '</ul>';
@@ -102,6 +119,16 @@ function handleFormSubmission() {
             
             // Submit form via AJAX
             const formData = new FormData(form);
+            
+            // Handle directory uploads properly
+            const directoryInput = document.getElementById('videoDirectory');
+            if (directoryInput && directoryInput.files.length > 0) {
+                // For directory uploads, we need to append all files individually
+                for (let i = 0; i < directoryInput.files.length; i++) {
+                    formData.append('videoDirectory', directoryInput.files[i]);
+                }
+            }
+            
             fetch('/upload', {
                 method: 'POST',
                 body: formData
@@ -197,6 +224,10 @@ document.addEventListener('DOMContentLoaded', function() {
     const videoInput = document.getElementById('videos');
     if (videoInput) {
         videoInput.addEventListener('change', listSelectedVideos);
+const directoryInput = document.getElementById('videoDirectory');
+    if (directoryInput) {
+}
+        directoryInput.addEventListener('change', listSelectedVideos);
     }
 
     handleFormSubmission();

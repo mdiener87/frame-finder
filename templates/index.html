@@ -29,8 +29,15 @@
                         <label for="videos" class="form-label">Video Files</label>
                         <input class="form-control" type="file" id="videos" name="videos" multiple accept=".mp4">
                         <div class="form-text">Upload one or more video files (MP4)</div>
-                        <div id="videoList" class="mt-2"></div>
                     </div>
+                    
+                    <div class="mb-3">
+                        <label for="videoDirectory" class="form-label">Or Select Video Directory</label>
+                        <input class="form-control" type="file" id="videoDirectory" name="videoDirectory" webkitdirectory directory>
+                        <div class="form-text">Select a directory containing video files</div>
+                    </div>
+                    
+                    <div id="videoList" class="mt-2"></div>
                     
                     <div class="mb-3">
                         <label for="frameInterval" class="form-label">Frame Extraction Interval</label>

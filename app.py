@@ -14,10 +14,9 @@ app.secret_key = 'frame-finder-secret-key'  # In production, use a secure secret
 # Configuration
 UPLOAD_FOLDER = 'uploads'
 ALLOWED_EXTENSIONS = {'png', 'jpg', 'jpeg', 'mp4'}
-MAX_CONTENT_LENGTH = 100 * 1024 * 1024  # 100MB max file size
 
 app.config['UPLOAD_FOLDER'] = UPLOAD_FOLDER
-app.config['MAX_CONTENT_LENGTH'] = MAX_CONTENT_LENGTH
+# Removed MAX_CONTENT_LENGTH to allow unlimited upload size for localhost
 
 # In-memory storage for processing tasks (in production, use Redis or database)
 processing_tasks = {}
@@ -74,16 +73,22 @@ def process_videos_background(task_id, reference_paths, video_paths, frame_inter
 def upload_files():
     """Handle file uploads and start processing"""
     # Check if files were uploaded
-    if 'reference_images' not in request.files or 'videos' not in request.files:
-        flash('No files selected')
+    if 'reference_images' not in request.files:
+        flash('No reference images selected')
         return redirect(url_for('index'))
     
     reference_images = request.files.getlist('reference_images')
     negative_references = request.files.getlist('negative_references')
     videos = request.files.getlist('videos')
+    video_directory_files = request.files.getlist('videoDirectory')
     
-    if not reference_images or not videos:
-        flash('Please select both reference images and videos')
+    if not reference_images:
+        flash('Please select reference images')
+        return redirect(url_for('index'))
+    
+    # Check if either individual videos or directory videos were selected
+    if not videos and not video_directory_files:
+        flash('Please select either video files or a video directory')
         return redirect(url_for('index'))
     
     # Create temporary directories for uploaded files
@@ -113,10 +118,22 @@ def upload_files():
             neg_image.save(filepath)
             negative_paths.append(filepath)
     
-    # Save videos
+    # Save videos (both individual files and directory files)
     video_paths = []
+    
+    # Process individual video files
     for video in videos:
         if video and allowed_file(video.filename):
+            filename = secure_filename(video.filename)
+            filepath = os.path.join(videos_dir, filename)
+            video.save(filepath)
+            video_paths.append(filepath)
+    
+    # Process video directory files
+    for video in video_directory_files:
+        if video and allowed_file(video.filename):
+            # For directory uploads, we need to preserve the directory structure
+            # or just use the filename if webkitRelativePath is not available
             filename = secure_filename(video.filename)
             filepath = os.path.join(videos_dir, filename)
             video.save(filepath)
