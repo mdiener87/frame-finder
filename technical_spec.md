@@ -1,314 +1,179 @@
-# Frame-Finder Analyzer Technical Specification
+# Frame Finder UX Improvements - Technical Specification
 
-## Current Implementation Analysis
+## Overview
+This document details the technical implementation for three UX improvements:
+1. Display time index in hh:mm:ss format instead of seconds
+2. Persist previous run settings when returning to main page
+3. Implement dynamic confidence threshold filtering on results page
 
-The current analyzer.py implementation has several areas for improvement:
+## 1. Time Display Format Improvement
 
-1. **Performance Issues**:
-   - Reference embeddings are computed for each frame comparison
-   - No GPU acceleration is utilized
-   - No batching of frame processing
-   - No caching of reference embeddings
+### Current State
+- Timestamps displayed as seconds with 2 decimal places in `templates/results.html` line 39:
+  ```html
+  <td class="timestamp">{{ "%.2f"|format(match.timestamp) }}s</td>
+  ```
 
-2. **Accuracy Issues**:
-   - No negative reference support
-   - Fixed confidence threshold
-   - No temporal clustering
-   - No adaptive thresholding
+### Implementation Plan
+- Create JavaScript function to convert seconds to hh:mm:ss format
+- Update results template to use formatted time
+- Ensure consistent formatting across all timestamp displays
 
-3. **UI/UX Issues**:
-   - No real-time progress feedback
-   - Frame interval only supports integers
-   - Fixed 50% confidence threshold
+### Technical Details
+- Function signature: `formatTime(seconds)`
+- Format: `HH:MM:SS` (pad with leading zeros as needed)
+- Example: 3661.5 seconds → "01:01.500"
 
-## Improvement Plan
+## 2. Settings Persistence Improvement
 
-### 1. Cache Reference Embeddings
+### Current State
+- No persistence of form settings between page visits
+- All settings reset when navigating away and back
 
-**Problem**: Reference embeddings are computed for each frame comparison, causing redundant computation.
+### Implementation Plan
+- Store form values in browser localStorage on form submission
+- Restore values from localStorage when main page loads
+- Handle edge cases (invalid values, missing storage)
 
-**Solution**: 
-- Compute reference embeddings once at startup
-- Cache normalized embedding vectors
-- Reuse cached embeddings for all frame comparisons
+### Technical Details
+- Storage key: `frameFinderSettings`
+- Values to store:
+  - frameInterval (number)
+  - confidenceThreshold (number)
+- Functions needed:
+  - `saveSettings()` - called on form submission
+  - `restoreSettings()` - called on page load
 
-**Implementation**:
+## 3. Dynamic Confidence Threshold Filtering
+
+### Current State Analysis
+- Threshold filtering occurs in `analyzer.py` line 298:
+  ```python
+  if s >= (vid_thr if vid_thr is not None else -1.0):
+  ```
+- Results below threshold are permanently discarded
+- No post-processing filtering capability
+
+### Implementation Plan
+- Modify analyzer to store ALL results regardless of threshold
+- Add max confidence tracking per video
+- Add dynamic filtering slider to results page
+- Implement real-time result filtering in JavaScript
+
+### Backend Changes (analyzer.py)
+
+#### Modify `process_videos` function:
+1. Remove threshold filtering when collecting matches (line 298)
+2. Store all matches in temporary list
+3. Track max confidence per video
+4. Pass threshold value to results for reference
+
+#### Updated Logic:
 ```python
-class ReferenceEmbeddings:
-    def __init__(self, reference_paths, model, processor, device):
-        self.embeddings = []
-        self.paths = reference_paths
-        self.model = model
-        self.processor = processor
-        self.device = device
-        self._compute_embeddings()
-    
-    def _compute_embeddings(self):
-        for path in self.paths:
-            image = Image.open(path)
-            inputs = self.processor(images=image, return_tensors="pt", padding=True)
-            inputs = {k: v.to(self.device) for k, v in inputs.items()}
-            
-            with torch.no_grad():
-                features = self.model.get_image_features(**inputs)
-                features = features / features.norm(p=2, dim=-1, keepdim=True)
-                self.embeddings.append(features.cpu())
+# Instead of filtering during collection, collect all:
+for ts, s, ridx in zip(frame_ts, scores_np, ref_idx_np):
+    matches.append({
+        "timestamp": float(ts),
+        "confidence": float(s),
+        "reference_image": os.path.basename(reference_paths[ridx]) if len(reference_paths) else None
+    })
+
+# Then apply temporal clustering
+matches = cluster_peaks(matches, window_s=cluster_window)
+
+# Track max confidence for UI display
+max_confidence = max([m["confidence"] for m in matches], default=0.0)
 ```
 
-### 2. Light Image Normalization
-
-**Problem**: Inconsistent lighting and compression artifacts affect similarity scores.
-
-**Solution**: Apply CLAHE (Contrast Limited Adaptive Histogram Equalization) on the L channel of LAB color space.
-
-**Implementation**:
+#### Updated Return Value:
 ```python
-def normalize_image(image):
-    # Convert to LAB color space
-    lab = cv2.cvtColor(np.array(image), cv2.COLOR_RGB2LAB)
-    l, a, b = cv2.split(lab)
-    
-    # Apply CLAHE to L channel
-    clahe = cv2.createCLAHE(clipLimit=2.0, tileGridSize=(8,8))
-    l = clahe.apply(l)
-    
-    # Merge channels and convert back to RGB
-    lab = cv2.merge((l, a, b))
-    normalized = cv2.cvtColor(lab, cv2.COLOR_LAB2RGB)
-    
-    return Image.fromarray(normalized)
+results[video_name] = {
+    "matches": matches,
+    "max_confidence": max_confidence,
+    "threshold_used": vid_thr
+}
 ```
 
-### 3. Negative References + Delta Scoring
+### Frontend Changes
 
-**Problem**: High false positive rate due to hull/background matches.
+#### Results Template (templates/results.html):
+1. Add confidence threshold slider:
+   ```html
+   <div class="mb-3">
+       <label for="dynamicThreshold" class="form-label">Filter Results by Confidence</label>
+       <input type="range" class="form-range" id="dynamicThreshold" min="0" max="100" value="75">
+       <div class="form-text">Minimum confidence: <span id="dynamicThresholdValue">75</span>%</div>
+   </div>
+   ```
 
-**Solution**: 
-- Add support for negative reference images
-- Compute delta score: max(sim(frame, positives)) - max(sim(frame, negatives))
+2. Add result count display:
+   ```html
+   <div id="resultStats" class="mb-3">
+       <span id="visibleCount">0</span> of <span id="totalCount">0</span> results displayed
+   </div>
+   ```
 
-**Implementation**:
-```python
-def compute_delta_score(frame_features, positive_embeddings, negative_embeddings):
-    # Compute similarities with positive references
-    positive_scores = []
-    for emb in positive_embeddings:
-        similarity = torch.nn.functional.cosine_similarity(frame_features, emb).item()
-        positive_scores.append(similarity)
-    
-    # Compute similarities with negative references
-    negative_scores = []
-    if negative_embeddings:
-        for emb in negative_embeddings:
-            similarity = torch.nn.functional.cosine_similarity(frame_features, emb).item()
-            negative_scores.append(similarity)
-    
-    # Compute delta score
-    max_positive = max(positive_scores) if positive_scores else 0
-    max_negative = max(negative_scores) if negative_scores else 0
-    
-    return max_positive - max_negative
-```
+3. Add max confidence display per file:
+   ```html
+   <p class="text-muted">
+       {{ matches|length }} match(es) found | 
+       Max confidence: <span class="max-confidence">{{ "%.2f"|format(max_confidence * 100) }}%</span>
+   </p>
+   ```
 
-### 4. Batch Frame Encoding
+#### JavaScript (static/js/main.js):
+1. Add dynamic filtering functionality:
+   ```javascript
+   function filterResults(threshold) {
+       // Hide/show table rows based on confidence threshold
+       // Update visible count display
+   }
+   
+   function updateResultStats() {
+       // Update visible/total count display
+   }
+   ```
 
-**Problem**: Processing frames one by one is inefficient and doesn't leverage GPU parallelization.
+2. Add event listeners for slider:
+   ```javascript
+   document.getElementById('dynamicThreshold').addEventListener('input', function() {
+       const threshold = this.value;
+       document.getElementById('dynamicThresholdValue').textContent = threshold;
+       filterResults(threshold / 100.0);
+   });
+   ```
 
-**Solution**: Process frames in batches to improve throughput and CLIP signal.
+## File Modification Summary
 
-**Implementation**:
-```python
-def batch_process_frames(frames, batch_size=32):
-    results = []
-    for i in range(0, len(frames), batch_size):
-        batch = frames[i:i+batch_size]
-        # Process batch
-        batch_results = process_batch(batch)
-        results.extend(batch_results)
-    return results
-```
+### analyzer.py
+- Modify `process_videos` function to collect all results
+- Update return format to include max confidence and threshold used
+- Remove threshold filtering during match collection
 
-### 5. Temporal Clustering / Peak Picking
+### static/js/main.js
+- Add `formatTime(seconds)` function
+- Add `saveSettings()` and `restoreSettings()` functions
+- Add dynamic filtering functionality
+- Add event listeners for new UI elements
 
-**Problem**: Multiple detections of the same event due to wobble or similar frames.
+### templates/results.html
+- Update timestamp display to use formatted time
+- Add confidence threshold slider
+- Add result statistics display
+- Add max confidence display per file
+- Add necessary JavaScript initialization
 
-**Solution**: Cluster hits within ~±1s and keep the highest-scoring frame per cluster.
+### templates/index.html
+- Add settings restoration functionality (if needed)
 
-**Implementation**:
-```python
-def cluster_detections(detections, time_window=1.0):
-    # Sort detections by timestamp
-    detections.sort(key=lambda x: x['timestamp'])
-    
-    clusters = []
-    current_cluster = []
-    
-    for detection in detections:
-        if not current_cluster:
-            current_cluster.append(detection)
-        else:
-            # Check if within time window
-            if detection['timestamp'] - current_cluster[0]['timestamp'] <= time_window:
-                current_cluster.append(detection)
-            else:
-                # Close current cluster and start new one
-                clusters.append(max(current_cluster, key=lambda x: x['confidence']))
-                current_cluster = [detection]
-    
-    # Don't forget the last cluster
-    if current_cluster:
-        clusters.append(max(current_cluster, key=lambda x: x['confidence']))
-    
-    return clusters
-```
+## Implementation Order
+1. Time formatting (least complex)
+2. Settings persistence (moderate complexity)
+3. Dynamic filtering (most complex, affects both frontend and backend)
 
-### 6. Adaptive Thresholding
-
-**Problem**: Hardcoded 0.5 threshold doesn't work well across different videos.
-
-**Solution**: Sample background frames, compute delta-scores, set threshold to μ + 3σ or 99.5th percentile.
-
-**Implementation**:
-```python
-def compute_adaptive_threshold(background_frames, reference_embeddings, negative_embeddings):
-    scores = []
-    for frame in background_frames:
-        # Process frame and compute score
-        score = compute_delta_score(frame, reference_embeddings, negative_embeddings)
-        scores.append(score)
-    
-    # Compute threshold as 99.5th percentile
-    if scores:
-        threshold = np.percentile(scores, 99.5)
-        return max(threshold, 0.1)  # Minimum threshold of 0.1
-    
-    return 0.5  # Default fallback
-```
-
-### 7. Stronger Backbone Model
-
-**Problem**: Current CLIP-ViT-Base model may not provide sufficient visual discrimination.
-
-**Solution**: Upgrade to CLIP-ViT-Large or SigLIP for finer visual discrimination.
-
-**Implementation Options**:
-1. `openai/clip-vit-large-patch14`
-2. `google/siglip-base-patch16-256`
-
-### 8. Two-Stage Filter
-
-**Problem**: CLIP processing is computationally expensive for all frames.
-
-**Solution**: Use cheap OpenCV gate (NCC or ORB/AKAZE match count) → CLIP re-check only for candidates.
-
-**Implementation**:
-```python
-def two_stage_filter(frame, reference_images, threshold=0.7):
-    # Stage 1: OpenCV template matching
-    frame_cv = cv2.cvtColor(np.array(frame), cv2.COLOR_RGB2BGR)
-    
-    for ref_img in reference_images:
-        ref_cv = cv2.cvtColor(np.array(ref_img), cv2.COLOR_RGB2BGR)
-        result = cv2.matchTemplate(frame_cv, ref_cv, cv2.TM_CCOEFF_NORMED)
-        _, max_val, _, _ = cv2.minMaxLoc(result)
-        
-        if max_val > threshold:
-            return True  # Pass to Stage 2 (CLIP)
-    
-    return False  # Reject early
-```
-
-### 9. Micro-Tuning Around Peaks
-
-**Problem**: Initial detection may not be at the optimal frame.
-
-**Solution**: When candidate detected, rescan ±2s at higher FPS (e.g., 4 fps) and keep max score.
-
-**Implementation**:
-```python
-def micro_tune_around_peak(video_path, peak_timestamp, window=2.0, high_fps=4):
-    # Extract frames at higher FPS around the peak
-    start_time = max(0, peak_timestamp - window)
-    end_time = peak_timestamp + window
-    
-    high_res_frames = extract_frames_high_res(video_path, start_time, end_time, 1/high_fps)
-    
-    # Find the frame with highest score in this window
-    best_frame = None
-    best_score = -1
-    
-    for frame, timestamp in high_res_frames:
-        score = compute_similarity(frame, reference_embeddings)
-        if score > best_score:
-            best_score = score
-            best_frame = (frame, timestamp)
-    
-    return best_frame
-```
-
-### 10. Flask Wiring Updates
-
-**Problem**: Current Flask app doesn't support negative references or new features.
-
-**Solution**: 
-- Allow uploading "negative refs"
-- Expose clustered/peak-picked results with adaptive threshold
-
-**Implementation**:
-- Add new file upload field for negative references
-- Modify processing pipeline to handle negative references
-- Update results display to show clustered results
-
-### 11. Real-Time Output Viewer
-
-**Problem**: No feedback during analysis process.
-
-**Solution**: Add real-time progress updates to the web page.
-
-**Implementation**:
-- Add WebSocket or Server-Sent Events for real-time updates
-- Show current video being processed
-- Show progress percentage
-- Show current matches found
-
-### 12. UI Improvements
-
-**Changes Needed**:
-1. Change default confidence interval to 75%
-2. Support decimal values in frame interval selector
-3. Add negative reference upload field
-4. Add real-time progress display
-
-## Implementation Priority
-
-1. **Critical Performance Improvements**:
-   - Cache reference embeddings
-   - GPU acceleration
-   - Batch frame encoding
-
-2. **Accuracy Improvements**:
-   - Light image normalization
-   - Negative references + delta scoring
-   - Temporal clustering
-
-3. **Advanced Features**:
-   - Adaptive thresholding
-   - Stronger backbone model
-   - Two-stage filter
-
-4. **UI/UX Improvements**:
-   - Real-time output viewer
-   - UI updates for new features
-
-## Dependencies
-
-- PyTorch with CUDA support
-- OpenCV with contrib modules (for advanced features)
-- Updated requirements.txt with new dependencies
-
-## Testing Plan
-
-1. Unit tests for each new component
-2. Integration tests for the full pipeline
-3. Performance benchmarks
-4. Accuracy validation on sample datasets
+## Testing Considerations
+- Verify time formatting with various input values (0, 60, 3600, 3661.5)
+- Test settings persistence across page reloads
+- Verify dynamic filtering works with various threshold values
+- Ensure backward compatibility with existing functionality
+- Test edge cases (no results, single result, many results)

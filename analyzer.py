@@ -295,19 +295,26 @@ def process_videos(reference_paths, video_paths, frame_interval=1.0,
             scores_np = scores.float().detach().cpu().numpy()
             ref_idx_np = ref_idx.detach().cpu().numpy()
             for ts, s, ridx in zip(frame_ts, scores_np, ref_idx_np):
-                if s >= (vid_thr if vid_thr is not None else -1.0):
-                    matches.append({
-                        "timestamp": float(ts),
-                        "confidence": float(s),
-                        "reference_image": os.path.basename(reference_paths[ridx]) if len(reference_paths) else None
-                    })
+                matches.append({
+                    "timestamp": float(ts),
+                    "confidence": float(s),
+                    "reference_image": os.path.basename(reference_paths[ridx]) if len(reference_paths) else None
+                })
 
             # Temporal clustering
             matches = cluster_peaks(matches, window_s=cluster_window)
+            
+            # Calculate max confidence for UI display
+            max_confidence = max([m["confidence"] for m in matches], default=0.0)
 
         except Exception as e:
             matches = [{"error": str(e)}]
+            max_confidence = 0.0
 
-        results[video_name] = matches
+        results[video_name] = {
+            "matches": matches,
+            "max_confidence": max_confidence,
+            "threshold_used": vid_thr
+        }
 
     return results

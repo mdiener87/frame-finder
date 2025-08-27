@@ -9,42 +9,58 @@
         <p class="lead">Found matches in your video files</p>
         
         {% if results %}
-            {% for video_name, matches in results.items() %}
-                <div class="card result-card">
+            {% for video_name, video_data in results.items() %}
+                <div class="card result-card mb-4">
                     <div class="card-header">
                         <h3>{{ video_name }}</h3>
                     </div>
                     <div class="card-body">
-                        {% if matches %}
-                            <p class="text-muted">{{ matches|length }} match(es) found</p>
+                        {% if video_data.matches %}
+                            <div class="row mb-3">
+                                <div class="col-md-6">
+                                    <p class="text-muted">
+                                        <span id="visibleCount-{{ loop.index }}">{{ video_data.matches|length }}</span> of {{ video_data.matches|length }} match(es) found |
+                                        Max confidence: <span class="max-confidence">{{ "%.2f"|format(video_data.max_confidence * 100) }}%</span>
+                                    </p>
+                                </div>
+                                <div class="col-md-6">
+                                    <div class="mb-2">
+                                        <label for="dynamicThreshold-{{ loop.index }}" class="form-label">Filter by Confidence:</label>
+                                        <input type="range" class="form-range dynamic-threshold" id="dynamicThreshold-{{ loop.index }}"
+                                               data-video-index="{{ loop.index }}" min="0" max="100"
+                                               value="{{ (video_data.threshold_used * 100)|int if video_data.threshold_used else 75 }}">
+                                        <div class="form-text">
+                                            Minimum confidence: <span id="dynamicThresholdValue-{{ loop.index }}">75</span>%
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                            
                             <div class="table-responsive">
-                                <table class="table table-striped">
+                                <table class="table table-striped results-table" id="resultsTable-{{ loop.index }}">
                                     <thead>
                                         <tr>
                                             <th>Timestamp</th>
                                             <th>Confidence Score</th>
-                                            <th>Delta Score</th>
                                             <th>Reference Image</th>
-                                            <th>Cluster ID</th>
                                         </tr>
                                     </thead>
                                     <tbody>
-                                        {% for match in matches %}
+                                        {% for match in video_data.matches %}
                                             {% if match.error %}
                                                 <tr class="table-danger">
-                                                    <td colspan="5">Error: {{ match.error }}</td>
+                                                    <td colspan="3">Error: {{ match.error }}</td>
                                                 </tr>
                                             {% else %}
-                                                <tr class="{{ 'table-success' if match.confidence > 0.8 else 'table-warning' if match.confidence > 0.6 else 'table-secondary' }}">
-                                                    <td class="timestamp">{{ "%.2f"|format(match.timestamp) }}s</td>
+                                                <tr class="{{ 'table-success' if match.confidence > 0.8 else 'table-warning' if match.confidence > 0.6 else 'table-secondary' }}"
+                                                    data-confidence="{{ match.confidence }}">
+                                                    <td class="timestamp" data-timestamp="{{ match.timestamp }}">{{ "%.3f"|format(match.timestamp) }}s</td>
                                                     <td class="confidence">{{ "%.2f"|format(match.confidence * 100) }}%</td>
-                                                    <td class="delta">{{ "%.2f"|format(match.delta_score) if match.delta_score is defined else 'N/A' }}</td>
                                                     <td>
                                                         {% if match.reference_image %}
                                                             <span class="badge bg-secondary">{{ match.reference_image|basename }}</span>
                                                         {% endif %}
                                                     </td>
-                                                    <td>{{ match.cluster_id if match.cluster_id is defined else 'N/A' }}</td>
                                                 </tr>
                                             {% endif %}
                                         {% endfor %}
@@ -52,7 +68,7 @@
                                 </table>
                             </div>
                         {% else %}
-                            <p class="text-muted">No matches found above the confidence threshold.</p>
+                            <p class="text-muted">No matches found.</p>
                         {% endif %}
                     </div>
                 </div>
@@ -70,4 +86,56 @@
         </div>
     </div>
 </div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+    // Format seconds to hh:mm:ss format
+    function formatTime(seconds) {
+        const hrs = Math.floor(seconds / 3600);
+        const mins = Math.floor((seconds % 3600) / 60);
+        const secs = seconds % 60;
+        const formatted = `${hrs.toString().padStart(2, '0')}:${mins.toString().padStart(2, '0')}:${secs.toFixed(3).padStart(6, '0')}`;
+        return formatted;
+    }
+    
+    // Update timestamp displays with formatted time
+    document.addEventListener('DOMContentLoaded', function() {
+        document.querySelectorAll('.timestamp[data-timestamp]').forEach(function(element) {
+            const seconds = parseFloat(element.getAttribute('data-timestamp'));
+            element.textContent = formatTime(seconds);
+        });
+        
+        // Add event listeners for dynamic threshold sliders
+        document.querySelectorAll('.dynamic-threshold').forEach(function(slider) {
+            const videoIndex = slider.getAttribute('data-video-index');
+            const valueDisplay = document.getElementById('dynamicThresholdValue-' + videoIndex);
+            const resultsTable = document.getElementById('resultsTable-' + videoIndex);
+            const visibleCount = document.getElementById('visibleCount-' + videoIndex);
+            
+            // Set initial value display
+            valueDisplay.textContent = slider.value;
+            
+            slider.addEventListener('input', function() {
+                const threshold = this.value;
+                valueDisplay.textContent = threshold;
+                
+                // Filter rows based on confidence threshold
+                let visibleRowCount = 0;
+                resultsTable.querySelectorAll('tbody tr').forEach(function(row) {
+                    const confidence = parseFloat(row.getAttribute('data-confidence'));
+                    if (confidence >= threshold / 100.0) {
+                        row.style.display = '';
+                        visibleRowCount++;
+                    } else {
+                        row.style.display = 'none';
+                    }
+                });
+                
+                // Update visible count
+                visibleCount.textContent = visibleRowCount;
+            });
+        });
+    });
+</script>
 {% endblock %}

@@ -29,6 +29,14 @@ os.makedirs(UPLOAD_FOLDER, exist_ok=True)
 def basename_filter(path):
     return os.path.basename(path)
 
+# Custom filter to format seconds to hh:mm:ss
+@app.template_filter('format_time')
+def format_time(seconds):
+    hrs = int(seconds // 3600)
+    mins = int((seconds % 3600) // 60)
+    secs = seconds % 60
+    return f"{hrs:02d}:{mins:02d}:{secs:06.3f}"
+
 @app.route('/')
 def index():
     """Render the main upload page"""

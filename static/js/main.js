@@ -108,6 +108,9 @@ function handleFormSubmission() {
         form.addEventListener('submit', function(e) {
             e.preventDefault(); // Prevent default form submission
             
+            // Save settings before processing
+            saveSettings();
+            
             analyzeBtn.innerHTML = '<span class="spinner-border spinner-border-sm" role="status" aria-hidden="true"></span> Processing...';
             analyzeBtn.disabled = true;
             
@@ -203,8 +206,59 @@ function exportResults() {
     alert('In a full implementation, this would export results to a file.');
 }
 
+// Save form settings to localStorage
+function saveSettings() {
+    const frameInterval = document.getElementById('frameInterval');
+    const confidenceThreshold = document.getElementById('confidenceThreshold');
+    
+    if (frameInterval && confidenceThreshold) {
+        const settings = {
+            frameInterval: frameInterval.value,
+            confidenceThreshold: confidenceThreshold.value,
+            timestamp: Date.now()
+        };
+        
+        try {
+            localStorage.setItem('frameFinderSettings', JSON.stringify(settings));
+        } catch (e) {
+            console.warn('Could not save settings to localStorage:', e);
+        }
+    }
+}
+
+// Restore form settings from localStorage
+function restoreSettings() {
+    try {
+        const settingsStr = localStorage.getItem('frameFinderSettings');
+        if (settingsStr) {
+            const settings = JSON.parse(settingsStr);
+            
+            // Check if settings are recent (less than 1 hour old)
+            if (Date.now() - settings.timestamp < 3600000) {
+                const frameInterval = document.getElementById('frameInterval');
+                const confidenceThreshold = document.getElementById('confidenceThreshold');
+                const thresholdValue = document.getElementById('thresholdValue');
+                
+                if (frameInterval) {
+                    frameInterval.value = settings.frameInterval;
+                }
+                
+                if (confidenceThreshold && thresholdValue) {
+                    confidenceThreshold.value = settings.confidenceThreshold;
+                    thresholdValue.textContent = settings.confidenceThreshold;
+                }
+            }
+        }
+    } catch (e) {
+        console.warn('Could not restore settings from localStorage:', e);
+    }
+}
+
 // Initialize when DOM is loaded
 document.addEventListener('DOMContentLoaded', function() {
+    // Restore settings from localStorage
+    restoreSettings();
+    
     // Set up event listeners
     const thresholdInput = document.getElementById('confidenceThreshold');
     if (thresholdInput) {
@@ -224,9 +278,9 @@ document.addEventListener('DOMContentLoaded', function() {
     const videoInput = document.getElementById('videos');
     if (videoInput) {
         videoInput.addEventListener('change', listSelectedVideos);
-const directoryInput = document.getElementById('videoDirectory');
+    }
+    const directoryInput = document.getElementById('videoDirectory');
     if (directoryInput) {
-}
         directoryInput.addEventListener('change', listSelectedVideos);
     }
 
