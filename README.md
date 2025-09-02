@@ -1,145 +1,129 @@
 # Frame Finder
 
-A lightweight Flask-based web tool that identifies specific visual props in video files by comparing frames against reference images using image embedding similarity.
+A tool to detect reference images in video files using multiple approaches for improved accuracy.
 
 ## Overview
 
-Frame Finder extracts frames from MP4 video files at regular intervals and compares them against reference images using CLIP (Contrastive Language-Image Pre-training) model to find visual matches. While the initial use case is identifying the "Think Tank AI" prop from Star Trek: Voyager, the tool is designed to work with arbitrary inputs.
+This project implements a robust frame detection system that can:
+- Identify when a reference image appears in videos
+- Minimize false positives through statistical analysis
+- Provide confidence scores for detections
+- Automatically determine which videos in a batch are most likely to contain the reference
 
-## Features
+## Why This Problem Is Challenging
 
-- Upload reference images (JPG/PNG) and video files (MP4)
-- Upload negative reference images to reduce false positives
-- Extract frames from videos at configurable intervals (supports decimal values)
-- Compare frames against reference images using CLIP similarity with delta scoring
-- Apply image normalization (CLAHE on L channel) for consistent lighting
-- GPU acceleration for faster processing
-- Batch frame processing for improved throughput
-- Temporal clustering to reduce duplicate detections
-- Adaptive thresholding per video for better accuracy
-- Display results with timestamps, confidence scores, and thumbnails
-- Real-time progress viewer during analysis
-- Simple web interface for uploading and viewing results
-- Optional export of results data
+The task of detecting specific objects in videos is more complex than it initially appears:
 
-## Installation
+1. **Object Detection vs. Image Classification**: CLIP excels at semantic understanding ("what is this?") but struggles with precise object matching ("where is this?").
 
-1. Clone the repository:
-   ```
-   git clone <repository-url>
-   cd frame-finder
-   ```
+2. **Scale and Context Issues**: Objects that are small in the frame or appear in different contexts are harder to detect reliably.
 
-2. Create a virtual environment:
-   ```
-   python3 -m venv venv
-   source venv/bin/activate  # On Windows: venv\Scripts\activate
-   ```
+3. **Visual Similarity Ambiguity**: Models can sometimes find "false" similarities based on color, texture, or composition rather than actual object matching.
 
-3. Install dependencies:
-   ```
-   pip install -r requirements.txt
-   ```
+4. **Confidence Calibration**: Model confidence scores are not always well-calibrated probabilities.
 
-4. Run the application:
-   ```
-   python app.py
-   ```
+## Approaches Implemented
 
-5. Open your browser to http://localhost:5000
+### 1. Basic CLIP-based Detection (`frame_analyzer.py`)
+- Uses OpenAI's CLIP model for semantic similarity
+- Implements statistical filtering to reduce false positives
+- Works well for clear, unambiguous matches
 
-## Usage
+### 2. Enhanced CLIP with Preprocessing (`enhanced_analyzer.py`)
+- Applies image normalization (CLAHE) to handle lighting variations
+- Uses larger CLIP models for better accuracy
+- Implements differential similarity with negative samples
 
-1. Navigate to the web interface
-2. Upload one or more reference images (JPG/PNG)
-3. Optionally upload negative reference images (images that should NOT be detected)
-4. Upload one or more video files (MP4)
-5. Adjust processing parameters if needed:
-   - Frame extraction interval (default: 1.0 frame/second, supports decimal values)
-   - Confidence threshold (default: 75%)
-6. Click "Analyze" to start processing
-7. View real-time progress during analysis
-8. View results with timestamps, confidence scores, and thumbnails
-9. Optionally export results
+### 3. Multi-Strategy Approach (`multi_strategy_analyzer.py`)
+- Combines CLIP semantic similarity with traditional computer vision (ORB features)
+- Uses weighted combination of multiple similarity measures
+- More robust for challenging detection scenarios
 
-## Technical Details
+### 4. Strict Analysis with Comparative Logic (`strict_analyzer.py`)
+- Uses multiple validation criteria that all must be met
+- Implements background comparison for better context
+- Provides clear differentiation between positive and negative results
 
-### Core Components
+## Unified Web Interface
 
-- **Flask**: Web framework for handling requests and rendering templates
-- **OpenCV**: Video processing and frame extraction
-- **PIL/Pillow**: Image processing utilities
-- **Transformers (Hugging Face)**: CLIP model integration for image similarity
-- **PyTorch**: Underlying framework for CLIP model
+The project includes a single, unified web interface:
 
-### Processing Workflow
+### Main Page (`/`)
+- Landing page with link to start analysis
 
-1. User uploads reference images, negative reference images (optional), and video files
-2. Reference embeddings are computed once and cached for efficiency
-3. Videos are processed to extract frames at regular intervals (supports decimal values)
-4. Each frame is normalized using CLAHE on L channel for consistent lighting
-5. Each frame is compared against reference images using CLIP embeddings with delta scoring
-6. Matches above a confidence threshold are collected
-7. Temporal clustering is applied to reduce duplicate detections
-8. Results are displayed with timestamps, confidence scores, and thumbnails
+### Video Analysis (`/analyze`)
+- Upload a reference image and one or multiple videos
+- Get automatic analysis showing which videos contain the reference
+- See detailed results including:
+  - Which videos likely contain the reference
+  - Top match timestamps for each video
+  - Confidence levels for each determination
+  - Detailed reasoning for each result
 
-### Configuration
+## API Endpoints
 
-- Frame extraction interval: Configurable in UI (0.1-60 seconds, supports decimal values)
-- Confidence threshold: Adjustable slider (0-100%, default: 75%)
-- Negative reference images: Optional upload to reduce false positives
-- Thumbnail size: Configurable in image processing functions
+### POST /api/analyze
+Start analysis of one or more videos.
 
-## Development
+Form Data:
+- `reference`: Reference image file
+- `videos`: One or more video files
 
-### Project Structure
-
-```
-frame-finder/
-├── app.py                 # Flask app entry point
-├── analyzer.py            # Core image/video processing logic
-├── requirements.txt       # Python dependencies
-├── templates/             # HTML templates
-│   ├── base.html          # Base template
-│   ├── index.html         # Main upload page
-│   └── results.html       # Results display
-├── static/                # Static assets
-│   ├── css/               # Stylesheets
-│   ├── js/                # JavaScript files
-│   └── thumbnails/        # Generated thumbnails
-└── README.md              # This file
+Response:
+```json
+{
+  "analysis_id": "unique-id",
+  "status": "processing",
+  "message": "Analysis started"
+}
 ```
 
-### Adding New Features
+### GET /api/analysis/<analysis_id>
+Get results of analysis.
 
-The modular architecture allows for easy extension:
+Response:
+```json
+{
+  "status": "completed",
+  "results": {
+    "video1.mp4": {
+      "found": true,
+      "confidence": 0.86,
+      "max_similarity": 0.86,
+      "matches": [...],
+      "video_name": "video1.mp4"
+    }
+  },
+  "comparison": {
+    "video1.mp4": {
+      "is_likely_match": true,
+      "confidence_level": "high",
+      "max_similarity": 0.86,
+      "matches_count": 5,
+      "reasoning": "Strong match: 5 matches, 0.860 similarity"
+    }
+  }
+}
+```
 
-- Add new comparison algorithms in analyzer.py
-- Extend UI features in templates/
-- Add new routes in app.py
+## Running Tests
 
-### Code Structure
+```bash
+python test_frame_analyzer.py
+```
 
-- `app.py`: Main Flask application with routes
-- `analyzer.py`: Core processing logic
-- `templates/`: HTML templates using Jinja2
-- `static/`: CSS, JavaScript, and other static assets
+## Running the Web Interface
 
-## Future Enhancements
+```bash
+python api.py
+```
 
-- SQLite database for storing and querying results
-- Support for additional video formats
-- Advanced filtering and sorting of results
-- Model selection (CLIP-ViT-Large, SigLIP)
-- Two-stage filtering (OpenCV gate → CLIP re-check)
-- Micro-tuning around peaks
+The web interface will be available at http://localhost:5000
 
-## License
+## Key Features
 
-This project is licensed under the MIT License.
-
-## Acknowledgments
-
-- OpenAI CLIP model for image similarity
-- Hugging Face Transformers for easy model integration
-- Flask for the web framework
+- **Unified Interface**: Single interface for both single and multiple video analysis
+- **Automatic Determination**: System automatically determines which videos contain the reference
+- **Detailed Results**: Shows which videos likely contain the reference, top match timestamps, and confidence levels
+- **Comparative Analysis**: When analyzing multiple videos, the system compares them to determine which are most likely matches
+- **No Manual Threshold Adjustment**: The system automatically determines likely matches without requiring manual threshold adjustment

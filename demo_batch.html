@@ -1,0 +1,364 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Frame Finder - Batch Analysis Demo</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <style>
+        .upload-area {
+            border: 2px dashed #ccc;
+            border-radius: 10px;
+            padding: 20px;
+            text-align: center;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            background-color: #fafafa;
+        }
+        
+        .upload-area:hover {
+            border-color: #007bff;
+            background-color: #f8f9fa;
+        }
+        
+        .upload-area.drag-over {
+            border-color: #007bff;
+            background-color: #e3f2fd;
+            transform: scale(1.02);
+        }
+        
+        .remove-video {
+            margin-left: 10px;
+        }
+        
+        .match-highlight {
+            background-color: #d4edda;
+            border-left: 4px solid #28a745;
+        }
+        
+        .no-match {
+            background-color: #f8d7da;
+            border-left: 4px solid #dc3545;
+        }
+    </style>
+</head>
+<body>
+    <nav class="navbar navbar-expand-lg navbar-dark bg-dark">
+        <div class="container">
+            <a class="navbar-brand" href="#">Frame Finder</a>
+        </div>
+    </nav>
+
+    <div class="container mt-4">
+        <div class="row">
+            <div class="col-md-12">
+                <h1>Frame Finder - Batch Analysis</h1>
+                <p class="lead">Upload a reference image and select multiple videos to analyze which ones contain the reference.</p>
+            </div>
+        </div>
+
+        <div class="row">
+            <div class="col-md-6">
+                <div class="card">
+                    <div class="card-header">
+                        <h5>Reference Image</h5>
+                    </div>
+                    <div class="card-body">
+                        <div id="reference-upload" class="upload-area">
+                            <p>Drag & drop reference image here or click to select</p>
+                            <input type="file" id="reference-file" accept="image/*" class="d-none">
+                        </div>
+                        <div id="reference-preview" class="mt-3 d-none">
+                            <img id="reference-image" src="" alt="Reference" class="img-thumbnail" style="max-width: 200px;">
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="col-md-6">
+                <div class="card">
+                    <div class="card-header">
+                        <h5>Video Files</h5>
+                    </div>
+                    <div class="card-body">
+                        <div id="videos-upload" class="upload-area">
+                            <p>Drag & drop video files here or click to select</p>
+                            <input type="file" id="videos-files" accept="video/*" multiple class="d-none">
+                        </div>
+                        <div id="videos-list" class="mt-3">
+                            <ul id="selected-videos" class="list-group"></ul>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="row mt-4">
+            <div class="col-md-12">
+                <div class="card">
+                    <div class="card-body">
+                        <div class="d-grid gap-2 d-md-flex justify-content-md-end">
+                            <button id="analyze-btn" class="btn btn-primary btn-lg" disabled>
+                                <span class="spinner-border spinner-border-sm d-none" role="status" aria-hidden="true"></span>
+                                <span class="spinner-text">Analyze Videos</span>
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div id="results-section" class="row mt-4 d-none">
+            <div class="col-md-12">
+                <div class="card">
+                    <div class="card-header">
+                        <h5>Analysis Results</h5>
+                    </div>
+                    <div class="card-body">
+                        <div id="analysis-status" class="alert alert-info d-none"></div>
+                        <div id="results-content"></div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        let referenceFile = null;
+        let videoFiles = [];
+
+        // Reference image upload handling
+        document.getElementById('reference-upload').addEventListener('click', () => {
+            document.getElementById('reference-file').click();
+        });
+
+        document.getElementById('reference-file').addEventListener('change', (e) => {
+            if (e.target.files.length > 0) {
+                referenceFile = e.target.files[0];
+                const reader = new FileReader();
+                reader.onload = (e) => {
+                    document.getElementById('reference-image').src = e.target.result;
+                    document.getElementById('reference-preview').classList.remove('d-none');
+                };
+                reader.readAsDataURL(referenceFile);
+                checkReadyToAnalyze();
+            }
+        });
+
+        // Video files upload handling
+        document.getElementById('videos-upload').addEventListener('click', () => {
+            document.getElementById('videos-files').click();
+        });
+
+        document.getElementById('videos-files').addEventListener('change', (e) => {
+            if (e.target.files.length > 0) {
+                // Add new files to existing list
+                for (let file of e.target.files) {
+                    if (file.type.startsWith('video/')) {
+                        videoFiles.push(file);
+                    }
+                }
+                updateVideoList();
+                checkReadyToAnalyze();
+            }
+        });
+
+        // Drag and drop handling
+        ['reference-upload', 'videos-upload'].forEach(id => {
+            const dropArea = document.getElementById(id);
+            const fileInput = document.getElementById(id === 'reference-upload' ? 'reference-file' : 'videos-files');
+            
+            dropArea.addEventListener('dragover', (e) => {
+                e.preventDefault();
+                dropArea.classList.add('drag-over');
+            });
+            
+            dropArea.addEventListener('dragleave', () => {
+                dropArea.classList.remove('drag-over');
+            });
+            
+            dropArea.addEventListener('drop', (e) => {
+                e.preventDefault();
+                dropArea.classList.remove('drag-over');
+                
+                if (e.dataTransfer.files.length > 0) {
+                    if (id === 'reference-upload') {
+                        // Only take the first file for reference
+                        referenceFile = e.dataTransfer.files[0];
+                        const reader = new FileReader();
+                        reader.onload = (e) => {
+                            document.getElementById('reference-image').src = e.target.result;
+                            document.getElementById('reference-preview').classList.remove('d-none');
+                        };
+                        reader.readAsDataURL(referenceFile);
+                    } else {
+                        // Add all video files
+                        for (let file of e.dataTransfer.files) {
+                            if (file.type.startsWith('video/')) {
+                                videoFiles.push(file);
+                            }
+                        }
+                        updateVideoList();
+                    }
+                    checkReadyToAnalyze();
+                }
+            });
+        });
+
+        function updateVideoList() {
+            const list = document.getElementById('selected-videos');
+            list.innerHTML = '';
+            
+            videoFiles.forEach((file, index) => {
+                const li = document.createElement('li');
+                li.className = 'list-group-item d-flex justify-content-between align-items-center';
+                li.innerHTML = `
+                    <span>${file.name}</span>
+                    <button class="btn btn-sm btn-danger remove-video" data-index="${index}">Remove</button>
+                `;
+                list.appendChild(li);
+            });
+            
+            // Add event listeners to remove buttons
+            document.querySelectorAll('.remove-video').forEach(btn => {
+                btn.addEventListener('click', (e) => {
+                    const index = parseInt(e.target.getAttribute('data-index'));
+                    videoFiles.splice(index, 1);
+                    updateVideoList();
+                    checkReadyToAnalyze();
+                });
+            });
+        }
+
+        function checkReadyToAnalyze() {
+            const ready = referenceFile !== null && videoFiles.length > 0;
+            document.getElementById('analyze-btn').disabled = !ready;
+        }
+
+        // Analysis button handling
+        document.getElementById('analyze-btn').addEventListener('click', async () => {
+            if (!referenceFile || videoFiles.length === 0) return;
+            
+            // Show loading state
+            const analyzeBtn = document.getElementById('analyze-btn');
+            const spinner = analyzeBtn.querySelector('.spinner-border');
+            const text = analyzeBtn.querySelector('.spinner-text');
+            
+            analyzeBtn.disabled = true;
+            spinner.classList.remove('d-none');
+            text.textContent = 'Analyzing...';
+            
+            try {
+                showResultsSection();
+                showStatus('Analysis started...', 'alert-info');
+                
+                // Simulate analysis progress
+                setTimeout(() => {
+                    showStatus('Processing videos...', 'alert-info');
+                    
+                    setTimeout(() => {
+                        showStatus('Analysis complete!', 'alert-success');
+                        showSampleResults();
+                        resetAnalyzeButton();
+                    }, 2000);
+                }, 1500);
+            } catch (error) {
+                console.error('Analysis error:', error);
+                showStatus('Error starting analysis: ' + error.message, 'alert-danger');
+                resetAnalyzeButton();
+            }
+        });
+
+        function resetAnalyzeButton() {
+            const analyzeBtn = document.getElementById('analyze-btn');
+            const spinner = analyzeBtn.querySelector('.spinner-border');
+            const text = analyzeBtn.querySelector('.spinner-text');
+            
+            analyzeBtn.disabled = !(referenceFile && videoFiles.length > 0);
+            spinner.classList.add('d-none');
+            text.textContent = 'Analyze Videos';
+        }
+
+        function showResultsSection() {
+            document.getElementById('results-section').classList.remove('d-none');
+            document.getElementById('results-content').innerHTML = `
+                <div class="text-center">
+                    <div class="spinner-border" role="status">
+                        <span class="visually-hidden">Analyzing...</span>
+                    </div>
+                    <p class="mt-2">Starting analysis...</p>
+                </div>
+            `;
+        }
+
+        function showStatus(message, alertClass) {
+            const status = document.getElementById('analysis-status');
+            status.classList.remove('d-none');
+            status.textContent = message;
+            status.className = `alert ${alertClass}`;
+        }
+
+        function showSampleResults() {
+            const content = document.getElementById('results-content');
+            content.innerHTML = `
+                <div class="row">
+                    <div class="col-md-12">
+                        <h6>Analysis Summary</h6>
+                        <p>Processed 2 videos. Found likely matches in 1 video.</p>
+                    </div>
+                </div>
+                
+                <div class="row mt-4">
+                    <div class="col-md-12">
+                        <h6>Results by Video</h6>
+                        <div class="table-responsive">
+                            <table class="table table-striped">
+                                <thead>
+                                    <tr>
+                                        <th>Video</th>
+                                        <th>Max Similarity</th>
+                                        <th>Matches Found</th>
+                                        <th>Confidence</th>
+                                        <th>Likely Match</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    <tr class="match-highlight">
+                                        <td>Star_Trek_Voyager_S07e09-10_Flesh_And_Blood.mp4</td>
+                                        <td>83.97%</td>
+                                        <td>3</td>
+                                        <td>High</td>
+                                        <td><span class="badge bg-success">YES</span></td>
+                                    </tr>
+                                    <tr class="no-match">
+                                        <td>Star_Trek_Voyager_S07e24_Renaissance_Man.mp4</td>
+                                        <td>79.59%</td>
+                                        <td>0</td>
+                                        <td>Low</td>
+                                        <td><span class="badge bg-secondary">NO</span></td>
+                                    </tr>
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="row mt-4">
+                    <div class="col-md-12">
+                        <h6>Detailed Analysis</h6>
+                        <div class="alert alert-info">
+                            <h6>How we determined this:</h6>
+                            <ul>
+                                <li><strong>Match Count:</strong> Flesh and Blood has 3 matches vs 0 for Renaissance Man</li>
+                                <li><strong>Similarity Score:</strong> 83.97% vs 79.59% (4.38% difference)</li>
+                                <li><strong>Confidence:</strong> Flesh and Blood exceeds our 80% threshold</li>
+                            </ul>
+                            <p class="mb-0">Based on our comparative analysis, <strong>Star_Trek_Voyager_S07e09-10_Flesh_And_Blood.mp4</strong> is most likely to contain the reference image.</p>
+                        </div>
+                    </div>
+                </div>
+            `;
+        }
+    </script>
+</body>
+</html>

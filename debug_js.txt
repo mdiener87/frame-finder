@@ -1,0 +1,44 @@
+        function pollForResults(analysisId) {
+            const poll = async () => {
+                try {
+                    const response = await fetch(`/api/analysis/${analysisId}`);
+                    
+                    // Debug: Log the raw response
+                    const text = await response.text();
+                    console.log('Raw response:', text);
+                    
+                    // Try to parse as JSON
+                    let data;
+                    try {
+                        data = JSON.parse(text);
+                    } catch (parseError) {
+                        console.error('Failed to parse JSON:', parseError);
+                        console.error('Response text was:', text);
+                        throw new Error('Invalid JSON response from server');
+                    }
+                    
+                    if (!response.ok) {
+                        throw new Error(data.error || 'Failed to get results');
+                    }
+                    
+                    if (data.status === 'processing') {
+                        const status = data.current_status || {};
+                        showStatus(`Processing ${status.current_video || 'video'} (${status.progress || '0/0'})...`, 'alert-info');
+                        setTimeout(poll, 2000);
+                    } else if (data.status === 'completed') {
+                        showStatus('Analysis complete!', 'alert-success');
+                        showResults(data);
+                        resetAnalyzeButton();
+                    } else if (data.status === 'failed') {
+                        showStatus('Analysis failed: ' + (data.error || 'Unknown error'), 'alert-danger');
+                        resetAnalyzeButton();
+                    }
+                } catch (error) {
+                    console.error('Polling error:', error);
+                    showStatus('Error during analysis: ' + error.message, 'alert-danger');
+                    resetAnalyzeButton();
+                }
+            };
+            
+            poll();
+        }

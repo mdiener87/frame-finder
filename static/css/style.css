@@ -1,82 +1,75 @@
-/* Custom styles for Frame Finder */
+/* style.css - Custom styles for Frame Finder */
 
-body {
-    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+.upload-area {
+    border: 2px dashed #ccc;
+    border-radius: 10px;
+    padding: 20px;
+    text-align: center;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    background-color: #fafafa;
 }
 
-.navbar-brand {
-    font-weight: bold;
+.upload-area:hover {
+    border-color: #007bff;
+    background-color: #f8f9fa;
 }
 
-.card {
-    box-shadow: 0 0.125rem 0.25rem rgba(0, 0, 0, 0.075);
-    border: 1px solid rgba(0, 0, 0, 0.125);
+.upload-area.drag-over {
+    border-color: #007bff;
+    background-color: #e3f2fd;
+    transform: scale(1.02);
 }
 
-.thumbnail-preview {
-    max-width: 100px;
-    max-height: 100px;
+.remove-video {
+    margin-left: 10px;
+}
+
+.video-thumbnail {
+    width: 100px;
+    height: 56px;
     object-fit: cover;
+    border-radius: 4px;
 }
 
-#negativePreview .thumbnail-preview {
-    border: 2px solid #dc3545; /* Red border for negative references */
+.loading-spinner {
+    display: inline-block;
+    width: 1rem;
+    height: 1rem;
+    vertical-align: text-bottom;
+    border: 0.2em solid currentColor;
+    border-right-color: transparent;
+    border-radius: 50%;
+    animation: spinner-border 0.75s linear infinite;
 }
 
-#referencePreview .thumbnail-preview {
-    border: 2px solid #28a745; /* Green border for positive references */
-}
-
-.file-list {
-    max-height: 200px;
-    overflow-y: auto;
-}
-
-.result-card {
-    margin-bottom: 1.5rem;
-}
-
-.timestamp {
-    font-weight: bold;
-    color: #0d6efd;
-}
-
-.confidence {
-    font-weight: bold;
-    color: #198754;
-}
-
-.progress-bar-animated {
-    animation: progress-bar-stripes 1s linear infinite;
-}
-
-@keyframes progress-bar-stripes {
-    0% {
-        background-position-x: 1rem;
+@keyframes spinner-border {
+    to {
+        transform: rotate(360deg);
     }
 }
 
-.alert-info {
-    background-color: #d1ecf1;
-    border-color: #b0d4dc;
-    color: #0c5460;
+.match-highlight {
+    background-color: #d4edda;
+    border-left: 4px solid #28a745;
 }
 
-.alert-info .alert-link {
-    color: #08353c;
+.no-match {
+    background-color: #f8d7da;
+    border-left: 4px solid #dc3545;
 }
 
-.btn-primary {
-    background-color: #0d6efd;
-    border-color: #0d6efd;
+.confidence-high {
+    color: #28a745;
+    font-weight: bold;
 }
 
-.btn-primary:hover {
-    background-color: #0b5ed7;
-    border-color: #0a58ca;
+.confidence-medium {
+    color: #ffc107;
+    font-weight: bold;
 }
 
-.form-control:focus {
-    border-color: #86b7fe;
-    box-shadow: 0 0 0 0.25rem rgba(13, 110, 253, 0.25);
+.confidence-low {
+    color: #6c757d;
+    font-weight: bold;
 }
