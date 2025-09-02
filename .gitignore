@@ -9,6 +9,9 @@ __pycache__/
 venv/
 .env/
 
+# Copyright stuff
+*.mp4
+
 # Logs and temp files
 *.log
 *.tmp
