@@ -20,7 +20,7 @@ import numpy as np
 sys.path.append(os.path.dirname(os.path.abspath(__file__)))
 
 app = Flask(__name__)
-app.config['MAX_CONTENT_LENGTH'] = 1024 * 1024 * 1024  # 1GB max file size
+app.config['MAX_CONTENT_LENGTH'] = 2 * 1024 * 1024 * 1024  # 2GB max file size
 
 # Initialize the frame analyzer
 analyzer = FrameAnalyzer()
@@ -54,18 +54,30 @@ def analyze_videos():
     }
     """
     try:
-        # Create temporary directory for uploaded files
-        temp_dir = tempfile.mkdtemp()
+        print("Starting analysis request...")
         
-        # Save reference image
+        # Check if we have files
         if 'reference' not in request.files:
             return jsonify({
                 'error': 'Missing reference image'
             }), 400
         
+        # Check file count
+        video_files = request.files.getlist('videos')
+        if len(video_files) > 50:
+            return jsonify({
+                'error': 'Too many files selected. Please select 50 or fewer videos at a time.'
+            }), 413  # Request Entity Too Large
+        
+        # Create temporary directory for uploaded files
+        temp_dir = tempfile.mkdtemp()
+        print(f"Created temporary directory: {temp_dir}")
+        
+        # Save reference image
         reference_file = request.files['reference']
         reference_path = os.path.join(temp_dir, reference_file.filename)
         reference_file.save(reference_path)
+        print(f"Saved reference image: {reference_path}")
         
         # Save video files
         video_paths = []
@@ -73,10 +85,23 @@ def analyze_videos():
         # Handle multiple files with the same key
         if 'videos' in request.files:
             video_files = request.files.getlist('videos')
-            for video_file in video_files:
+            for i, video_file in enumerate(video_files):
+                # Check individual file size (1GB limit per file)
+                if len(video_files) > 1 and i == 0:  # Only check on first iteration to avoid multiple seeks
+                    video_file.seek(0, os.SEEK_END)
+                    file_size = video_file.tell()
+                    video_file.seek(0)  # Reset file pointer
+                    if file_size > 1024 * 1024 * 1024:  # 1GB
+                        # Clean up and return error
+                        shutil.rmtree(temp_dir)
+                        return jsonify({
+                            'error': f'File {video_file.filename} is too large (max 1GB per file)'
+                        }), 413
+                
                 video_path = os.path.join(temp_dir, video_file.filename)
                 video_file.save(video_path)
                 video_paths.append(video_path)
+                print(f"Saved video file {i+1}/{len(video_files)}: {video_path}")
         
         if not video_paths:
             # Clean up and return error
@@ -87,6 +112,7 @@ def analyze_videos():
         
         # Generate unique analysis ID
         analysis_id = str(uuid.uuid4())
+        print(f"Generated analysis ID: {analysis_id}")
         
         # Store analysis information
         analysis_results[analysis_id] = {
@@ -104,6 +130,7 @@ def analyze_videos():
             args=(analysis_id, reference_path, video_paths, temp_dir)
         )
         thread.start()
+        print(f"Started analysis thread for {analysis_id}")
         
         return jsonify({
             "analysis_id": analysis_id,
@@ -113,6 +140,8 @@ def analyze_videos():
         
     except Exception as e:
         print(f"Error in analyze_videos: {str(e)}")
+        import traceback
+        traceback.print_exc()
         return jsonify({
             'error': f'Internal server error: {str(e)}'
         }), 500
@@ -122,10 +151,13 @@ def perform_analysis(analysis_id: str, reference_path: str,
     """Perform analysis in background."""
     try:
         results = {}
+        print(f"Starting analysis for {len(video_paths)} videos")
         
         # Analyze each video
         for i, video_path in enumerate(video_paths):
             try:
+                print(f"Analyzing video {i+1}/{len(video_paths)}: {os.path.basename(video_path)}")
+                
                 # Update status
                 analysis_results[analysis_id]["current_video"] = os.path.basename(video_path)
                 analysis_results[analysis_id]["progress"] = f"{i+1}/{len(video_paths)}"
@@ -140,9 +172,12 @@ def perform_analysis(analysis_id: str, reference_path: str,
                 # Add video name to result for easier identification
                 result["video_name"] = os.path.basename(video_path)
                 results[video_path] = result
+                print(f"Completed analysis for {os.path.basename(video_path)}")
                 
             except Exception as e:
                 print(f"Error analyzing video {video_path}: {str(e)}")
+                import traceback
+                traceback.print_exc()
                 results[video_path] = {
                     "error": str(e),
                     "found": False,
@@ -154,10 +189,12 @@ def perform_analysis(analysis_id: str, reference_path: str,
         
         # Store raw results
         analysis_results[analysis_id]["results"] = results
+        print(f"Stored raw results for {analysis_id}")
         
         # Perform comparative analysis
         comparison = perform_comparative_analysis(results)
         analysis_results[analysis_id]["comparison"] = comparison
+        print(f"Performed comparative analysis for {analysis_id}")
         
         # Update status
         analysis_results[analysis_id]["status"] = "completed"
@@ -165,6 +202,8 @@ def perform_analysis(analysis_id: str, reference_path: str,
         
     except Exception as e:
         print(f"Error in perform_analysis for {analysis_id}: {str(e)}")
+        import traceback
+        traceback.print_exc()
         analysis_results[analysis_id]["status"] = "failed"
         analysis_results[analysis_id]["error"] = str(e)
 
@@ -314,6 +353,8 @@ def get_analysis_results(analysis_id: str):
         
     except Exception as e:
         print(f"Error in get_analysis_results for {analysis_id}: {str(e)}")
+        import traceback
+        traceback.print_exc()
         return jsonify({
             'error': f'Internal server error: {str(e)}'
         }), 500
