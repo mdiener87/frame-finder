@@ -1,245 +1,196 @@
-# Frame-Finder Analyzer Implementation Plan
+# Implementation Plan for New Prop Detection Algorithm
 
 ## Overview
 
-This document outlines the implementation plan for improving the frame-finder analyzer based on the technical specification. The improvements are organized by priority and dependencies to ensure a smooth implementation process.
+This document outlines the step-by-step implementation plan for the new prop detection algorithm based on the technical specification. The implementation will be done in phases to ensure proper testing and integration.
 
-## Phase 1: Critical Performance Improvements
+## Phase 1: Core Algorithm Implementation
 
-### 1. GPU Acceleration and Model Upgrade
-**Priority**: High
-**Dependencies**: None
+### 1. Preprocessing Pipeline
 
-**Tasks**:
-- [ ] Update analyzer.py to detect and use GPU if available
-- [ ] Modify model loading to move model to GPU
-- [ ] Update requirements.txt with appropriate torch version
-- [ ] Test GPU utilization
+#### 1.1 Reference Image Preprocessing
+- Implement image loading and format conversion
+- Add tight crop functionality (user responsibility, but provide utilities)
+- Implement gamma correction and normalization to [0,1] range
+- Add letterbox/pad and center-crop functionality
+- Create grayscale conversion utility
+- Implement caching mechanism for processed references
 
-**Implementation Details**:
-```python
-# Check for GPU availability
-device = "cuda" if torch.cuda.is_available() else "cpu"
-print(f"Using device: {device}")
+#### 1.2 Video Frame Preprocessing
+- Implement consistent preprocessing with reference images
+- Add aspect handling utilities
+- Implement optional CLAHE normalization
 
-# Move model to device
-model = model.to(device)
-```
+### 2. Multi-scale Template Matching
 
-### 2. Reference Embedding Caching
-**Priority**: High
-**Dependencies**: GPU Acceleration
+#### 2.1 Template Pyramid Generation
+- Implement scaling functions to create template pyramid (0.6–1.6× in ~10 steps)
+- Add utility functions for template scaling
 
-**Tasks**:
-- [ ] Create ReferenceEmbeddings class
-- [ ] Modify compare_images function to use cached embeddings
-- [ ] Update process_videos to use ReferenceEmbeddings
-- [ ] Test caching performance improvement
+#### 2.2 Normalized Cross-Correlation
+- Implement OpenCV-based NCC matching
+- Add peak detection for top-K matches per scale
+- Implement bounding box conversion from matches
 
-### 3. Batch Frame Encoding
-**Priority**: High
-**Dependencies**: Reference Embedding Caching
+### 3. LPIPS Verification
 
-**Tasks**:
-- [ ] Modify extract_frames to support batch processing
-- [ ] Update compare_images to handle batched inputs
-- [ ] Implement batch_process_frames function
-- [ ] Test batch processing performance
+#### 3.1 LPIPS Network Integration
+- Integrate LPIPS library with PyTorch backend
+- Implement network initialization and caching
+- Add GPU support for LPIPS computations
 
-## Phase 2: Accuracy Improvements
+#### 3.2 Candidate Verification
+- Implement LPIPS distance calculation for candidate crops
+- Add thresholding mechanism (LPIPS < T_lpips)
 
-### 4. Light Image Normalization
-**Priority**: Medium
-**Dependencies**: None
+### 4. CLIP Verification
 
-**Tasks**:
-- [ ] Implement normalize_image function with CLAHE
-- [ ] Apply normalization to both reference images and frames
-- [ ] Add option to enable/disable normalization
-- [ ] Test normalization impact on accuracy
+#### 4.1 CLIP Model Integration
+- Integrate open-clip-torch library
+- Implement CLIP embedding computation
+- Add GPU support for CLIP computations
 
-### 5. Negative References + Delta Scoring
-**Priority**: High
-**Dependencies**: Reference Embedding Caching
+#### 4.2 Cosine Similarity Calculation
+- Implement cosine similarity computation between embeddings
+- Add thresholding mechanism (cosine > T_clip)
 
-**Tasks**:
-- [ ] Add support for negative reference images in UI
-- [ ] Modify Flask app to handle negative references
-- [ ] Implement compute_delta_score function
-- [ ] Update process_videos to use delta scoring
-- [ ] Test false positive reduction
+## Phase 2: Advanced Features
 
-### 6. Temporal Clustering / Peak Picking
-**Priority**: Medium
-**Dependencies**: Negative References
+### 1. Temporal Smoothing and Deduplication
 
-**Tasks**:
-- [ ] Implement cluster_detections function
-- [ ] Add clustering parameter to UI
-- [ ] Update results processing to apply clustering
-- [ ] Test clustering effectiveness
+#### 1.1 Non-Maximum Suppression
+- Implement per-frame NMS with IoU threshold (≥ 0.5)
+- Add bounding box merging functionality
 
-## Phase 3: Advanced Features
+#### 1.2 Track Consistency
+- Implement centroid IoU tracking frame-to-frame
+- Add tracking utilities
 
-### 7. Adaptive Thresholding
-**Priority**: Medium
-**Dependencies**: Negative References + Delta Scoring
+#### 1.3 Debounce Mechanism
+- Implement N of M consecutive frame requirement (e.g., ≥3 of 12)
+- Add event emission logic
 
-**Tasks**:
-- [ ] Implement compute_adaptive_threshold function
-- [ ] Add option to enable adaptive thresholding
-- [ ] Update process_videos to use adaptive thresholding
-- [ ] Test threshold adaptation across different videos
+#### 1.4 Cool-down Period
+- Implement re-trigger suppression with spatial movement checking
 
-### 8. Stronger Backbone Model
-**Priority**: Low
-**Dependencies**: GPU Acceleration
+### 2. Calibration and Thresholding
 
-**Tasks**:
-- [ ] Add model selection option to UI
-- [ ] Implement support for CLIP-ViT-Large
-- [ ] Implement support for SigLIP (optional)
-- [ ] Test accuracy improvement
-- [ ] Document VRAM requirements
+#### 2.1 Calibration Set Generation
+- Implement utility for building calibration sets
+- Add positive/negative sample handling
 
-### 9. Two-Stage Filter
-**Priority**: Low
-**Dependencies**: Light Image Normalization
+#### 2.2 Threshold Selection
+- Implement ROC/PR curve generation using scikit-learn
+- Add threshold optimization utilities
 
-**Tasks**:
-- [ ] Implement two_stage_filter function
-- [ ] Add option to enable two-stage filtering
-- [ ] Update processing pipeline to use filter
-- [ ] Test performance improvement
+### 3. Optional Features
 
-### 10. Micro-Tuning Around Peaks
-**Priority**: Low
-**Dependencies**: Temporal Clustering
+#### 3.1 ORB Confirmation
+- Implement ORB keypoint detection and matching
+- Add in-box inlier ratio calculation
 
-**Tasks**:
-- [ ] Implement micro_tune_around_peak function
-- [ ] Add option to enable micro-tuning
-- [ ] Update peak processing to apply micro-tuning
-- [ ] Test precision improvement
+#### 3.2 Score Fusion
+- Implement z-score computation for LPIPS and CLIP scores
+- Add score fusion mechanisms (sum or minimum)
 
-## Phase 4: UI/UX Improvements
+## Phase 3: Performance Optimizations
 
-### 11. Flask Wiring Updates
-**Priority**: High
-**Dependencies**: Negative References Implementation
+### 1. Frame Stride Implementation
+- Add configurable frame stride parameter
+- Implement back-fill logic around hits
 
-**Tasks**:
-- [ ] Add negative reference upload field to index.html
-- [ ] Modify app.py to handle negative references
-- [ ] Update results display to show clustered results
-- [ ] Test end-to-end negative reference workflow
+### 2. Resolution Handling
+- Add downscaling utilities for proposal stage
+- Implement resolution management for verification stage
 
-### 12. Real-Time Output Viewer
-**Priority**: Medium
-**Dependencies**: None
+### 3. GPU Utilization
+- Ensure LPIPS & CLIP run on CUDA when available
+- Implement parallelization for proposals and verifications
 
-**Tasks**:
-- [ ] Implement WebSocket or Server-Sent Events in Flask
-- [ ] Add progress display to index.html
-- [ ] Update main.js to handle real-time updates
-- [ ] Test real-time progress feedback
+## Phase 4: Integration and Testing
 
-### 13. UI Updates
-**Priority**: High
-**Dependencies**: None
+### 1. Backend Integration
+- Replace current analyzer.py with new implementation
+- Maintain API compatibility where possible
+- Add new configuration options
 
-**Tasks**:
-- [ ] Change default confidence interval to 75%
-- [ ] Modify frame interval selector to support decimals
-- [ ] Add negative reference upload field
-- [ ] Add clustering options to UI
-- [ ] Test all UI changes
+### 2. Frontend Integration
+- Update frontend to work with new backend
+- Add any new UI elements if needed
+- Maintain existing user experience
 
-## Implementation Order
+### 3. Testing
+- Implement unit tests for each component
+- Add integration tests for the full pipeline
+- Create performance benchmarks
+- Validate accuracy improvements
 
-1. **Week 1**: GPU Acceleration, Reference Embedding Caching
-2. **Week 2**: Batch Frame Encoding, Light Image Normalization
-3. **Week 3**: Negative References + Delta Scoring, Temporal Clustering
-4. **Week 4**: Adaptive Thresholding, Flask Wiring Updates
-5. **Week 5**: UI/UX Improvements, Real-Time Output Viewer
-6. **Week 6**: Advanced Features (Two-Stage Filter, Micro-Tuning)
-7. **Week 7**: Stronger Backbone Model, Final Testing
-8. **Week 8**: Documentation and Optimization
+## Detailed Component Implementation Order
 
-## Testing Strategy
+### Week 1: Foundation
+1. Preprocessing pipeline (reference images and video frames)
+2. Template pyramid generation
+3. Basic NCC matching implementation
+4. Initial LPIPS integration
 
-### Unit Tests
-- [ ] ReferenceEmbeddings class
-- [ ] Image normalization functions
-- [ ] Delta scoring implementation
-- [ ] Clustering algorithms
-- [ ] Adaptive thresholding
+### Week 2: Core Verification
+1. Complete LPIPS verification with thresholding
+2. CLIP model integration
+3. CLIP cosine similarity implementation
+4. Basic score fusion
 
-### Integration Tests
-- [ ] End-to-end processing pipeline
-- [ ] GPU utilization
-- [ ] Negative reference handling
-- [ ] Real-time progress updates
+### Week 3: Temporal Processing
+1. Non-Maximum Suppression implementation
+2. Track consistency mechanisms
+3. Debounce and cool-down implementation
 
-### Performance Tests
-- [ ] Processing time comparison (before/after)
-- [ ] GPU utilization metrics
-- [ ] Memory usage analysis
-- [ ] Batch processing efficiency
+### Week 4: Calibration and Optimization
+1. Calibration set generation utilities
+2. Threshold selection with ROC/PR curves
+3. Performance optimizations (frame stride, resolution handling)
 
-### Accuracy Tests
-- [ ] False positive reduction with negative references
-- [ ] Precision improvement with clustering
-- [ ] Threshold adaptation effectiveness
-- [ ] Model accuracy comparison
+### Week 5: Advanced Features
+1. ORB confirmation implementation
+2. Enhanced score fusion
+3. GPU utilization improvements
+
+### Week 6: Integration
+1. Backend API updates
+2. Frontend compatibility
+3. Parameter tuning and validation
+
+### Week 7: Testing and Documentation
+1. Unit tests for all components
+2. Integration testing
+3. Performance benchmarking
+4. Documentation updates
 
 ## Risk Mitigation
 
-1. **GPU Memory Issues**:
-   - Implement automatic fallback to CPU
-   - Add batch size adjustment based on available VRAM
-   - Monitor memory usage during processing
+### Technical Risks
+1. **GPU Memory Issues**: Implement fallback to CPU processing
+2. **Performance Bottlenecks**: Profile each component and optimize critical paths
+3. **Accuracy Issues**: Extensive calibration and threshold tuning
 
-2. **Performance Degradation**:
-   - Maintain backward compatibility
-   - Provide options to disable new features
-   - Benchmark each improvement
-
-3. **UI Compatibility**:
-   - Test on multiple browsers
-   - Ensure mobile responsiveness
-   - Provide clear user guidance
+### Mitigation Strategies
+1. Implement progressive processing with early exits
+2. Add detailed logging for debugging
+3. Create comprehensive test suite with known good examples
+4. Provide clear error messages and failure handling
 
 ## Success Metrics
 
-1. **Performance**:
-   - 50% reduction in processing time
-   - 90% GPU utilization when available
-   - Support for batch processing of 32+ frames
+### Accuracy
+- Precision ≥ 95% on test set
+- Recall ≥ 80% on test set
+- Detections persist ≥ 3 frames
 
-2. **Accuracy**:
-   - 30% reduction in false positives
-   - 20% improvement in true positive rate
-   - Adaptive thresholding effectiveness > 80%
+### Performance
+- Processing time for 2-hour video < 30 minutes on mid-range hardware
+- Memory usage < 8GB during processing
+- GPU utilization > 70% when available
 
-3. **User Experience**:
-   - Real-time progress updates
-   - Intuitive UI for new features
-   - 95% user satisfaction rating
-
-## Documentation Updates
-
-1. **User Guide**:
-   - New feature explanations
-   - Updated UI walkthrough
-   - Performance optimization tips
-
-2. **Technical Documentation**:
-   - API documentation for new functions
-   - Architecture diagrams
-   - Implementation details
-
-3. **README Updates**:
-   - New requirements
-   - Installation instructions
-   - Usage examples
+### Usability
+- Same or improved user experience
+- Clear error messages and progress reporting
+- Comprehensive documentation

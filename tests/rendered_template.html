@@ -1,0 +1,1846 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Frame Finder - Results</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link href="/static/css/style.css" rel="stylesheet">
+</head>
+<body>
+    <nav class="navbar navbar-expand-lg navbar-dark bg-dark">
+        <div class="container">
+            <a class="navbar-brand" href="/">Frame Finder</a>
+        </div>
+    </nav>
+
+    <div class="container mt-4">
+        
+            
+        
+
+        
+<div class="row">
+    <div class="col-md-12">
+        <h1>Analysis Results</h1>
+        <p class="lead">Found matches in your video files</p>
+        
+        
+            <!-- Global confidence filter -->
+            <div class="card mb-4">
+                <div class="card-body">
+                    <div class="row">
+                        <div class="col-md-6">
+                            <h5>Global Confidence Filter</h5>
+                        </div>
+                        <div class="col-md-6">
+                            <div class="mb-2">
+                                <label for="globalDynamicThreshold" class="form-label">Filter by Confidence:</label>
+                                <input type="range" class="form-range" id="globalDynamicThreshold" min="0" max="100" value="0">
+                                <div class="form-text">
+                                    Minimum confidence: <span id="globalDynamicThresholdValue">0</span>%
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            
+                <div class="card result-card mb-4">
+                    <div class="card-header">
+                        <h3>TT_Start.mp4</h3>
+                    </div>
+                    <div class="card-body">
+                        
+                            <div class="row mb-3">
+                                <div class="col-md-12">
+                                    <p class="text-muted">
+                                        <span id="visibleCount-1">90</span> of 90 match(es) found |
+                                        Max confidence: <span class="max-confidence">67.93%</span>
+                                    </p>
+                                </div>
+                            </div>
+                            
+                            <!-- Enhanced confidence filter -->
+                            <div class="card mb-4">
+                                <div class="card-body">
+                                    <div class="row">
+                                        <div class="col-md-12">
+                                            <h5>Confidence Filters</h5>
+                                        </div>
+                                        <div class="col-md-4">
+                                            <div class="mb-2">
+                                                <label for="overallThreshold-1" class="form-label">Overall Confidence:</label>
+                                                <input type="range" class="form-range overall-threshold" id="overallThreshold-1" min="0" max="100" value="0" data-video-index="1">
+                                                <div class="form-text">
+                                                    Minimum: <span id="overallThresholdValue-1">0</span>%
+                                                </div>
+                                            </div>
+                                        </div>
+                                        <div class="col-md-4">
+                                            <div class="mb-2">
+                                                <label for="lpipsFilter-1" class="form-label">LPIPS Score:</label>
+                                                <input type="range" class="form-range lpips-filter" id="lpipsFilter-1" min="0" max="100" value="0" data-video-index="1">
+                                                <div class="form-text">
+                                                    Minimum: <span id="lpipsFilterValue-1">0</span>%
+                                                </div>
+                                            </div>
+                                        </div>
+                                        <div class="col-md-4">
+                                            <div class="mb-2">
+                                                <label for="clipFilter-1" class="form-label">CLIP Score:</label>
+                                                <input type="range" class="form-range clip-filter" id="clipFilter-1" min="0" max="100" value="0" data-video-index="1">
+                                                <div class="form-text">
+                                                    Minimum: <span id="clipFilterValue-1">0</span>%
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            
+                            <div class="table-responsive">
+                                <table class="table table-striped results-table" id="resultsTable-1">
+                                    <thead>
+                                        <tr>
+                                            <th>Timestamp</th>
+                                            <th>Overall Confidence</th>
+                                            <th>LPIPS Score</th>
+                                            <th>CLIP Score</th>
+                                            <th>Reference Image</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody>
+                                        
+                                            
+                                                <tr class="table-secondary"
+                                                    data-confidence="0.46201884746551514"
+                                                    data-lpips="0.586145281791687"
+                                                    data-clip="0.21711033582687378">
+                                                    <td class="timestamp" data-timestamp="0.0">0.000s</td>
+                                                    <td class="confidence">46.20%</td>
+                                                    <td class="lpips-score">58.61%</td>
+                                                    <td class="clip-score">21.71%</td>
+                                                    <td>
+                                                        
+                                                            <span class="badge bg-secondary">reference_image.png</span>
+                                                        
+                                                    </td>
+                                                </tr>
+                                            
+                                        
+                                            
+                                                <tr class="table-secondary"
+                                                    data-confidence="0.46201884746551514"
+                                                    data-lpips="0.586145281791687"
+                                                    data-clip="0.21711033582687378">
+                                                    <td class="timestamp" data-timestamp="1.001">1.001s</td>
+                                                    <td class="confidence">46.20%</td>
+                                                    <td class="lpips-score">58.61%</td>
+                                                    <td class="clip-score">21.71%</td>
+                                                    <td>
+                                                        
+                                                            <span class="badge bg-secondary">reference_image.png</span>
+                                                        
+                                                    </td>
+                                                </tr>
+                                            
+                                        
+                                            
+                                                <tr class="table-secondary"
+                                                    data-confidence="0.5241915136575699"
+                                                    data-lpips="0.5907204747200012"
+                                                    data-clip="0.3437432646751404">
+                                                    <td class="timestamp" data-timestamp="2.002">2.002s</td>
+                                                    <td class="confidence">52.42%</td>
+                                                    <td class="lpips-score">59.07%</td>
+                                                    <td class="clip-score">34.37%</td>
+                                                    <td>
+                                                        
+                                                            <span class="badge bg-secondary">reference_image.png</span>
+                                                        
+                                                    </td>
+                                                </tr>
+                                            
+                                        
+                                            
+                                                <tr class="table-warning"
+                                                    data-confidence="0.6095610857009888"
+                                                    data-lpips="0.5771276950836182"
+                                                    data-clip="0.5076860189437866">
+                                                    <td class="timestamp" data-timestamp="3.0029999999999997">3.003s</td>
+                                                    <td class="confidence">60.96%</td>
+                                                    <td class="lpips-score">57.71%</td>
+                                                    <td class="clip-score">50.77%</td>
+                                                    <td>
+                                                        
+                                                            <span class="badge bg-secondary">reference_image.png</span>
+                                                        
+                                                    </td>
+                                                </tr>
+                                            
+                                        
+                                            
+                                                <tr class="table-warning"
+                                                    data-confidence="0.6115677654743195"
+                                                    data-lpips="0.5761727094650269"
+                                                    data-clip="0.5112218856811523">
+                                                    <td class="timestamp" data-timestamp="4.004">4.004s</td>
+                                                    <td class="confidence">61.16%</td>
+                                                    <td class="lpips-score">57.62%</td>
+                                                    <td class="clip-score">51.12%</td>
+                                                    <td>
+                                                        
+                                                            <span class="badge bg-secondary">reference_image.png</span>
+                                                        
+                                                    </td>
+                                                </tr>
+                                            
+                                        
+                                            
+                                                <tr class="table-warning"
+                                                    data-confidence="0.6057523339986801"
+                                                    data-lpips="0.5751543045043945"
+                                                    data-clip="0.4990818202495575">
+                                                    <td class="timestamp" data-timestamp="5.005">5.005s</td>
+                                                    <td class="confidence">60.58%</td>
+                                                    <td class="lpips-score">57.52%</td>
+                                                    <td class="clip-score">49.91%</td>
+                                                    <td>
+                                                        
+                                                            <span class="badge bg-secondary">reference_image.png</span>
+                                                        
+                                                    </td>
+                                                </tr>
+                                            
+                                        
+                                            
+                                                <tr class="table-secondary"
+                                                    data-confidence="0.5866167098283768"
+                                                    data-lpips="0.5759592652320862"
+                                                    data-clip="0.46121305227279663">
+                                                    <td class="timestamp" data-timestamp="6.005999999999999">6.006s</td>
+                                                    <td class="confidence">58.66%</td>
+                                                    <td class="lpips-score">57.60%</td>
+                                                    <td class="clip-score">46.12%</td>
+                                                    <td>
+                                                        
+                                                            <span class="badge bg-secondary">reference_image.png</span>
+                                                        
+                                                    </td>
+                                                </tr>
+                                            
+                                        
+                                            
+                                                <tr class="table-warning"
+                                                    data-confidence="0.6125732064247131"
+                                                    data-lpips="0.5268906950950623"
+                                                    data-clip="0.4885917603969574">
+                                                    <td class="timestamp" data-timestamp="6.005999999999999">6.006s</td>
+                                                    <td class="confidence">61.26%</td>
+                                                    <td class="lpips-score">52.69%</td>
+                                                    <td class="clip-score">48.86%</td>
+                                                    <td>
+                                                        
+                                                            <span class="badge bg-secondary">reference_image.png</span>
+                                                        
+                                                    </td>
+                                                </tr>
+                                            
+                                        
+                                            
+                                                <tr class="table-secondary"
+                                                    data-confidence="0.5897618234157562"
+                                                    data-lpips="0.5761129856109619"
+                                                    data-clip="0.4675801396369934">
+                                                    <td class="timestamp" data-timestamp="7.007">7.007s</td>
+                                                    <td class="confidence">58.98%</td>
+                                                    <td class="lpips-score">57.61%</td>
+                                                    <td class="clip-score">46.76%</td>
+                                                    <td>
+                                                        
+                                                            <span class="badge bg-secondary">reference_image.png</span>
+                                                        
+                                                    </td>
+                                                </tr>
+                                            
+                                        
+                                            
+                                                <tr class="table-warning"
+                                                    data-confidence="0.6261180639266968"
+                                                    data-lpips="0.5200568437576294"
+                                                    data-clip="0.5122645497322083">
+                                                    <td class="timestamp" data-timestamp="7.007">7.007s</td>
+                                                    <td class="confidence">62.61%</td>
+                                                    <td class="lpips-score">52.01%</td>
+                                                    <td class="clip-score">51.23%</td>
+                                                    <td>
+                                                        
+                                                            <span class="badge bg-secondary">reference_image.png</span>
+                                                        
+                                                    </td>
+                                                </tr>
+                                            
+                                        
+                                            
+                                                <tr class="table-warning"
+                                                    data-confidence="0.6017837524414062"
+                                                    data-lpips="0.5750231742858887"
+                                                    data-clip="0.49107909202575684">
+                                                    <td class="timestamp" data-timestamp="8.008">8.008s</td>
+                                                    <td class="confidence">60.18%</td>
+                                                    <td class="lpips-score">57.50%</td>
+                                                    <td class="clip-score">49.11%</td>
+                                                    <td>
+                                                        
+                                                            <span class="badge bg-secondary">reference_image.png</span>
+                                                        
+                                                    </td>
+                                                </tr>
+                                            
+                                        
+                                            
+                                                <tr class="table-secondary"
+                                                    data-confidence="0.5905260741710663"
+                                                    data-lpips="0.5703073740005493"
+                                                    data-clip="0.4662058353424072">
+                                                    <td class="timestamp" data-timestamp="9.008999999999999">9.009s</td>
+                                                    <td class="confidence">59.05%</td>
+                                                    <td class="lpips-score">57.03%</td>
+                                                    <td class="clip-score">46.62%</td>
+                                                    <td>
+                                                        
+                                                            <span class="badge bg-secondary">reference_image.png</span>
+                                                        
+                                                    </td>
+                                                </tr>
+                                            
+                                        
+                                            
+                                                <tr class="table-warning"
+                                                    data-confidence="0.6111994683742523"
+                                                    data-lpips="0.571147084236145"
+                                                    data-clip="0.5079724788665771">
+                                                    <td class="timestamp" data-timestamp="10.01">10.010s</td>
+                                                    <td class="confidence">61.12%</td>
+                                                    <td class="lpips-score">57.11%</td>
+                                                    <td class="clip-score">50.80%</td>
+                                                    <td>
+                                                        
+                                                            <span class="badge bg-secondary">reference_image.png</span>
+                                                        
+                                                    </td>
+                                                </tr>
+                                            
+                                        
+                                            
+                                                <tr class="table-warning"
+                                                    data-confidence="0.6074790060520172"
+                                                    data-lpips="0.5755088329315186"
+                                                    data-clip="0.5027124285697937">
+                                                    <td class="timestamp" data-timestamp="11.011">11.011s</td>
+                                                    <td class="confidence">60.75%</td>
+                                                    <td class="lpips-score">57.55%</td>
+                                                    <td class="clip-score">50.27%</td>
+                                                    <td>
+                                                        
+                                                            <span class="badge bg-secondary">reference_image.png</span>
+                                                        
+                                                    </td>
+                                                </tr>
+                                            
+                                        
+                                            
+                                                <tr class="table-warning"
+                                                    data-confidence="0.6153420209884644"
+                                                    data-lpips="0.573358416557312"
+                                                    data-clip="0.5173632502555847">
+                                                    <td class="timestamp" data-timestamp="12.011999999999999">12.012s</td>
+                                                    <td class="confidence">61.53%</td>
+                                                    <td class="lpips-score">57.34%</td>
+                                                    <td class="clip-score">51.74%</td>
+                                                    <td>
+                                                        
+                                                            <span class="badge bg-secondary">reference_image.png</span>
+                                                        
+                                                    </td>
+                                                </tr>
+                                            
+                                        
+                                            
+                                                <tr class="table-warning"
+                                                    data-confidence="0.6118395328521729"
+                                                    data-lpips="0.5761537551879883"
+                                                    data-clip="0.5117559432983398">
+                                                    <td class="timestamp" data-timestamp="13.013">13.013s</td>
+                                                    <td class="confidence">61.18%</td>
+                                                    <td class="lpips-score">57.62%</td>
+                                                    <td class="clip-score">51.18%</td>
+                                                    <td>
+                                                        
+                                                            <span class="badge bg-secondary">reference_image.png</span>
+                                                        
+                                                    </td>
+                                                </tr>
+                                            
+                                        
+                                            
+                                                <tr class="table-warning"
+                                                    data-confidence="0.6173365265130997"
+                                                    data-lpips="0.569936215877533"
+                                                    data-clip="0.5196411609649658">
+                                                    <td class="timestamp" data-timestamp="16.016">16.016s</td>
+                                                    <td class="confidence">61.73%</td>
+                                                    <td class="lpips-score">56.99%</td>
+                                                    <td class="clip-score">51.96%</td>
+                                                    <td>
+                                                        
+                                                            <span class="badge bg-secondary">reference_image.png</span>
+                                                        
+                                                    </td>
+                                                </tr>
+                                            
+                                        
+                                            
+                                                <tr class="table-secondary"
+                                                    data-confidence="0.5828182399272919"
+                                                    data-lpips="0.5822785496711731"
+                                                    data-clip="0.4567757546901703">
+                                                    <td class="timestamp" data-timestamp="23.023">23.023s</td>
+                                                    <td class="confidence">58.28%</td>
+                                                    <td class="lpips-score">58.23%</td>
+                                                    <td class="clip-score">45.68%</td>
+                                                    <td>
+                                                        
+                                                            <span class="badge bg-secondary">reference_image.png</span>
+                                                        
+                                                    </td>
+                                                </tr>
+                                            
+                                        
+                                            
+                                                <tr class="table-secondary"
+                                                    data-confidence="0.5886133909225464"
+                                                    data-lpips="0.5765378475189209"
+                                                    data-clip="0.4654957056045532">
+                                                    <td class="timestamp" data-timestamp="25.025">25.025s</td>
+                                                    <td class="confidence">58.86%</td>
+                                                    <td class="lpips-score">57.65%</td>
+                                                    <td class="clip-score">46.55%</td>
+                                                    <td>
+                                                        
+                                                            <span class="badge bg-secondary">reference_image.png</span>
+                                                        
+                                                    </td>
+                                                </tr>
+                                            
+                                        
+                                            
+                                                <tr class="table-warning"
+                                                    data-confidence="0.6243054568767548"
+                                                    data-lpips="0.5302820205688477"
+                                                    data-clip="0.5137519240379333">
+                                                    <td class="timestamp" data-timestamp="27.026999999999997">27.027s</td>
+                                                    <td class="confidence">62.43%</td>
+                                                    <td class="lpips-score">53.03%</td>
+                                                    <td class="clip-score">51.38%</td>
+                                                    <td>
+                                                        
+                                                            <span class="badge bg-secondary">reference_image.png</span>
+                                                        
+                                                    </td>
+                                                </tr>
+                                            
+                                        
+                                            
+                                                <tr class="table-warning"
+                                                    data-confidence="0.6057181507349014"
+                                                    data-lpips="0.5616143345832825"
+                                                    data-clip="0.4922434687614441">
+                                                    <td class="timestamp" data-timestamp="28.028">28.028s</td>
+                                                    <td class="confidence">60.57%</td>
+                                                    <td class="lpips-score">56.16%</td>
+                                                    <td class="clip-score">49.22%</td>
+                                                    <td>
+                                                        
+                                                            <span class="badge bg-secondary">reference_image.png</span>
+                                                        
+                                                    </td>
+                                                </tr>
+                                            
+                                        
+                                            
+                                                <tr class="table-secondary"
+                                                    data-confidence="0.5955298095941544"
+                                                    data-lpips="0.5603054165840149"
+                                                    data-clip="0.47121232748031616">
+                                                    <td class="timestamp" data-timestamp="32.032">32.032s</td>
+                                                    <td class="confidence">59.55%</td>
+                                                    <td class="lpips-score">56.03%</td>
+                                                    <td class="clip-score">47.12%</td>
+                                                    <td>
+                                                        
+                                                            <span class="badge bg-secondary">reference_image.png</span>
+                                                        
+                                                    </td>
+                                                </tr>
+                                            
+                                        
+                                            
+                                                <tr class="table-secondary"
+                                                    data-confidence="0.5335065275430679"
+                                                    data-lpips="0.5517120957374573"
+                                                    data-clip="0.3428691029548645">
+                                                    <td class="timestamp" data-timestamp="33.032999999999994">33.033s</td>
+                                                    <td class="confidence">53.35%</td>
+                                                    <td class="lpips-score">55.17%</td>
+                                                    <td class="clip-score">34.29%</td>
+                                                    <td>
+                                                        
+                                                            <span class="badge bg-secondary">reference_image.png</span>
+                                                        
+                                                    </td>
+                                                </tr>
+                                            
+                                        
+                                            
+                                                <tr class="table-secondary"
+                                                    data-confidence="0.5636492967605591"
+                                                    data-lpips="0.5908520221710205"
+                                                    data-clip="0.4227246046066284">
+                                                    <td class="timestamp" data-timestamp="34.034">34.034s</td>
+                                                    <td class="confidence">56.36%</td>
+                                                    <td class="lpips-score">59.09%</td>
+                                                    <td class="clip-score">42.27%</td>
+                                                    <td>
+                                                        
+                                                            <span class="badge bg-secondary">reference_image.png</span>
+                                                        
+                                                    </td>
+                                                </tr>
+                                            
+                                        
+                                            
+                                                <tr class="table-secondary"
+                                                    data-confidence="0.5621519535779953"
+                                                    data-lpips="0.6055307984352112"
+                                                    data-clip="0.4270693063735962">
+                                                    <td class="timestamp" data-timestamp="35.035">35.035s</td>
+                                                    <td class="confidence">56.22%</td>
+                                                    <td class="lpips-score">60.55%</td>
+                                                    <td class="clip-score">42.71%</td>
+                                                    <td>
+                                                        
+                                                            <span class="badge bg-secondary">reference_image.png</span>
+                                                        
+                                                    </td>
+                                                </tr>
+                                            
+                                        
+                                            
+                                                <tr class="table-secondary"
+                                                    data-confidence="0.5541258454322815"
+                                                    data-lpips="0.5955174565315247"
+                                                    data-clip="0.4060104191303253">
+                                                    <td class="timestamp" data-timestamp="36.035999999999994">36.036s</td>
+                                                    <td class="confidence">55.41%</td>
+                                                    <td class="lpips-score">59.55%</td>
+                                                    <td class="clip-score">40.60%</td>
+                                                    <td>
+                                                        
+                                                            <span class="badge bg-secondary">reference_image.png</span>
+                                                        
+                                                    </td>
+                                                </tr>
+                                            
+                                        
+                                            
+                                                <tr class="table-warning"
+                                                    data-confidence="0.6340985000133514"
+                                                    data-lpips="0.5217701196670532"
+                                                    data-clip="0.5290820598602295">
+                                                    <td class="timestamp" data-timestamp="41.041">41.041s</td>
+                                                    <td class="confidence">63.41%</td>
+                                                    <td class="lpips-score">52.18%</td>
+                                                    <td class="clip-score">52.91%</td>
+                                                    <td>
+                                                        
+                                                            <span class="badge bg-secondary">reference_image.png</span>
+                                                        
+                                                    </td>
+                                                </tr>
+                                            
+                                        
+                                            
+                                                <tr class="table-warning"
+                                                    data-confidence="0.6404442340135574"
+                                                    data-lpips="0.5179856419563293"
+                                                    data-clip="0.5398812890052795">
+                                                    <td class="timestamp" data-timestamp="42.041999999999994">42.042s</td>
+                                                    <td class="confidence">64.04%</td>
+                                                    <td class="lpips-score">51.80%</td>
+                                                    <td class="clip-score">53.99%</td>
+                                                    <td>
+                                                        
+                                                            <span class="badge bg-secondary">reference_image.png</span>
+                                                        
+                                                    </td>
+                                                </tr>
+                                            
+                                        
+                                            
+                                                <tr class="table-warning"
+                                                    data-confidence="0.6133983731269836"
+                                                    data-lpips="0.5297306776046753"
+                                                    data-clip="0.49166208505630493">
+                                                    <td class="timestamp" data-timestamp="43.043">43.043s</td>
+                                                    <td class="confidence">61.34%</td>
+                                                    <td class="lpips-score">52.97%</td>
+                                                    <td class="clip-score">49.17%</td>
+                                                    <td>
+                                                        
+                                                            <span class="badge bg-secondary">reference_image.png</span>
+                                                        
+                                                    </td>
+                                                </tr>
+                                            
+                                        
+                                            
+                                                <tr class="table-warning"
+                                                    data-confidence="0.6209150701761246"
+                                                    data-lpips="0.5387219786643982"
+                                                    data-clip="0.5111911296844482">
+                                                    <td class="timestamp" data-timestamp="44.044">44.044s</td>
+                                                    <td class="confidence">62.09%</td>
+                                                    <td class="lpips-score">53.87%</td>
+                                                    <td class="clip-score">51.12%</td>
+                                                    <td>
+                                                        
+                                                            <span class="badge bg-secondary">reference_image.png</span>
+                                                        
+                                                    </td>
+                                                </tr>
+                                            
+                                        
+                                            
+                                                <tr class="table-warning"
+                                                    data-confidence="0.648927167057991"
+                                                    data-lpips="0.5192814469337463"
+                                                    data-clip="0.5574950575828552">
+                                                    <td class="timestamp" data-timestamp="45.044999999999995">45.045s</td>
+                                                    <td class="confidence">64.89%</td>
+                                                    <td class="lpips-score">51.93%</td>
+                                                    <td class="clip-score">55.75%</td>
+                                                    <td>
+                                                        
+                                                            <span class="badge bg-secondary">reference_image.png</span>
+                                                        
+                                                    </td>
+                                                </tr>
+                                            
+                                        
+                                            
+                                                <tr class="table-secondary"
+                                                    data-confidence="0.563380166888237"
+                                                    data-lpips="0.5872656106948853"
+                                                    data-clip="0.4203931391239166">
+                                                    <td class="timestamp" data-timestamp="45.044999999999995">45.045s</td>
+                                                    <td class="confidence">56.34%</td>
+                                                    <td class="lpips-score">58.73%</td>
+                                                    <td class="clip-score">42.04%</td>
+                                                    <td>
+                                                        
+                                                            <span class="badge bg-secondary">reference_image.png</span>
+                                                        
+                                                    </td>
+                                                </tr>
+                                            
+                                        
+                                            
+                                                <tr class="table-secondary"
+                                                    data-confidence="0.5751678645610809"
+                                                    data-lpips="0.5625897645950317"
+                                                    data-clip="0.43163061141967773">
+                                                    <td class="timestamp" data-timestamp="48.047999999999995">48.048s</td>
+                                                    <td class="confidence">57.52%</td>
+                                                    <td class="lpips-score">56.26%</td>
+                                                    <td class="clip-score">43.16%</td>
+                                                    <td>
+                                                        
+                                                            <span class="badge bg-secondary">reference_image.png</span>
+                                                        
+                                                    </td>
+                                                </tr>
+                                            
+                                        
+                                            
+                                                <tr class="table-warning"
+                                                    data-confidence="0.6596134901046753"
+                                                    data-lpips="0.4867837429046631"
+                                                    data-clip="0.5626188516616821">
+                                                    <td class="timestamp" data-timestamp="50.05">50.050s</td>
+                                                    <td class="confidence">65.96%</td>
+                                                    <td class="lpips-score">48.68%</td>
+                                                    <td class="clip-score">56.26%</td>
+                                                    <td>
+                                                        
+                                                            <span class="badge bg-secondary">reference_image.png</span>
+                                                        
+                                                    </td>
+                                                </tr>
+                                            
+                                        
+                                            
+                                                <tr class="table-warning"
+                                                    data-confidence="0.6610371172428131"
+                                                    data-lpips="0.5264061689376831"
+                                                    data-clip="0.5852773189544678">
+                                                    <td class="timestamp" data-timestamp="51.050999999999995">51.051s</td>
+                                                    <td class="confidence">66.10%</td>
+                                                    <td class="lpips-score">52.64%</td>
+                                                    <td class="clip-score">58.53%</td>
+                                                    <td>
+                                                        
+                                                            <span class="badge bg-secondary">reference_image.png</span>
+                                                        
+                                                    </td>
+                                                </tr>
+                                            
+                                        
+                                            
+                                                <tr class="table-secondary"
+                                                    data-confidence="0.5727063715457916"
+                                                    data-lpips="0.6033947467803955"
+                                                    data-clip="0.447110116481781">
+                                                    <td class="timestamp" data-timestamp="52.052">52.052s</td>
+                                                    <td class="confidence">57.27%</td>
+                                                    <td class="lpips-score">60.34%</td>
+                                                    <td class="clip-score">44.71%</td>
+                                                    <td>
+                                                        
+                                                            <span class="badge bg-secondary">reference_image.png</span>
+                                                        
+                                                    </td>
+                                                </tr>
+                                            
+                                        
+                                            
+                                                <tr class="table-warning"
+                                                    data-confidence="0.6288424134254456"
+                                                    data-lpips="0.5432453155517578"
+                                                    data-clip="0.52930748462677">
+                                                    <td class="timestamp" data-timestamp="53.053">53.053s</td>
+                                                    <td class="confidence">62.88%</td>
+                                                    <td class="lpips-score">54.32%</td>
+                                                    <td class="clip-score">52.93%</td>
+                                                    <td>
+                                                        
+                                                            <span class="badge bg-secondary">reference_image.png</span>
+                                                        
+                                                    </td>
+                                                </tr>
+                                            
+                                        
+                                            
+                                                <tr class="table-warning"
+                                                    data-confidence="0.6198130398988724"
+                                                    data-lpips="0.5413832068443298"
+                                                    data-clip="0.5103176832199097">
+                                                    <td class="timestamp" data-timestamp="54.053999999999995">54.054s</td>
+                                                    <td class="confidence">61.98%</td>
+                                                    <td class="lpips-score">54.14%</td>
+                                                    <td class="clip-score">51.03%</td>
+                                                    <td>
+                                                        
+                                                            <span class="badge bg-secondary">reference_image.png</span>
+                                                        
+                                                    </td>
+                                                </tr>
+                                            
+                                        
+                                            
+                                                <tr class="table-warning"
+                                                    data-confidence="0.639742486178875"
+                                                    data-lpips="0.49164536595344543"
+                                                    data-clip="0.5253076553344727">
+                                                    <td class="timestamp" data-timestamp="55.05499999999999">55.055s</td>
+                                                    <td class="confidence">63.97%</td>
+                                                    <td class="lpips-score">49.16%</td>
+                                                    <td class="clip-score">52.53%</td>
+                                                    <td>
+                                                        
+                                                            <span class="badge bg-secondary">reference_image.png</span>
+                                                        
+                                                    </td>
+                                                </tr>
+                                            
+                                        
+                                            
+                                                <tr class="table-secondary"
+                                                    data-confidence="0.5666259229183197"
+                                                    data-lpips="0.5900530815124512"
+                                                    data-clip="0.428278386592865">
+                                                    <td class="timestamp" data-timestamp="56.056">56.056s</td>
+                                                    <td class="confidence">56.66%</td>
+                                                    <td class="lpips-score">59.01%</td>
+                                                    <td class="clip-score">42.83%</td>
+                                                    <td>
+                                                        
+                                                            <span class="badge bg-secondary">reference_image.png</span>
+                                                        
+                                                    </td>
+                                                </tr>
+                                            
+                                        
+                                            
+                                                <tr class="table-warning"
+                                                    data-confidence="0.677756279706955"
+                                                    data-lpips="0.5465813875198364"
+                                                    data-clip="0.6288032531738281">
+                                                    <td class="timestamp" data-timestamp="56.056">56.056s</td>
+                                                    <td class="confidence">67.78%</td>
+                                                    <td class="lpips-score">54.66%</td>
+                                                    <td class="clip-score">62.88%</td>
+                                                    <td>
+                                                        
+                                                            <span class="badge bg-secondary">reference_image.png</span>
+                                                        
+                                                    </td>
+                                                </tr>
+                                            
+                                        
+                                            
+                                                <tr class="table-warning"
+                                                    data-confidence="0.6792797893285751"
+                                                    data-lpips="0.5517624020576477"
+                                                    data-clip="0.6344407796859741">
+                                                    <td class="timestamp" data-timestamp="56.056">56.056s</td>
+                                                    <td class="confidence">67.93%</td>
+                                                    <td class="lpips-score">55.18%</td>
+                                                    <td class="clip-score">63.44%</td>
+                                                    <td>
+                                                        
+                                                            <span class="badge bg-secondary">reference_image.png</span>
+                                                        
+                                                    </td>
+                                                </tr>
+                                            
+                                        
+                                            
+                                                <tr class="table-secondary"
+                                                    data-confidence="0.5846532434225082"
+                                                    data-lpips="0.5736504793167114"
+                                                    data-clip="0.4561317265033722">
+                                                    <td class="timestamp" data-timestamp="57.056999999999995">57.057s</td>
+                                                    <td class="confidence">58.47%</td>
+                                                    <td class="lpips-score">57.37%</td>
+                                                    <td class="clip-score">45.61%</td>
+                                                    <td>
+                                                        
+                                                            <span class="badge bg-secondary">reference_image.png</span>
+                                                        
+                                                    </td>
+                                                </tr>
+                                            
+                                        
+                                            
+                                                <tr class="table-secondary"
+                                                    data-confidence="0.5546077340841293"
+                                                    data-lpips="0.5932441353797913"
+                                                    data-clip="0.4058375358581543">
+                                                    <td class="timestamp" data-timestamp="58.05799999999999">58.058s</td>
+                                                    <td class="confidence">55.46%</td>
+                                                    <td class="lpips-score">59.32%</td>
+                                                    <td class="clip-score">40.58%</td>
+                                                    <td>
+                                                        
+                                                            <span class="badge bg-secondary">reference_image.png</span>
+                                                        
+                                                    </td>
+                                                </tr>
+                                            
+                                        
+                                            
+                                                <tr class="table-secondary"
+                                                    data-confidence="0.5891328155994415"
+                                                    data-lpips="0.5880818963050842"
+                                                    data-clip="0.47230657935142517">
+                                                    <td class="timestamp" data-timestamp="59.059">59.059s</td>
+                                                    <td class="confidence">58.91%</td>
+                                                    <td class="lpips-score">58.81%</td>
+                                                    <td class="clip-score">47.23%</td>
+                                                    <td>
+                                                        
+                                                            <span class="badge bg-secondary">reference_image.png</span>
+                                                        
+                                                    </td>
+                                                </tr>
+                                            
+                                        
+                                            
+                                                <tr class="table-secondary"
+                                                    data-confidence="0.5793081670999527"
+                                                    data-lpips="0.5892668962478638"
+                                                    data-clip="0.4532497823238373">
+                                                    <td class="timestamp" data-timestamp="60.059999999999995">60.060s</td>
+                                                    <td class="confidence">57.93%</td>
+                                                    <td class="lpips-score">58.93%</td>
+                                                    <td class="clip-score">45.32%</td>
+                                                    <td>
+                                                        
+                                                            <span class="badge bg-secondary">reference_image.png</span>
+                                                        
+                                                    </td>
+                                                </tr>
+                                            
+                                        
+                                            
+                                                <tr class="table-warning"
+                                                    data-confidence="0.6104865372180939"
+                                                    data-lpips="0.5717490911483765"
+                                                    data-clip="0.506847620010376">
+                                                    <td class="timestamp" data-timestamp="62.062">62.062s</td>
+                                                    <td class="confidence">61.05%</td>
+                                                    <td class="lpips-score">57.17%</td>
+                                                    <td class="clip-score">50.68%</td>
+                                                    <td>
+                                                        
+                                                            <span class="badge bg-secondary">reference_image.png</span>
+                                                        
+                                                    </td>
+                                                </tr>
+                                            
+                                        
+                                            
+                                                <tr class="table-warning"
+                                                    data-confidence="0.6072890907526016"
+                                                    data-lpips="0.5622841715812683"
+                                                    data-clip="0.4957202672958374">
+                                                    <td class="timestamp" data-timestamp="63.062999999999995">63.063s</td>
+                                                    <td class="confidence">60.73%</td>
+                                                    <td class="lpips-score">56.23%</td>
+                                                    <td class="clip-score">49.57%</td>
+                                                    <td>
+                                                        
+                                                            <span class="badge bg-secondary">reference_image.png</span>
+                                                        
+                                                    </td>
+                                                </tr>
+                                            
+                                        
+                                            
+                                                <tr class="table-warning"
+                                                    data-confidence="0.609310656785965"
+                                                    data-lpips="0.5623908042907715"
+                                                    data-clip="0.4998167157173157">
+                                                    <td class="timestamp" data-timestamp="64.064">64.064s</td>
+                                                    <td class="confidence">60.93%</td>
+                                                    <td class="lpips-score">56.24%</td>
+                                                    <td class="clip-score">49.98%</td>
+                                                    <td>
+                                                        
+                                                            <span class="badge bg-secondary">reference_image.png</span>
+                                                        
+                                                    </td>
+                                                </tr>
+                                            
+                                        
+                                            
+                                                <tr class="table-warning"
+                                                    data-confidence="0.621600866317749"
+                                                    data-lpips="0.5584841966629028"
+                                                    data-clip="0.5224438309669495">
+                                                    <td class="timestamp" data-timestamp="65.065">65.065s</td>
+                                                    <td class="confidence">62.16%</td>
+                                                    <td class="lpips-score">55.85%</td>
+                                                    <td class="clip-score">52.24%</td>
+                                                    <td>
+                                                        
+                                                            <span class="badge bg-secondary">reference_image.png</span>
+                                                        
+                                                    </td>
+                                                </tr>
+                                            
+                                        
+                                            
+                                                <tr class="table-warning"
+                                                    data-confidence="0.6075563132762909"
+                                                    data-lpips="0.5575400590896606"
+                                                    data-clip="0.4938826560974121">
+                                                    <td class="timestamp" data-timestamp="66.06599999999999">66.066s</td>
+                                                    <td class="confidence">60.76%</td>
+                                                    <td class="lpips-score">55.75%</td>
+                                                    <td class="clip-score">49.39%</td>
+                                                    <td>
+                                                        
+                                                            <span class="badge bg-secondary">reference_image.png</span>
+                                                        
+                                                    </td>
+                                                </tr>
+                                            
+                                        
+                                            
+                                                <tr class="table-secondary"
+                                                    data-confidence="0.5899776965379715"
+                                                    data-lpips="0.5591511130332947"
+                                                    data-clip="0.45953094959259033">
+                                                    <td class="timestamp" data-timestamp="67.067">67.067s</td>
+                                                    <td class="confidence">59.00%</td>
+                                                    <td class="lpips-score">55.92%</td>
+                                                    <td class="clip-score">45.95%</td>
+                                                    <td>
+                                                        
+                                                            <span class="badge bg-secondary">reference_image.png</span>
+                                                        
+                                                    </td>
+                                                </tr>
+                                            
+                                        
+                                            
+                                                <tr class="table-warning"
+                                                    data-confidence="0.6148602217435837"
+                                                    data-lpips="0.5726686120033264"
+                                                    data-clip="0.5160547494888306">
+                                                    <td class="timestamp" data-timestamp="68.068">68.068s</td>
+                                                    <td class="confidence">61.49%</td>
+                                                    <td class="lpips-score">57.27%</td>
+                                                    <td class="clip-score">51.61%</td>
+                                                    <td>
+                                                        
+                                                            <span class="badge bg-secondary">reference_image.png</span>
+                                                        
+                                                    </td>
+                                                </tr>
+                                            
+                                        
+                                            
+                                                <tr class="table-warning"
+                                                    data-confidence="0.6368343234062195"
+                                                    data-lpips="0.5728249549865723"
+                                                    data-clip="0.5600811243057251">
+                                                    <td class="timestamp" data-timestamp="69.06899999999999">69.069s</td>
+                                                    <td class="confidence">63.68%</td>
+                                                    <td class="lpips-score">57.28%</td>
+                                                    <td class="clip-score">56.01%</td>
+                                                    <td>
+                                                        
+                                                            <span class="badge bg-secondary">reference_image.png</span>
+                                                        
+                                                    </td>
+                                                </tr>
+                                            
+                                        
+                                            
+                                                <tr class="table-secondary"
+                                                    data-confidence="0.5923911035060883"
+                                                    data-lpips="0.5709397792816162"
+                                                    data-clip="0.4702520966529846">
+                                                    <td class="timestamp" data-timestamp="70.07">70.070s</td>
+                                                    <td class="confidence">59.24%</td>
+                                                    <td class="lpips-score">57.09%</td>
+                                                    <td class="clip-score">47.03%</td>
+                                                    <td>
+                                                        
+                                                            <span class="badge bg-secondary">reference_image.png</span>
+                                                        
+                                                    </td>
+                                                </tr>
+                                            
+                                        
+                                            
+                                                <tr class="table-warning"
+                                                    data-confidence="0.6239829808473587"
+                                                    data-lpips="0.5710126757621765"
+                                                    data-clip="0.5334722995758057">
+                                                    <td class="timestamp" data-timestamp="71.071">71.071s</td>
+                                                    <td class="confidence">62.40%</td>
+                                                    <td class="lpips-score">57.10%</td>
+                                                    <td class="clip-score">53.35%</td>
+                                                    <td>
+                                                        
+                                                            <span class="badge bg-secondary">reference_image.png</span>
+                                                        
+                                                    </td>
+                                                </tr>
+                                            
+                                        
+                                            
+                                                <tr class="table-secondary"
+                                                    data-confidence="0.5795457363128662"
+                                                    data-lpips="0.6001200675964355"
+                                                    data-clip="0.4591515064239502">
+                                                    <td class="timestamp" data-timestamp="75.07499999999999">75.075s</td>
+                                                    <td class="confidence">57.95%</td>
+                                                    <td class="lpips-score">60.01%</td>
+                                                    <td class="clip-score">45.92%</td>
+                                                    <td>
+                                                        
+                                                            <span class="badge bg-secondary">reference_image.png</span>
+                                                        
+                                                    </td>
+                                                </tr>
+                                            
+                                        
+                                            
+                                                <tr class="table-secondary"
+                                                    data-confidence="0.5844572931528091"
+                                                    data-lpips="0.5909193754196167"
+                                                    data-clip="0.46437427401542664">
+                                                    <td class="timestamp" data-timestamp="76.076">76.076s</td>
+                                                    <td class="confidence">58.45%</td>
+                                                    <td class="lpips-score">59.09%</td>
+                                                    <td class="clip-score">46.44%</td>
+                                                    <td>
+                                                        
+                                                            <span class="badge bg-secondary">reference_image.png</span>
+                                                        
+                                                    </td>
+                                                </tr>
+                                            
+                                        
+                                            
+                                                <tr class="table-secondary"
+                                                    data-confidence="0.5925958901643753"
+                                                    data-lpips="0.6174352169036865"
+                                                    data-clip="0.49390938878059387">
+                                                    <td class="timestamp" data-timestamp="76.076">76.076s</td>
+                                                    <td class="confidence">59.26%</td>
+                                                    <td class="lpips-score">61.74%</td>
+                                                    <td class="clip-score">49.39%</td>
+                                                    <td>
+                                                        
+                                                            <span class="badge bg-secondary">reference_image.png</span>
+                                                        
+                                                    </td>
+                                                </tr>
+                                            
+                                        
+                                            
+                                                <tr class="table-secondary"
+                                                    data-confidence="0.5885747671127319"
+                                                    data-lpips="0.6120645403862"
+                                                    data-clip="0.48318180441856384">
+                                                    <td class="timestamp" data-timestamp="77.077">77.077s</td>
+                                                    <td class="confidence">58.86%</td>
+                                                    <td class="lpips-score">61.21%</td>
+                                                    <td class="clip-score">48.32%</td>
+                                                    <td>
+                                                        
+                                                            <span class="badge bg-secondary">reference_image.png</span>
+                                                        
+                                                    </td>
+                                                </tr>
+                                            
+                                        
+                                            
+                                                <tr class="table-secondary"
+                                                    data-confidence="0.567359134554863"
+                                                    data-lpips="0.5941808223724365"
+                                                    data-clip="0.4318086802959442">
+                                                    <td class="timestamp" data-timestamp="77.077">77.077s</td>
+                                                    <td class="confidence">56.74%</td>
+                                                    <td class="lpips-score">59.42%</td>
+                                                    <td class="clip-score">43.18%</td>
+                                                    <td>
+                                                        
+                                                            <span class="badge bg-secondary">reference_image.png</span>
+                                                        
+                                                    </td>
+                                                </tr>
+                                            
+                                        
+                                            
+                                                <tr class="table-secondary"
+                                                    data-confidence="0.5632630437612534"
+                                                    data-lpips="0.5587266087532043"
+                                                    data-clip="0.4058893918991089">
+                                                    <td class="timestamp" data-timestamp="78.07799999999999">78.078s</td>
+                                                    <td class="confidence">56.33%</td>
+                                                    <td class="lpips-score">55.87%</td>
+                                                    <td class="clip-score">40.59%</td>
+                                                    <td>
+                                                        
+                                                            <span class="badge bg-secondary">reference_image.png</span>
+                                                        
+                                                    </td>
+                                                </tr>
+                                            
+                                        
+                                            
+                                                <tr class="table-secondary"
+                                                    data-confidence="0.5313131660223007"
+                                                    data-lpips="0.5652286410331726"
+                                                    data-clip="0.34524065256118774">
+                                                    <td class="timestamp" data-timestamp="79.079">79.079s</td>
+                                                    <td class="confidence">53.13%</td>
+                                                    <td class="lpips-score">56.52%</td>
+                                                    <td class="clip-score">34.52%</td>
+                                                    <td>
+                                                        
+                                                            <span class="badge bg-secondary">reference_image.png</span>
+                                                        
+                                                    </td>
+                                                </tr>
+                                            
+                                        
+                                            
+                                                <tr class="table-warning"
+                                                    data-confidence="0.6237364709377289"
+                                                    data-lpips="0.5109105110168457"
+                                                    data-clip="0.5029281973838806">
+                                                    <td class="timestamp" data-timestamp="80.08">80.080s</td>
+                                                    <td class="confidence">62.37%</td>
+                                                    <td class="lpips-score">51.09%</td>
+                                                    <td class="clip-score">50.29%</td>
+                                                    <td>
+                                                        
+                                                            <span class="badge bg-secondary">reference_image.png</span>
+                                                        
+                                                    </td>
+                                                </tr>
+                                            
+                                        
+                                            
+                                                <tr class="table-warning"
+                                                    data-confidence="0.6304958462715149"
+                                                    data-lpips="0.5084877014160156"
+                                                    data-clip="0.5152355432510376">
+                                                    <td class="timestamp" data-timestamp="81.08099999999999">81.081s</td>
+                                                    <td class="confidence">63.05%</td>
+                                                    <td class="lpips-score">50.85%</td>
+                                                    <td class="clip-score">51.52%</td>
+                                                    <td>
+                                                        
+                                                            <span class="badge bg-secondary">reference_image.png</span>
+                                                        
+                                                    </td>
+                                                </tr>
+                                            
+                                        
+                                            
+                                                <tr class="table-warning"
+                                                    data-confidence="0.6351679563522339"
+                                                    data-lpips="0.5141829252243042"
+                                                    data-clip="0.5274273753166199">
+                                                    <td class="timestamp" data-timestamp="82.082">82.082s</td>
+                                                    <td class="confidence">63.52%</td>
+                                                    <td class="lpips-score">51.42%</td>
+                                                    <td class="clip-score">52.74%</td>
+                                                    <td>
+                                                        
+                                                            <span class="badge bg-secondary">reference_image.png</span>
+                                                        
+                                                    </td>
+                                                </tr>
+                                            
+                                        
+                                            
+                                                <tr class="table-warning"
+                                                    data-confidence="0.6314642131328583"
+                                                    data-lpips="0.5093234777450562"
+                                                    data-clip="0.5175901651382446">
+                                                    <td class="timestamp" data-timestamp="83.083">83.083s</td>
+                                                    <td class="confidence">63.15%</td>
+                                                    <td class="lpips-score">50.93%</td>
+                                                    <td class="clip-score">51.76%</td>
+                                                    <td>
+                                                        
+                                                            <span class="badge bg-secondary">reference_image.png</span>
+                                                        
+                                                    </td>
+                                                </tr>
+                                            
+                                        
+                                            
+                                                <tr class="table-warning"
+                                                    data-confidence="0.6453850269317627"
+                                                    data-lpips="0.5361902713775635"
+                                                    data-clip="0.5588651895523071">
+                                                    <td class="timestamp" data-timestamp="84.08399999999999">84.084s</td>
+                                                    <td class="confidence">64.54%</td>
+                                                    <td class="lpips-score">53.62%</td>
+                                                    <td class="clip-score">55.89%</td>
+                                                    <td>
+                                                        
+                                                            <span class="badge bg-secondary">reference_image.png</span>
+                                                        
+                                                    </td>
+                                                </tr>
+                                            
+                                        
+                                            
+                                                <tr class="table-warning"
+                                                    data-confidence="0.6243503540754318"
+                                                    data-lpips="0.5212759375572205"
+                                                    data-clip="0.5093386769294739">
+                                                    <td class="timestamp" data-timestamp="85.085">85.085s</td>
+                                                    <td class="confidence">62.44%</td>
+                                                    <td class="lpips-score">52.13%</td>
+                                                    <td class="clip-score">50.93%</td>
+                                                    <td>
+                                                        
+                                                            <span class="badge bg-secondary">reference_image.png</span>
+                                                        
+                                                    </td>
+                                                </tr>
+                                            
+                                        
+                                            
+                                                <tr class="table-warning"
+                                                    data-confidence="0.6093358844518661"
+                                                    data-lpips="0.5372542142868042"
+                                                    data-clip="0.4872988760471344">
+                                                    <td class="timestamp" data-timestamp="86.086">86.086s</td>
+                                                    <td class="confidence">60.93%</td>
+                                                    <td class="lpips-score">53.73%</td>
+                                                    <td class="clip-score">48.73%</td>
+                                                    <td>
+                                                        
+                                                            <span class="badge bg-secondary">reference_image.png</span>
+                                                        
+                                                    </td>
+                                                </tr>
+                                            
+                                        
+                                            
+                                                <tr class="table-warning"
+                                                    data-confidence="0.6187929660081863"
+                                                    data-lpips="0.5451386570930481"
+                                                    data-clip="0.5101552605628967">
+                                                    <td class="timestamp" data-timestamp="89.089">89.089s</td>
+                                                    <td class="confidence">61.88%</td>
+                                                    <td class="lpips-score">54.51%</td>
+                                                    <td class="clip-score">51.02%</td>
+                                                    <td>
+                                                        
+                                                            <span class="badge bg-secondary">reference_image.png</span>
+                                                        
+                                                    </td>
+                                                </tr>
+                                            
+                                        
+                                            
+                                                <tr class="table-warning"
+                                                    data-confidence="0.6298614889383316"
+                                                    data-lpips="0.5362119078636169"
+                                                    data-clip="0.5278289318084717">
+                                                    <td class="timestamp" data-timestamp="90.08999999999999">90.090s</td>
+                                                    <td class="confidence">62.99%</td>
+                                                    <td class="lpips-score">53.62%</td>
+                                                    <td class="clip-score">52.78%</td>
+                                                    <td>
+                                                        
+                                                            <span class="badge bg-secondary">reference_image.png</span>
+                                                        
+                                                    </td>
+                                                </tr>
+                                            
+                                        
+                                            
+                                                <tr class="table-warning"
+                                                    data-confidence="0.6263784766197205"
+                                                    data-lpips="0.5190114974975586"
+                                                    data-clip="0.5122627019882202">
+                                                    <td class="timestamp" data-timestamp="91.091">91.091s</td>
+                                                    <td class="confidence">62.64%</td>
+                                                    <td class="lpips-score">51.90%</td>
+                                                    <td class="clip-score">51.23%</td>
+                                                    <td>
+                                                        
+                                                            <span class="badge bg-secondary">reference_image.png</span>
+                                                        
+                                                    </td>
+                                                </tr>
+                                            
+                                        
+                                            
+                                                <tr class="table-secondary"
+                                                    data-confidence="0.5831667333841324"
+                                                    data-lpips="0.6020525097846985"
+                                                    data-clip="0.467359721660614">
+                                                    <td class="timestamp" data-timestamp="92.092">92.092s</td>
+                                                    <td class="confidence">58.32%</td>
+                                                    <td class="lpips-score">60.21%</td>
+                                                    <td class="clip-score">46.74%</td>
+                                                    <td>
+                                                        
+                                                            <span class="badge bg-secondary">reference_image.png</span>
+                                                        
+                                                    </td>
+                                                </tr>
+                                            
+                                        
+                                            
+                                                <tr class="table-secondary"
+                                                    data-confidence="0.5880907326936722"
+                                                    data-lpips="0.620921790599823"
+                                                    data-clip="0.48664236068725586">
+                                                    <td class="timestamp" data-timestamp="93.09299999999999">93.093s</td>
+                                                    <td class="confidence">58.81%</td>
+                                                    <td class="lpips-score">62.09%</td>
+                                                    <td class="clip-score">48.66%</td>
+                                                    <td>
+                                                        
+                                                            <span class="badge bg-secondary">reference_image.png</span>
+                                                        
+                                                    </td>
+                                                </tr>
+                                            
+                                        
+                                            
+                                                <tr class="table-secondary"
+                                                    data-confidence="0.566675066947937"
+                                                    data-lpips="0.6142627000808716"
+                                                    data-clip="0.4404814839363098">
+                                                    <td class="timestamp" data-timestamp="94.094">94.094s</td>
+                                                    <td class="confidence">56.67%</td>
+                                                    <td class="lpips-score">61.43%</td>
+                                                    <td class="clip-score">44.05%</td>
+                                                    <td>
+                                                        
+                                                            <span class="badge bg-secondary">reference_image.png</span>
+                                                        
+                                                    </td>
+                                                </tr>
+                                            
+                                        
+                                            
+                                                <tr class="table-warning"
+                                                    data-confidence="0.6090465784072876"
+                                                    data-lpips="0.536209225654602"
+                                                    data-clip="0.4861977696418762">
+                                                    <td class="timestamp" data-timestamp="94.094">94.094s</td>
+                                                    <td class="confidence">60.90%</td>
+                                                    <td class="lpips-score">53.62%</td>
+                                                    <td class="clip-score">48.62%</td>
+                                                    <td>
+                                                        
+                                                            <span class="badge bg-secondary">reference_image.png</span>
+                                                        
+                                                    </td>
+                                                </tr>
+                                            
+                                        
+                                            
+                                                <tr class="table-secondary"
+                                                    data-confidence="0.5893781930208206"
+                                                    data-lpips="0.6190527677536011"
+                                                    data-clip="0.4882827699184418">
+                                                    <td class="timestamp" data-timestamp="95.095">95.095s</td>
+                                                    <td class="confidence">58.94%</td>
+                                                    <td class="lpips-score">61.91%</td>
+                                                    <td class="clip-score">48.83%</td>
+                                                    <td>
+                                                        
+                                                            <span class="badge bg-secondary">reference_image.png</span>
+                                                        
+                                                    </td>
+                                                </tr>
+                                            
+                                        
+                                            
+                                                <tr class="table-secondary"
+                                                    data-confidence="0.5875942558050156"
+                                                    data-lpips="0.5809720158576965"
+                                                    data-clip="0.4656745195388794">
+                                                    <td class="timestamp" data-timestamp="96.09599999999999">96.096s</td>
+                                                    <td class="confidence">58.76%</td>
+                                                    <td class="lpips-score">58.10%</td>
+                                                    <td class="clip-score">46.57%</td>
+                                                    <td>
+                                                        
+                                                            <span class="badge bg-secondary">reference_image.png</span>
+                                                        
+                                                    </td>
+                                                </tr>
+                                            
+                                        
+                                            
+                                                <tr class="table-warning"
+                                                    data-confidence="0.6193275451660156"
+                                                    data-lpips="0.6321001052856445"
+                                                    data-clip="0.5547051429748535">
+                                                    <td class="timestamp" data-timestamp="98.098">98.098s</td>
+                                                    <td class="confidence">61.93%</td>
+                                                    <td class="lpips-score">63.21%</td>
+                                                    <td class="clip-score">55.47%</td>
+                                                    <td>
+                                                        
+                                                            <span class="badge bg-secondary">reference_image.png</span>
+                                                        
+                                                    </td>
+                                                </tr>
+                                            
+                                        
+                                            
+                                                <tr class="table-warning"
+                                                    data-confidence="0.6600402742624283"
+                                                    data-lpips="0.5932276844978333"
+                                                    data-clip="0.6166943907737732">
+                                                    <td class="timestamp" data-timestamp="99.09899999999999">99.099s</td>
+                                                    <td class="confidence">66.00%</td>
+                                                    <td class="lpips-score">59.32%</td>
+                                                    <td class="clip-score">61.67%</td>
+                                                    <td>
+                                                        
+                                                            <span class="badge bg-secondary">reference_image.png</span>
+                                                        
+                                                    </td>
+                                                </tr>
+                                            
+                                        
+                                            
+                                                <tr class="table-warning"
+                                                    data-confidence="0.6005548238754272"
+                                                    data-lpips="0.6670482158660889"
+                                                    data-clip="0.5346337556838989">
+                                                    <td class="timestamp" data-timestamp="100.1">100.100s</td>
+                                                    <td class="confidence">60.06%</td>
+                                                    <td class="lpips-score">66.70%</td>
+                                                    <td class="clip-score">53.46%</td>
+                                                    <td>
+                                                        
+                                                            <span class="badge bg-secondary">reference_image.png</span>
+                                                        
+                                                    </td>
+                                                </tr>
+                                            
+                                        
+                                            
+                                                <tr class="table-secondary"
+                                                    data-confidence="0.5653850585222244"
+                                                    data-lpips="0.6192213296890259"
+                                                    data-clip="0.4403807818889618">
+                                                    <td class="timestamp" data-timestamp="108.10799999999999">108.108s</td>
+                                                    <td class="confidence">56.54%</td>
+                                                    <td class="lpips-score">61.92%</td>
+                                                    <td class="clip-score">44.04%</td>
+                                                    <td>
+                                                        
+                                                            <span class="badge bg-secondary">reference_image.png</span>
+                                                        
+                                                    </td>
+                                                </tr>
+                                            
+                                        
+                                            
+                                                <tr class="table-secondary"
+                                                    data-confidence="0.5216503590345383"
+                                                    data-lpips="0.6185470223426819"
+                                                    data-clip="0.3525742292404175">
+                                                    <td class="timestamp" data-timestamp="109.109">109.109s</td>
+                                                    <td class="confidence">52.17%</td>
+                                                    <td class="lpips-score">61.85%</td>
+                                                    <td class="clip-score">35.26%</td>
+                                                    <td>
+                                                        
+                                                            <span class="badge bg-secondary">reference_image.png</span>
+                                                        
+                                                    </td>
+                                                </tr>
+                                            
+                                        
+                                            
+                                                <tr class="table-secondary"
+                                                    data-confidence="0.5588263124227524"
+                                                    data-lpips="0.6141363978385925"
+                                                    data-clip="0.424720823764801">
+                                                    <td class="timestamp" data-timestamp="110.10999999999999">110.110s</td>
+                                                    <td class="confidence">55.88%</td>
+                                                    <td class="lpips-score">61.41%</td>
+                                                    <td class="clip-score">42.47%</td>
+                                                    <td>
+                                                        
+                                                            <span class="badge bg-secondary">reference_image.png</span>
+                                                        
+                                                    </td>
+                                                </tr>
+                                            
+                                        
+                                            
+                                                <tr class="table-secondary"
+                                                    data-confidence="0.5852206945419312"
+                                                    data-lpips="0.5217969417572021"
+                                                    data-clip="0.4313398599624634">
+                                                    <td class="timestamp" data-timestamp="111.11099999999999">111.111s</td>
+                                                    <td class="confidence">58.52%</td>
+                                                    <td class="lpips-score">52.18%</td>
+                                                    <td class="clip-score">43.13%</td>
+                                                    <td>
+                                                        
+                                                            <span class="badge bg-secondary">reference_image.png</span>
+                                                        
+                                                    </td>
+                                                </tr>
+                                            
+                                        
+                                            
+                                                <tr class="table-secondary"
+                                                    data-confidence="0.5832417905330658"
+                                                    data-lpips="0.5107828974723816"
+                                                    data-clip="0.4218750298023224">
+                                                    <td class="timestamp" data-timestamp="112.112">112.112s</td>
+                                                    <td class="confidence">58.32%</td>
+                                                    <td class="lpips-score">51.08%</td>
+                                                    <td class="clip-score">42.19%</td>
+                                                    <td>
+                                                        
+                                                            <span class="badge bg-secondary">reference_image.png</span>
+                                                        
+                                                    </td>
+                                                </tr>
+                                            
+                                        
+                                            
+                                                <tr class="table-warning"
+                                                    data-confidence="0.6179064810276031"
+                                                    data-lpips="0.5593580007553101"
+                                                    data-clip="0.5154919624328613">
+                                                    <td class="timestamp" data-timestamp="114.11399999999999">114.114s</td>
+                                                    <td class="confidence">61.79%</td>
+                                                    <td class="lpips-score">55.94%</td>
+                                                    <td class="clip-score">51.55%</td>
+                                                    <td>
+                                                        
+                                                            <span class="badge bg-secondary">reference_image.png</span>
+                                                        
+                                                    </td>
+                                                </tr>
+                                            
+                                        
+                                            
+                                                <tr class="table-secondary"
+                                                    data-confidence="0.5945805311203003"
+                                                    data-lpips="0.5428625345230103"
+                                                    data-clip="0.4605923295021057">
+                                                    <td class="timestamp" data-timestamp="115.115">115.115s</td>
+                                                    <td class="confidence">59.46%</td>
+                                                    <td class="lpips-score">54.29%</td>
+                                                    <td class="clip-score">46.06%</td>
+                                                    <td>
+                                                        
+                                                            <span class="badge bg-secondary">reference_image.png</span>
+                                                        
+                                                    </td>
+                                                </tr>
+                                            
+                                        
+                                            
+                                                <tr class="table-secondary"
+                                                    data-confidence="0.5845754146575928"
+                                                    data-lpips="0.551586389541626"
+                                                    data-clip="0.44494402408599854">
+                                                    <td class="timestamp" data-timestamp="116.11599999999999">116.116s</td>
+                                                    <td class="confidence">58.46%</td>
+                                                    <td class="lpips-score">55.16%</td>
+                                                    <td class="clip-score">44.49%</td>
+                                                    <td>
+                                                        
+                                                            <span class="badge bg-secondary">reference_image.png</span>
+                                                        
+                                                    </td>
+                                                </tr>
+                                            
+                                        
+                                    </tbody>
+                                </table>
+                            </div>
+                        
+                    </div>
+                </div>
+            
+        
+        
+        <div class="mt-3">
+            <a href="/" class="btn btn-primary">Analyze More Videos</a>
+            <button id="exportBtn" class="btn btn-success" onclick="exportResults()" data-task-id="debug-task-id">Export Results</button>
+        </div>
+    </div>
+</div>
+
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    <script src="/static/js/main.js"></script>
+    
+<script>
+    // Format seconds to hh:mm:ss format
+    function formatTime(seconds) {
+        const hrs = Math.floor(seconds / 3600);
+        const mins = Math.floor((seconds % 3600) / 60);
+        const secs = seconds % 60;
+        const formatted = `${hrs.toString().padStart(2, '0')}:${mins.toString().padStart(2, '0')}:${secs.toFixed(3).padStart(6, '0')}`;
+        return formatted;
+    }
+    
+    // Update timestamp displays with formatted time
+    document.addEventListener('DOMContentLoaded', function() {
+        document.querySelectorAll('.timestamp[data-timestamp]').forEach(function(element) {
+            const seconds = parseFloat(element.getAttribute('data-timestamp'));
+            element.textContent = formatTime(seconds);
+        });
+        
+        // Add event listener for global dynamic threshold slider
+        const globalSlider = document.getElementById('globalDynamicThreshold');
+        const globalValueDisplay = document.getElementById('globalDynamicThresholdValue');
+        
+        if (globalSlider && globalValueDisplay) {
+            // Set initial value display
+            globalValueDisplay.textContent = globalSlider.value;
+            
+            globalSlider.addEventListener('input', function() {
+                const threshold = this.value;
+                globalValueDisplay.textContent = threshold;
+                
+                // Filter rows in all tables based on confidence threshold
+                document.querySelectorAll('.results-table').forEach(function(resultsTable) {
+                    const videoIndex = resultsTable.id.replace('resultsTable-', '');
+                    const visibleCount = document.getElementById('visibleCount-' + videoIndex);
+                    
+                    let visibleRowCount = 0;
+                    resultsTable.querySelectorAll('tbody tr').forEach(function(row) {
+                        const confidence = parseFloat(row.getAttribute('data-confidence'));
+                        if (confidence >= threshold / 100.0) {
+                            row.style.display = '';
+                            visibleRowCount++;
+                        } else {
+                            row.style.display = 'none';
+                        }
+                    });
+                    
+                    // Update visible count for this video
+                    if (visibleCount) {
+                        visibleCount.textContent = visibleRowCount;
+                    }
+                });
+            });
+        }
+    });
+    
+    // Consolidated DOMContentLoaded handler with proper initialization
+    document.addEventListener('DOMContentLoaded', function() {
+        // Add event listeners for global dynamic threshold slider
+        const globalSlider = document.getElementById('globalDynamicThreshold');
+        const globalValueDisplay = document.getElementById('globalDynamicThresholdValue');
+        
+        if (globalSlider && globalValueDisplay) {
+            // Set initial value display
+            globalValueDisplay.textContent = globalSlider.value;
+            
+            globalSlider.addEventListener('input', function() {
+                const threshold = this.value;
+                globalValueDisplay.textContent = threshold;
+                
+                // Filter rows in all tables based on confidence threshold
+                document.querySelectorAll('.results-table').forEach(function(resultsTable) {
+                    const videoIndex = resultsTable.id.replace('resultsTable-', '');
+                    const visibleCount = document.getElementById('visibleCount-' + videoIndex);
+                    
+                    let visibleRowCount = 0;
+                    resultsTable.querySelectorAll('tbody tr').forEach(function(row) {
+                        const confidence = parseFloat(row.getAttribute('data-confidence'));
+                        if (confidence >= threshold / 100.0) {
+                            row.style.display = '';
+                            visibleRowCount++;
+                        } else {
+                            row.style.display = 'none';
+                        }
+                    });
+                    
+                    // Update visible count for this video
+                    if (visibleCount) {
+                        visibleCount.textContent = visibleRowCount;
+                    }
+                });
+            });
+            
+            // Trigger initial filtering for global slider
+            globalSlider.dispatchEvent(new Event('input'));
+        }
+        
+        // Add event listeners for overall threshold sliders
+        document.querySelectorAll('.overall-threshold').forEach(function(slider) {
+            slider.addEventListener('input', function() {
+                const videoIndex = this.dataset.videoIndex;
+                document.getElementById('overallThresholdValue-' + videoIndex).textContent = this.value;
+                applyFilters(videoIndex);
+            });
+        });
+        
+        // Add event listeners for LPIPS filter sliders
+        document.querySelectorAll('.lpips-filter').forEach(function(slider) {
+            slider.addEventListener('input', function() {
+                const videoIndex = this.dataset.videoIndex;
+                document.getElementById('lpipsFilterValue-' + videoIndex).textContent = this.value;
+                applyFilters(videoIndex);
+            });
+        });
+        
+        // Add event listeners for CLIP filter sliders
+        document.querySelectorAll('.clip-filter').forEach(function(slider) {
+            slider.addEventListener('input', function() {
+                const videoIndex = this.dataset.videoIndex;
+                document.getElementById('clipFilterValue-' + videoIndex).textContent = this.value;
+                applyFilters(videoIndex);
+            });
+        });
+        
+        // Apply initial filtering to show all matches by default
+        // But set more reasonable default values for better UX
+        setTimeout(function() {
+            document.querySelectorAll('.results-table').forEach(function(table) {
+                const videoIndex = table.id.replace('resultsTable-', '');
+                applyFilters(videoIndex);
+            });
+        }, 100); // Small delay to ensure DOM is fully ready
+    });
+    
+    function applyFilters(videoIndex) {
+        const overallThreshold = document.getElementById('overallThreshold-' + videoIndex).value;
+        const lpipsThreshold = document.getElementById('lpipsFilter-' + videoIndex).value;
+        const clipThreshold = document.getElementById('clipFilter-' + videoIndex).value;
+        
+        const resultsTable = document.getElementById('resultsTable-' + videoIndex);
+        const visibleCount = document.getElementById('visibleCount-' + videoIndex);
+        
+        if (!resultsTable) return;
+        
+        let visibleRowCount = 0;
+        resultsTable.querySelectorAll('tbody tr').forEach(function(row) {
+            // Skip error rows
+            if (row.classList.contains('table-danger')) {
+                row.style.display = '';
+                visibleRowCount++;
+                return;
+            }
+            
+            const overallConfidence = parseFloat(row.getAttribute('data-confidence'));
+            const lpipsScore = parseFloat(row.getAttribute('data-lpips')) || 0;
+            const clipScore = parseFloat(row.getAttribute('data-clip')) || 0;
+            
+            // Check all thresholds (convert thresholds to 0-1 scale for comparison)
+            const overallThresholdDecimal = overallThreshold / 100.0;
+            const lpipsThresholdDecimal = lpipsThreshold / 100.0;
+            const clipThresholdDecimal = clipThreshold / 100.0;
+            
+            // More permissive filtering - show if ANY threshold is met OR if all are zero (default)
+            if ((overallThreshold == 0 && lpipsThreshold == 0 && clipThreshold == 0) ||
+                (overallConfidence >= overallThresholdDecimal ||
+                 lpipsScore >= lpipsThresholdDecimal ||
+                 clipScore >= clipThresholdDecimal)) {
+                row.style.display = '';
+                visibleRowCount++;
+            } else {
+                row.style.display = 'none';
+            }
+        });
+        
+        // Update visible count for this video
+        if (visibleCount) {
+            visibleCount.textContent = visibleRowCount;
+        }
+    }
+</script>
+
+</body>
+</html>

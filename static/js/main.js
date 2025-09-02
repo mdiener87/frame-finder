@@ -176,6 +176,23 @@ function handleFormSubmission() {
                 }
             }
             
+            // Add new parameters to formData
+            const frameStride = document.getElementById('frameStride');
+            const resolutionTarget = document.getElementById('resolutionTarget');
+            const lpipsThreshold = document.getElementById('lpipsThreshold');
+            const clipThreshold = document.getElementById('clipThreshold');
+            const nmsThreshold = document.getElementById('nmsThreshold');
+            const debounceN = document.getElementById('debounceN');
+            const debounceM = document.getElementById('debounceM');
+            
+            if (frameStride) formData.append('frameStride', frameStride.value);
+            if (resolutionTarget) formData.append('resolutionTarget', resolutionTarget.value);
+            if (lpipsThreshold) formData.append('lpipsThreshold', lpipsThreshold.value);
+            if (clipThreshold) formData.append('clipThreshold', clipThreshold.value);
+            if (nmsThreshold) formData.append('nmsThreshold', nmsThreshold.value);
+            if (debounceN) formData.append('debounceN', debounceN.value);
+            if (debounceM) formData.append('debounceM', debounceM.value);
+            
             fetch('/upload', {
                 method: 'POST',
                 body: formData,
@@ -219,6 +236,99 @@ function handleFormSubmission() {
             });
         });
     }
+}
+
+// Add event listeners for new sliders
+document.addEventListener('DOMContentLoaded', function() {
+    const lpipsThreshold = document.getElementById('lpipsThreshold');
+    const clipThreshold = document.getElementById('clipThreshold');
+    const nmsThreshold = document.getElementById('nmsThreshold');
+    const debounceN = document.getElementById('debounceN');
+    const debounceM = document.getElementById('debounceM');
+    
+    if (lpipsThreshold) {
+        lpipsThreshold.addEventListener('input', function() {
+            document.getElementById('lpipsThresholdValue').textContent = this.value;
+        });
+    }
+    
+    if (clipThreshold) {
+        clipThreshold.addEventListener('input', function() {
+            document.getElementById('clipThresholdValue').textContent = this.value;
+        });
+    }
+    
+    if (nmsThreshold) {
+        nmsThreshold.addEventListener('input', function() {
+            document.getElementById('nmsThresholdValue').textContent = this.value;
+        });
+    }
+    
+    if (debounceN) {
+        debounceN.addEventListener('input', function() {
+            document.getElementById('debounceNValue').textContent = this.value;
+        });
+    }
+    
+    if (debounceM) {
+        debounceM.addEventListener('input', function() {
+            document.getElementById('debounceMValue').textContent = this.value;
+        });
+    }
+    
+    // Add event listeners for preset buttons
+    document.querySelectorAll('.preset-btn').forEach(button => {
+        button.addEventListener('click', function() {
+            applyPreset(this.dataset.preset);
+        });
+    });
+});
+
+// Preset application function
+function applyPreset(preset) {
+    switch(preset) {
+        case 'precision':
+            // Stricter thresholds for high precision
+            document.getElementById('lpipsThreshold').value = 0.25;
+            document.getElementById('clipThreshold').value = 0.38;
+            document.getElementById('nmsThreshold').value = 0.5;
+            document.getElementById('debounceN').value = 4;
+            document.getElementById('debounceM').value = 12;
+            break;
+        case 'recall':
+            // Looser thresholds for high recall
+            document.getElementById('lpipsThreshold').value = 0.40;
+            document.getElementById('clipThreshold').value = 0.28;
+            document.getElementById('nmsThreshold').value = 0.5;
+            document.getElementById('debounceN').value = 2;
+            document.getElementById('debounceM').value = 10;
+            break;
+        case 'balanced':
+            // Default balanced settings
+            document.getElementById('lpipsThreshold').value = 0.35;
+            document.getElementById('clipThreshold').value = 0.33;
+            document.getElementById('nmsThreshold').value = 0.5;
+            document.getElementById('debounceN').value = 3;
+            document.getElementById('debounceM').value = 12;
+            break;
+        case 'performance':
+            // Settings optimized for performance
+            document.getElementById('frameStride').value = 3;
+            document.getElementById('resolutionTarget').value = 720;
+            document.getElementById('lpipsThreshold').value = 0.35;
+            document.getElementById('clipThreshold').value = 0.33;
+            document.getElementById('nmsThreshold').value = 0.5;
+            document.getElementById('debounceN').value = 2;
+            document.getElementById('debounceM').value = 8;
+            break;
+    }
+    
+    // Update displayed values
+    document.getElementById('lpipsThresholdValue').textContent = document.getElementById('lpipsThreshold').value;
+    document.getElementById('clipThresholdValue').textContent = document.getElementById('clipThreshold').value;
+    document.getElementById('nmsThresholdValue').textContent = document.getElementById('nmsThreshold').value;
+    document.getElementById('debounceNValue').textContent = document.getElementById('debounceN').value;
+    document.getElementById('debounceMValue').textContent = document.getElementById('debounceM').value;
 }
 
 // Poll for task status

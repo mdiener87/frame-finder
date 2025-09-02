@@ -43,7 +43,9 @@ def index():
     """Render the main upload page"""
     return render_template('index.html')
 
-def process_videos_background(task_id, reference_paths, video_paths, frame_interval, confidence_threshold, negative_paths):
+def process_videos_background(task_id, reference_paths, video_paths, frame_interval, confidence_threshold, negative_paths,
+                            frame_stride=1, resolution_target=1080, lpips_threshold=0.35, clip_threshold=0.33,
+                            nms_iou_threshold=0.5, debounce_n=3, debounce_m=12):
     """Process videos in background and update progress"""
     try:
         # Update task status to processing
@@ -56,6 +58,13 @@ def process_videos_background(task_id, reference_paths, video_paths, frame_inter
             'negative_paths': negative_paths,
             'frame_interval': frame_interval,
             'confidence_threshold': confidence_threshold,
+            'frame_stride': frame_stride,
+            'resolution_target': resolution_target,
+            'lpips_threshold': lpips_threshold,
+            'clip_threshold': clip_threshold,
+            'nms_iou_threshold': nms_iou_threshold,
+            'debounce_n': debounce_n,
+            'debounce_m': debounce_m,
             'error': None,
             'cancelled': False  # Add cancellation flag
         }
@@ -81,7 +90,18 @@ def process_videos_background(task_id, reference_paths, video_paths, frame_inter
                         processing_tasks[task_id]['progress'] = max(0, min(100, total_progress))
         
         # Process videos (this will take time) with progress callback
-        results = process_videos(reference_paths, video_paths, frame_interval, confidence_threshold, negative_paths, progress_callback)
+        results = process_videos(
+            reference_paths, video_paths, negative_paths,
+            frame_interval=frame_interval,
+            frame_stride=frame_stride,
+            resolution_target=resolution_target,
+            lpips_threshold=lpips_threshold,
+            clip_threshold=clip_threshold,
+            nms_iou_threshold=nms_iou_threshold,
+            debounce_n=debounce_n,
+            debounce_m=debounce_m,
+            progress_callback=progress_callback
+        )
         
         # Check if task was cancelled during processing
         if task_id in processing_tasks and processing_tasks[task_id].get('cancelled', False):
@@ -208,8 +228,15 @@ def upload_files():
     
     # Get processing parameters from form
     frame_interval = float(request.form.get('frameInterval', 1.0))
-    # Use a default confidence threshold of 75% since we removed the slider
-    confidence_threshold = 0.75
+    frame_stride = int(request.form.get('frameStride', 1))
+    resolution_target = int(request.form.get('resolutionTarget', 1080))
+    lpips_threshold = float(request.form.get('lpipsThreshold', 0.6))  # More reasonable default
+    clip_threshold = float(request.form.get('clipThreshold', 0.2))   # More reasonable default
+    nms_iou_threshold = float(request.form.get('nmsThreshold', 0.5))
+    debounce_n = int(request.form.get('debounceN', 2))  # More reasonable default
+    debounce_m = int(request.form.get('debounceM', 8))  # More reasonable default
+    # Get confidence threshold from form (default to 0 for showing all matches)
+    confidence_threshold = float(request.form.get('confidenceThreshold', 0.0))
     
     # Create a unique task ID
     task_id = str(uuid.uuid4())
@@ -217,7 +244,16 @@ def upload_files():
     # Start background processing
     thread = threading.Thread(
         target=process_videos_background,
-        args=(task_id, reference_paths, video_paths, frame_interval, confidence_threshold, negative_paths)
+        args=(task_id, reference_paths, video_paths, frame_interval, confidence_threshold, negative_paths),
+        kwargs={
+            'frame_stride': frame_stride,
+            'resolution_target': resolution_target,
+            'lpips_threshold': lpips_threshold,
+            'clip_threshold': clip_threshold,
+            'nms_iou_threshold': nms_iou_threshold,
+            'debounce_n': debounce_n,
+            'debounce_m': debounce_m
+        }
     )
     thread.start()
     

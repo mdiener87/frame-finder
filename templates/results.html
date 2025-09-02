@@ -19,9 +19,9 @@
                         <div class="col-md-6">
                             <div class="mb-2">
                                 <label for="globalDynamicThreshold" class="form-label">Filter by Confidence:</label>
-                                <input type="range" class="form-range" id="globalDynamicThreshold" min="0" max="100" value="75">
+                                <input type="range" class="form-range" id="globalDynamicThreshold" min="0" max="100" value="0">
                                 <div class="form-text">
-                                    Minimum confidence: <span id="globalDynamicThresholdValue">75</span>%
+                                    Minimum confidence: <span id="globalDynamicThresholdValue">0</span>%
                                 </div>
                             </div>
                         </div>
@@ -45,12 +45,51 @@
                                 </div>
                             </div>
                             
+                            <!-- Enhanced confidence filter -->
+                            <div class="card mb-4">
+                                <div class="card-body">
+                                    <div class="row">
+                                        <div class="col-md-12">
+                                            <h5>Confidence Filters</h5>
+                                        </div>
+                                        <div class="col-md-4">
+                                            <div class="mb-2">
+                                                <label for="overallThreshold-{{ loop.index }}" class="form-label">Overall Confidence:</label>
+                                                <input type="range" class="form-range overall-threshold" id="overallThreshold-{{ loop.index }}" min="0" max="100" value="0" data-video-index="{{ loop.index }}">
+                                                <div class="form-text">
+                                                    Minimum: <span id="overallThresholdValue-{{ loop.index }}">0</span>%
+                                                </div>
+                                            </div>
+                                        </div>
+                                        <div class="col-md-4">
+                                            <div class="mb-2">
+                                                <label for="lpipsFilter-{{ loop.index }}" class="form-label">LPIPS Score:</label>
+                                                <input type="range" class="form-range lpips-filter" id="lpipsFilter-{{ loop.index }}" min="0" max="100" value="0" data-video-index="{{ loop.index }}">
+                                                <div class="form-text">
+                                                    Minimum: <span id="lpipsFilterValue-{{ loop.index }}">0</span>%
+                                                </div>
+                                            </div>
+                                        </div>
+                                        <div class="col-md-4">
+                                            <div class="mb-2">
+                                                <label for="clipFilter-{{ loop.index }}" class="form-label">CLIP Score:</label>
+                                                <input type="range" class="form-range clip-filter" id="clipFilter-{{ loop.index }}" min="0" max="100" value="0" data-video-index="{{ loop.index }}">
+                                                <div class="form-text">
+                                                    Minimum: <span id="clipFilterValue-{{ loop.index }}">0</span>%
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            
                             <div class="table-responsive">
                                 <table class="table table-striped results-table" id="resultsTable-{{ loop.index }}">
                                     <thead>
                                         <tr>
                                             <th>Timestamp</th>
-                                            <th>Confidence Score</th>
+                                            <th>Overall Confidence</th>
+                                            <th>LPIPS Score</th>
+                                            <th>CLIP Score</th>
                                             <th>Reference Image</th>
                                         </tr>
                                     </thead>
@@ -58,13 +97,17 @@
                                         {% for match in video_data.matches %}
                                             {% if match.error %}
                                                 <tr class="table-danger">
-                                                    <td colspan="3">Error: {{ match.error }}</td>
+                                                    <td colspan="5">Error: {{ match.error }}</td>
                                                 </tr>
                                             {% else %}
                                                 <tr class="{{ 'table-success' if match.confidence > 0.8 else 'table-warning' if match.confidence > 0.6 else 'table-secondary' }}"
-                                                    data-confidence="{{ match.confidence }}">
+                                                    data-confidence="{{ match.confidence }}"
+                                                    data-lpips="{{ match.lpips_score|default(0) }}"
+                                                    data-clip="{{ match.clip_score|default(0) }}">
                                                     <td class="timestamp" data-timestamp="{{ match.timestamp }}">{{ "%.3f"|format(match.timestamp) }}s</td>
                                                     <td class="confidence">{{ "%.2f"|format(match.confidence * 100) }}%</td>
+                                                    <td class="lpips-score">{{ "%.2f"|format(match.lpips_score * 100) if match.lpips_score else 'N/A' }}%</td>
+                                                    <td class="clip-score">{{ "%.2f"|format(match.clip_score * 100) if match.clip_score else 'N/A' }}%</td>
                                                     <td>
                                                         {% if match.reference_image %}
                                                             <span class="badge bg-secondary">{{ match.reference_image|basename }}</span>
@@ -151,5 +194,129 @@
             });
         }
     });
+    
+    // Consolidated DOMContentLoaded handler with proper initialization
+    document.addEventListener('DOMContentLoaded', function() {
+        // Add event listeners for global dynamic threshold slider
+        const globalSlider = document.getElementById('globalDynamicThreshold');
+        const globalValueDisplay = document.getElementById('globalDynamicThresholdValue');
+        
+        if (globalSlider && globalValueDisplay) {
+            // Set initial value display
+            globalValueDisplay.textContent = globalSlider.value;
+            
+            globalSlider.addEventListener('input', function() {
+                const threshold = this.value;
+                globalValueDisplay.textContent = threshold;
+                
+                // Filter rows in all tables based on confidence threshold
+                document.querySelectorAll('.results-table').forEach(function(resultsTable) {
+                    const videoIndex = resultsTable.id.replace('resultsTable-', '');
+                    const visibleCount = document.getElementById('visibleCount-' + videoIndex);
+                    
+                    let visibleRowCount = 0;
+                    resultsTable.querySelectorAll('tbody tr').forEach(function(row) {
+                        const confidence = parseFloat(row.getAttribute('data-confidence'));
+                        if (confidence >= threshold / 100.0) {
+                            row.style.display = '';
+                            visibleRowCount++;
+                        } else {
+                            row.style.display = 'none';
+                        }
+                    });
+                    
+                    // Update visible count for this video
+                    if (visibleCount) {
+                        visibleCount.textContent = visibleRowCount;
+                    }
+                });
+            });
+            
+            // Trigger initial filtering for global slider
+            globalSlider.dispatchEvent(new Event('input'));
+        }
+        
+        // Add event listeners for overall threshold sliders
+        document.querySelectorAll('.overall-threshold').forEach(function(slider) {
+            slider.addEventListener('input', function() {
+                const videoIndex = this.dataset.videoIndex;
+                document.getElementById('overallThresholdValue-' + videoIndex).textContent = this.value;
+                applyFilters(videoIndex);
+            });
+        });
+        
+        // Add event listeners for LPIPS filter sliders
+        document.querySelectorAll('.lpips-filter').forEach(function(slider) {
+            slider.addEventListener('input', function() {
+                const videoIndex = this.dataset.videoIndex;
+                document.getElementById('lpipsFilterValue-' + videoIndex).textContent = this.value;
+                applyFilters(videoIndex);
+            });
+        });
+        
+        // Add event listeners for CLIP filter sliders
+        document.querySelectorAll('.clip-filter').forEach(function(slider) {
+            slider.addEventListener('input', function() {
+                const videoIndex = this.dataset.videoIndex;
+                document.getElementById('clipFilterValue-' + videoIndex).textContent = this.value;
+                applyFilters(videoIndex);
+            });
+        });
+        
+        // Apply initial filtering to show all matches by default
+        // But set more reasonable default values for better UX
+        setTimeout(function() {
+            document.querySelectorAll('.results-table').forEach(function(table) {
+                const videoIndex = table.id.replace('resultsTable-', '');
+                applyFilters(videoIndex);
+            });
+        }, 100); // Small delay to ensure DOM is fully ready
+    });
+    
+    function applyFilters(videoIndex) {
+        const overallThreshold = document.getElementById('overallThreshold-' + videoIndex).value;
+        const lpipsThreshold = document.getElementById('lpipsFilter-' + videoIndex).value;
+        const clipThreshold = document.getElementById('clipFilter-' + videoIndex).value;
+        
+        const resultsTable = document.getElementById('resultsTable-' + videoIndex);
+        const visibleCount = document.getElementById('visibleCount-' + videoIndex);
+        
+        if (!resultsTable) return;
+        
+        let visibleRowCount = 0;
+        resultsTable.querySelectorAll('tbody tr').forEach(function(row) {
+            // Skip error rows
+            if (row.classList.contains('table-danger')) {
+                row.style.display = '';
+                visibleRowCount++;
+                return;
+            }
+            
+            const overallConfidence = parseFloat(row.getAttribute('data-confidence'));
+            const lpipsScore = parseFloat(row.getAttribute('data-lpips')) || 0;
+            const clipScore = parseFloat(row.getAttribute('data-clip')) || 0;
+            
+            // Check all thresholds (convert thresholds to 0-1 scale for comparison)
+            const overallThresholdDecimal = overallThreshold / 100.0;
+            const lpipsThresholdDecimal = lpipsThreshold / 100.0;
+            const clipThresholdDecimal = clipThreshold / 100.0;
+            
+            // More permissive filtering - show if ANY threshold is met OR if all are zero (default)
+            if ((overallThreshold == 0 && lpipsThreshold == 0 && clipThreshold == 0) ||
+                (overallConfidence >= overallThresholdDecimal ||
+                 lpipsScore >= lpipsThresholdDecimal ||
+                 clipScore >= clipThresholdDecimal)) {
+                row.style.display = '';
+                visibleRowCount++;
+            } else {
+                row.style.display = 'none';
+            }
+        });
+        
+        // Update visible count for this video
+        if (visibleCount) {
+            visibleCount.textContent = visibleRowCount;
+        }
+    }
 </script>
 {% endblock %}

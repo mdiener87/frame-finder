@@ -1,0 +1,1458 @@
+{
+  "results": {
+    "TT_Start.mp4": {
+      "matches": [
+        {
+          "bbox": [
+            4,
+            7,
+            246,
+            246
+          ],
+          "score": 1.0,
+          "scale": 1.1,
+          "reference_index": 0,
+          "timestamp": 0.0,
+          "lpips_score": 0.586145281791687,
+          "clip_score": 0.21711033582687378,
+          "confidence": 0.46201884746551514,
+          "reference_image": "reference_image.png"
+        },
+        {
+          "bbox": [
+            4,
+            7,
+            246,
+            246
+          ],
+          "score": 1.0,
+          "scale": 1.1,
+          "reference_index": 0,
+          "timestamp": 1.001,
+          "lpips_score": 0.586145281791687,
+          "clip_score": 0.21711033582687378,
+          "confidence": 0.46201884746551514,
+          "reference_image": "reference_image.png"
+        },
+        {
+          "bbox": [
+            83,
+            73,
+            134,
+            134
+          ],
+          "score": 0.3229975700378418,
+          "scale": 0.6,
+          "reference_index": 0,
+          "timestamp": 2.002,
+          "lpips_score": 0.5907204747200012,
+          "clip_score": 0.3437432646751404,
+          "confidence": 0.5241915136575699,
+          "reference_image": "reference_image.png"
+        },
+        {
+          "bbox": [
+            90,
+            44,
+            134,
+            134
+          ],
+          "score": 0.32676663994789124,
+          "scale": 0.6,
+          "reference_index": 0,
+          "timestamp": 3.0029999999999997,
+          "lpips_score": 0.5771276950836182,
+          "clip_score": 0.5076860189437866,
+          "confidence": 0.6095610857009888,
+          "reference_image": "reference_image.png"
+        },
+        {
+          "bbox": [
+            90,
+            44,
+            134,
+            134
+          ],
+          "score": 0.32831457257270813,
+          "scale": 0.6,
+          "reference_index": 0,
+          "timestamp": 4.004,
+          "lpips_score": 0.5761727094650269,
+          "clip_score": 0.5112218856811523,
+          "confidence": 0.6115677654743195,
+          "reference_image": "reference_image.png"
+        },
+        {
+          "bbox": [
+            90,
+            44,
+            134,
+            134
+          ],
+          "score": 0.3302016854286194,
+          "scale": 0.6,
+          "reference_index": 0,
+          "timestamp": 5.005,
+          "lpips_score": 0.5751543045043945,
+          "clip_score": 0.4990818202495575,
+          "confidence": 0.6057523339986801,
+          "reference_image": "reference_image.png"
+        },
+        {
+          "bbox": [
+            90,
+            36,
+            134,
+            134
+          ],
+          "score": 0.32670465111732483,
+          "scale": 0.6,
+          "reference_index": 0,
+          "timestamp": 6.005999999999999,
+          "lpips_score": 0.5759592652320862,
+          "clip_score": 0.46121305227279663,
+          "confidence": 0.5866167098283768,
+          "reference_image": "reference_image.png"
+        },
+        {
+          "bbox": [
+            3,
+            67,
+            336,
+            336
+          ],
+          "score": 0.3122176229953766,
+          "scale": 1.5,
+          "reference_index": 0,
+          "timestamp": 6.005999999999999,
+          "lpips_score": 0.5268906950950623,
+          "clip_score": 0.4885917603969574,
+          "confidence": 0.6125732064247131,
+          "reference_image": "reference_image.png"
+        },
+        {
+          "bbox": [
+            90,
+            35,
+            134,
+            134
+          ],
+          "score": 0.3247801959514618,
+          "scale": 0.6,
+          "reference_index": 0,
+          "timestamp": 7.007,
+          "lpips_score": 0.5761129856109619,
+          "clip_score": 0.4675801396369934,
+          "confidence": 0.5897618234157562,
+          "reference_image": "reference_image.png"
+        },
+        {
+          "bbox": [
+            1,
+            67,
+            336,
+            336
+          ],
+          "score": 0.31341615319252014,
+          "scale": 1.5,
+          "reference_index": 0,
+          "timestamp": 7.007,
+          "lpips_score": 0.5200568437576294,
+          "clip_score": 0.5122645497322083,
+          "confidence": 0.6261180639266968,
+          "reference_image": "reference_image.png"
+        },
+        {
+          "bbox": [
+            90,
+            38,
+            134,
+            134
+          ],
+          "score": 0.3243614435195923,
+          "scale": 0.6,
+          "reference_index": 0,
+          "timestamp": 8.008,
+          "lpips_score": 0.5750231742858887,
+          "clip_score": 0.49107909202575684,
+          "confidence": 0.6017837524414062,
+          "reference_image": "reference_image.png"
+        },
+        {
+          "bbox": [
+            90,
+            36,
+            134,
+            134
+          ],
+          "score": 0.3256451487541199,
+          "scale": 0.6,
+          "reference_index": 0,
+          "timestamp": 9.008999999999999,
+          "lpips_score": 0.5703073740005493,
+          "clip_score": 0.4662058353424072,
+          "confidence": 0.5905260741710663,
+          "reference_image": "reference_image.png"
+        },
+        {
+          "bbox": [
+            90,
+            44,
+            134,
+            134
+          ],
+          "score": 0.3268676996231079,
+          "scale": 0.6,
+          "reference_index": 0,
+          "timestamp": 10.01,
+          "lpips_score": 0.571147084236145,
+          "clip_score": 0.5079724788665771,
+          "confidence": 0.6111994683742523,
+          "reference_image": "reference_image.png"
+        },
+        {
+          "bbox": [
+            90,
+            44,
+            134,
+            134
+          ],
+          "score": 0.3347545266151428,
+          "scale": 0.6,
+          "reference_index": 0,
+          "timestamp": 11.011,
+          "lpips_score": 0.5755088329315186,
+          "clip_score": 0.5027124285697937,
+          "confidence": 0.6074790060520172,
+          "reference_image": "reference_image.png"
+        },
+        {
+          "bbox": [
+            90,
+            45,
+            134,
+            134
+          ],
+          "score": 0.3398379683494568,
+          "scale": 0.6,
+          "reference_index": 0,
+          "timestamp": 12.011999999999999,
+          "lpips_score": 0.573358416557312,
+          "clip_score": 0.5173632502555847,
+          "confidence": 0.6153420209884644,
+          "reference_image": "reference_image.png"
+        },
+        {
+          "bbox": [
+            90,
+            45,
+            134,
+            134
+          ],
+          "score": 0.33896660804748535,
+          "scale": 0.6,
+          "reference_index": 0,
+          "timestamp": 13.013,
+          "lpips_score": 0.5761537551879883,
+          "clip_score": 0.5117559432983398,
+          "confidence": 0.6118395328521729,
+          "reference_image": "reference_image.png"
+        },
+        {
+          "bbox": [
+            0,
+            52,
+            291,
+            291
+          ],
+          "score": 0.317522794008255,
+          "scale": 1.3,
+          "reference_index": 0,
+          "timestamp": 16.016,
+          "lpips_score": 0.569936215877533,
+          "clip_score": 0.5196411609649658,
+          "confidence": 0.6173365265130997,
+          "reference_image": "reference_image.png"
+        },
+        {
+          "bbox": [
+            13,
+            90,
+            134,
+            134
+          ],
+          "score": 0.30377814173698425,
+          "scale": 0.6,
+          "reference_index": 0,
+          "timestamp": 23.023,
+          "lpips_score": 0.5822785496711731,
+          "clip_score": 0.4567757546901703,
+          "confidence": 0.5828182399272919,
+          "reference_image": "reference_image.png"
+        },
+        {
+          "bbox": [
+            28,
+            11,
+            134,
+            134
+          ],
+          "score": 0.30652284622192383,
+          "scale": 0.6,
+          "reference_index": 0,
+          "timestamp": 25.025,
+          "lpips_score": 0.5765378475189209,
+          "clip_score": 0.4654957056045532,
+          "confidence": 0.5886133909225464,
+          "reference_image": "reference_image.png"
+        },
+        {
+          "bbox": [
+            133,
+            56,
+            358,
+            358
+          ],
+          "score": 0.5341559648513794,
+          "scale": 1.6,
+          "reference_index": 0,
+          "timestamp": 27.026999999999997,
+          "lpips_score": 0.5302820205688477,
+          "clip_score": 0.5137519240379333,
+          "confidence": 0.6243054568767548,
+          "reference_image": "reference_image.png"
+        },
+        {
+          "bbox": [
+            112,
+            52,
+            336,
+            336
+          ],
+          "score": 0.5529069900512695,
+          "scale": 1.5,
+          "reference_index": 0,
+          "timestamp": 28.028,
+          "lpips_score": 0.5616143345832825,
+          "clip_score": 0.4922434687614441,
+          "confidence": 0.6057181507349014,
+          "reference_image": "reference_image.png"
+        },
+        {
+          "bbox": [
+            89,
+            58,
+            313,
+            313
+          ],
+          "score": 0.5182318687438965,
+          "scale": 1.4,
+          "reference_index": 0,
+          "timestamp": 32.032,
+          "lpips_score": 0.5603054165840149,
+          "clip_score": 0.47121232748031616,
+          "confidence": 0.5955298095941544,
+          "reference_image": "reference_image.png"
+        },
+        {
+          "bbox": [
+            81,
+            53,
+            313,
+            313
+          ],
+          "score": 0.5202012658119202,
+          "scale": 1.4,
+          "reference_index": 0,
+          "timestamp": 33.032999999999994,
+          "lpips_score": 0.5517120957374573,
+          "clip_score": 0.3428691029548645,
+          "confidence": 0.5335065275430679,
+          "reference_image": "reference_image.png"
+        },
+        {
+          "bbox": [
+            67,
+            55,
+            291,
+            291
+          ],
+          "score": 0.5174437165260315,
+          "scale": 1.3,
+          "reference_index": 0,
+          "timestamp": 34.034,
+          "lpips_score": 0.5908520221710205,
+          "clip_score": 0.4227246046066284,
+          "confidence": 0.5636492967605591,
+          "reference_image": "reference_image.png"
+        },
+        {
+          "bbox": [
+            55,
+            54,
+            291,
+            291
+          ],
+          "score": 0.4640771746635437,
+          "scale": 1.3,
+          "reference_index": 0,
+          "timestamp": 35.035,
+          "lpips_score": 0.6055307984352112,
+          "clip_score": 0.4270693063735962,
+          "confidence": 0.5621519535779953,
+          "reference_image": "reference_image.png"
+        },
+        {
+          "bbox": [
+            22,
+            32,
+            268,
+            268
+          ],
+          "score": 0.4526403546333313,
+          "scale": 1.2,
+          "reference_index": 0,
+          "timestamp": 36.035999999999994,
+          "lpips_score": 0.5955174565315247,
+          "clip_score": 0.4060104191303253,
+          "confidence": 0.5541258454322815,
+          "reference_image": "reference_image.png"
+        },
+        {
+          "bbox": [
+            0,
+            62,
+            358,
+            358
+          ],
+          "score": 0.4378874599933624,
+          "scale": 1.6,
+          "reference_index": 0,
+          "timestamp": 41.041,
+          "lpips_score": 0.5217701196670532,
+          "clip_score": 0.5290820598602295,
+          "confidence": 0.6340985000133514,
+          "reference_image": "reference_image.png"
+        },
+        {
+          "bbox": [
+            0,
+            49,
+            358,
+            358
+          ],
+          "score": 0.455753356218338,
+          "scale": 1.6,
+          "reference_index": 0,
+          "timestamp": 42.041999999999994,
+          "lpips_score": 0.5179856419563293,
+          "clip_score": 0.5398812890052795,
+          "confidence": 0.6404442340135574,
+          "reference_image": "reference_image.png"
+        },
+        {
+          "bbox": [
+            0,
+            66,
+            358,
+            358
+          ],
+          "score": 0.4307132661342621,
+          "scale": 1.6,
+          "reference_index": 0,
+          "timestamp": 43.043,
+          "lpips_score": 0.5297306776046753,
+          "clip_score": 0.49166208505630493,
+          "confidence": 0.6133983731269836,
+          "reference_image": "reference_image.png"
+        },
+        {
+          "bbox": [
+            0,
+            61,
+            358,
+            358
+          ],
+          "score": 0.45137542486190796,
+          "scale": 1.6,
+          "reference_index": 0,
+          "timestamp": 44.044,
+          "lpips_score": 0.5387219786643982,
+          "clip_score": 0.5111911296844482,
+          "confidence": 0.6209150701761246,
+          "reference_image": "reference_image.png"
+        },
+        {
+          "bbox": [
+            2,
+            48,
+            313,
+            313
+          ],
+          "score": 0.3552777171134949,
+          "scale": 1.4,
+          "reference_index": 0,
+          "timestamp": 45.044999999999995,
+          "lpips_score": 0.5192814469337463,
+          "clip_score": 0.5574950575828552,
+          "confidence": 0.648927167057991,
+          "reference_image": "reference_image.png"
+        },
+        {
+          "bbox": [
+            82,
+            0,
+            134,
+            134
+          ],
+          "score": 0.3546517491340637,
+          "scale": 0.6,
+          "reference_index": 0,
+          "timestamp": 45.044999999999995,
+          "lpips_score": 0.5872656106948853,
+          "clip_score": 0.4203931391239166,
+          "confidence": 0.563380166888237,
+          "reference_image": "reference_image.png"
+        },
+        {
+          "bbox": [
+            1,
+            41,
+            134,
+            134
+          ],
+          "score": 0.4200659394264221,
+          "scale": 0.6,
+          "reference_index": 0,
+          "timestamp": 48.047999999999995,
+          "lpips_score": 0.5625897645950317,
+          "clip_score": 0.43163061141967773,
+          "confidence": 0.5751678645610809,
+          "reference_image": "reference_image.png"
+        },
+        {
+          "bbox": [
+            0,
+            67,
+            358,
+            358
+          ],
+          "score": 0.40954965353012085,
+          "scale": 1.6,
+          "reference_index": 0,
+          "timestamp": 50.05,
+          "lpips_score": 0.4867837429046631,
+          "clip_score": 0.5626188516616821,
+          "confidence": 0.6596134901046753,
+          "reference_image": "reference_image.png"
+        },
+        {
+          "bbox": [
+            95,
+            20,
+            358,
+            358
+          ],
+          "score": 0.3345385789871216,
+          "scale": 1.6,
+          "reference_index": 0,
+          "timestamp": 51.050999999999995,
+          "lpips_score": 0.5264061689376831,
+          "clip_score": 0.5852773189544678,
+          "confidence": 0.6610371172428131,
+          "reference_image": "reference_image.png"
+        },
+        {
+          "bbox": [
+            53,
+            65,
+            134,
+            134
+          ],
+          "score": 0.3964821994304657,
+          "scale": 0.6,
+          "reference_index": 0,
+          "timestamp": 52.052,
+          "lpips_score": 0.6033947467803955,
+          "clip_score": 0.447110116481781,
+          "confidence": 0.5727063715457916,
+          "reference_image": "reference_image.png"
+        },
+        {
+          "bbox": [
+            60,
+            4,
+            156,
+            156
+          ],
+          "score": 0.36089369654655457,
+          "scale": 0.7,
+          "reference_index": 0,
+          "timestamp": 53.053,
+          "lpips_score": 0.5432453155517578,
+          "clip_score": 0.52930748462677,
+          "confidence": 0.6288424134254456,
+          "reference_image": "reference_image.png"
+        },
+        {
+          "bbox": [
+            85,
+            18,
+            134,
+            134
+          ],
+          "score": 0.3639003038406372,
+          "scale": 0.6,
+          "reference_index": 0,
+          "timestamp": 54.053999999999995,
+          "lpips_score": 0.5413832068443298,
+          "clip_score": 0.5103176832199097,
+          "confidence": 0.6198130398988724,
+          "reference_image": "reference_image.png"
+        },
+        {
+          "bbox": [
+            0,
+            0,
+            358,
+            358
+          ],
+          "score": 0.2296803593635559,
+          "scale": 1.6,
+          "reference_index": 0,
+          "timestamp": 55.05499999999999,
+          "lpips_score": 0.49164536595344543,
+          "clip_score": 0.5253076553344727,
+          "confidence": 0.639742486178875,
+          "reference_image": "reference_image.png"
+        },
+        {
+          "bbox": [
+            85,
+            0,
+            134,
+            134
+          ],
+          "score": 0.13888826966285706,
+          "scale": 0.6,
+          "reference_index": 0,
+          "timestamp": 56.056,
+          "lpips_score": 0.5900530815124512,
+          "clip_score": 0.428278386592865,
+          "confidence": 0.5666259229183197,
+          "reference_image": "reference_image.png"
+        },
+        {
+          "bbox": [
+            20,
+            66,
+            134,
+            134
+          ],
+          "score": 0.1358589380979538,
+          "scale": 0.6,
+          "reference_index": 0,
+          "timestamp": 56.056,
+          "lpips_score": 0.5465813875198364,
+          "clip_score": 0.6288032531738281,
+          "confidence": 0.677756279706955,
+          "reference_image": "reference_image.png"
+        },
+        {
+          "bbox": [
+            0,
+            89,
+            313,
+            313
+          ],
+          "score": 0.11185828596353531,
+          "scale": 1.4,
+          "reference_index": 0,
+          "timestamp": 56.056,
+          "lpips_score": 0.5517624020576477,
+          "clip_score": 0.6344407796859741,
+          "confidence": 0.6792797893285751,
+          "reference_image": "reference_image.png"
+        },
+        {
+          "bbox": [
+            1,
+            61,
+            134,
+            134
+          ],
+          "score": 0.3799300491809845,
+          "scale": 0.6,
+          "reference_index": 0,
+          "timestamp": 57.056999999999995,
+          "lpips_score": 0.5736504793167114,
+          "clip_score": 0.4561317265033722,
+          "confidence": 0.5846532434225082,
+          "reference_image": "reference_image.png"
+        },
+        {
+          "bbox": [
+            15,
+            56,
+            134,
+            134
+          ],
+          "score": 0.4904560148715973,
+          "scale": 0.6,
+          "reference_index": 0,
+          "timestamp": 58.05799999999999,
+          "lpips_score": 0.5932441353797913,
+          "clip_score": 0.4058375358581543,
+          "confidence": 0.5546077340841293,
+          "reference_image": "reference_image.png"
+        },
+        {
+          "bbox": [
+            7,
+            57,
+            134,
+            134
+          ],
+          "score": 0.5035626888275146,
+          "scale": 0.6,
+          "reference_index": 0,
+          "timestamp": 59.059,
+          "lpips_score": 0.5880818963050842,
+          "clip_score": 0.47230657935142517,
+          "confidence": 0.5891328155994415,
+          "reference_image": "reference_image.png"
+        },
+        {
+          "bbox": [
+            2,
+            63,
+            134,
+            134
+          ],
+          "score": 0.4541754126548767,
+          "scale": 0.6,
+          "reference_index": 0,
+          "timestamp": 60.059999999999995,
+          "lpips_score": 0.5892668962478638,
+          "clip_score": 0.4532497823238373,
+          "confidence": 0.5793081670999527,
+          "reference_image": "reference_image.png"
+        },
+        {
+          "bbox": [
+            27,
+            37,
+            134,
+            134
+          ],
+          "score": 0.28627946972846985,
+          "scale": 0.6,
+          "reference_index": 0,
+          "timestamp": 62.062,
+          "lpips_score": 0.5717490911483765,
+          "clip_score": 0.506847620010376,
+          "confidence": 0.6104865372180939,
+          "reference_image": "reference_image.png"
+        },
+        {
+          "bbox": [
+            35,
+            6,
+            134,
+            134
+          ],
+          "score": 0.2834996283054352,
+          "scale": 0.6,
+          "reference_index": 0,
+          "timestamp": 63.062999999999995,
+          "lpips_score": 0.5622841715812683,
+          "clip_score": 0.4957202672958374,
+          "confidence": 0.6072890907526016,
+          "reference_image": "reference_image.png"
+        },
+        {
+          "bbox": [
+            35,
+            5,
+            134,
+            134
+          ],
+          "score": 0.2903290390968323,
+          "scale": 0.6,
+          "reference_index": 0,
+          "timestamp": 64.064,
+          "lpips_score": 0.5623908042907715,
+          "clip_score": 0.4998167157173157,
+          "confidence": 0.609310656785965,
+          "reference_image": "reference_image.png"
+        },
+        {
+          "bbox": [
+            35,
+            4,
+            134,
+            134
+          ],
+          "score": 0.28105831146240234,
+          "scale": 0.6,
+          "reference_index": 0,
+          "timestamp": 65.065,
+          "lpips_score": 0.5584841966629028,
+          "clip_score": 0.5224438309669495,
+          "confidence": 0.621600866317749,
+          "reference_image": "reference_image.png"
+        },
+        {
+          "bbox": [
+            35,
+            4,
+            134,
+            134
+          ],
+          "score": 0.2815309166908264,
+          "scale": 0.6,
+          "reference_index": 0,
+          "timestamp": 66.06599999999999,
+          "lpips_score": 0.5575400590896606,
+          "clip_score": 0.4938826560974121,
+          "confidence": 0.6075563132762909,
+          "reference_image": "reference_image.png"
+        },
+        {
+          "bbox": [
+            35,
+            5,
+            134,
+            134
+          ],
+          "score": 0.27803388237953186,
+          "scale": 0.6,
+          "reference_index": 0,
+          "timestamp": 67.067,
+          "lpips_score": 0.5591511130332947,
+          "clip_score": 0.45953094959259033,
+          "confidence": 0.5899776965379715,
+          "reference_image": "reference_image.png"
+        },
+        {
+          "bbox": [
+            34,
+            36,
+            134,
+            134
+          ],
+          "score": 0.2675319314002991,
+          "scale": 0.6,
+          "reference_index": 0,
+          "timestamp": 68.068,
+          "lpips_score": 0.5726686120033264,
+          "clip_score": 0.5160547494888306,
+          "confidence": 0.6148602217435837,
+          "reference_image": "reference_image.png"
+        },
+        {
+          "bbox": [
+            34,
+            34,
+            134,
+            134
+          ],
+          "score": 0.26290902495384216,
+          "scale": 0.6,
+          "reference_index": 0,
+          "timestamp": 69.06899999999999,
+          "lpips_score": 0.5728249549865723,
+          "clip_score": 0.5600811243057251,
+          "confidence": 0.6368343234062195,
+          "reference_image": "reference_image.png"
+        },
+        {
+          "bbox": [
+            37,
+            36,
+            134,
+            134
+          ],
+          "score": 0.2608386278152466,
+          "scale": 0.6,
+          "reference_index": 0,
+          "timestamp": 70.07,
+          "lpips_score": 0.5709397792816162,
+          "clip_score": 0.4702520966529846,
+          "confidence": 0.5923911035060883,
+          "reference_image": "reference_image.png"
+        },
+        {
+          "bbox": [
+            36,
+            37,
+            134,
+            134
+          ],
+          "score": 0.2533387839794159,
+          "scale": 0.6,
+          "reference_index": 0,
+          "timestamp": 71.071,
+          "lpips_score": 0.5710126757621765,
+          "clip_score": 0.5334722995758057,
+          "confidence": 0.6239829808473587,
+          "reference_image": "reference_image.png"
+        },
+        {
+          "bbox": [
+            83,
+            12,
+            336,
+            336
+          ],
+          "score": 0.4686436355113983,
+          "scale": 1.5,
+          "reference_index": 0,
+          "timestamp": 75.07499999999999,
+          "lpips_score": 0.6001200675964355,
+          "clip_score": 0.4591515064239502,
+          "confidence": 0.5795457363128662,
+          "reference_image": "reference_image.png"
+        },
+        {
+          "bbox": [
+            95,
+            20,
+            358,
+            358
+          ],
+          "score": 0.46297913789749146,
+          "scale": 1.6,
+          "reference_index": 0,
+          "timestamp": 76.076,
+          "lpips_score": 0.5909193754196167,
+          "clip_score": 0.46437427401542664,
+          "confidence": 0.5844572931528091,
+          "reference_image": "reference_image.png"
+        },
+        {
+          "bbox": [
+            50,
+            0,
+            291,
+            291
+          ],
+          "score": 0.4583289623260498,
+          "scale": 1.3,
+          "reference_index": 0,
+          "timestamp": 76.076,
+          "lpips_score": 0.6174352169036865,
+          "clip_score": 0.49390938878059387,
+          "confidence": 0.5925958901643753,
+          "reference_image": "reference_image.png"
+        },
+        {
+          "bbox": [
+            51,
+            0,
+            291,
+            291
+          ],
+          "score": 0.4680464565753937,
+          "scale": 1.3,
+          "reference_index": 0,
+          "timestamp": 77.077,
+          "lpips_score": 0.6120645403862,
+          "clip_score": 0.48318180441856384,
+          "confidence": 0.5885747671127319,
+          "reference_image": "reference_image.png"
+        },
+        {
+          "bbox": [
+            97,
+            20,
+            358,
+            358
+          ],
+          "score": 0.4624514579772949,
+          "scale": 1.6,
+          "reference_index": 0,
+          "timestamp": 77.077,
+          "lpips_score": 0.5941808223724365,
+          "clip_score": 0.4318086802959442,
+          "confidence": 0.567359134554863,
+          "reference_image": "reference_image.png"
+        },
+        {
+          "bbox": [
+            0,
+            62,
+            134,
+            134
+          ],
+          "score": 0.25531259179115295,
+          "scale": 0.6,
+          "reference_index": 0,
+          "timestamp": 78.07799999999999,
+          "lpips_score": 0.5587266087532043,
+          "clip_score": 0.4058893918991089,
+          "confidence": 0.5632630437612534,
+          "reference_image": "reference_image.png"
+        },
+        {
+          "bbox": [
+            0,
+            64,
+            134,
+            134
+          ],
+          "score": 0.26241469383239746,
+          "scale": 0.6,
+          "reference_index": 0,
+          "timestamp": 79.079,
+          "lpips_score": 0.5652286410331726,
+          "clip_score": 0.34524065256118774,
+          "confidence": 0.5313131660223007,
+          "reference_image": "reference_image.png"
+        },
+        {
+          "bbox": [
+            0,
+            0,
+            358,
+            358
+          ],
+          "score": 0.31961703300476074,
+          "scale": 1.6,
+          "reference_index": 0,
+          "timestamp": 80.08,
+          "lpips_score": 0.5109105110168457,
+          "clip_score": 0.5029281973838806,
+          "confidence": 0.6237364709377289,
+          "reference_image": "reference_image.png"
+        },
+        {
+          "bbox": [
+            0,
+            0,
+            358,
+            358
+          ],
+          "score": 0.3295366168022156,
+          "scale": 1.6,
+          "reference_index": 0,
+          "timestamp": 81.08099999999999,
+          "lpips_score": 0.5084877014160156,
+          "clip_score": 0.5152355432510376,
+          "confidence": 0.6304958462715149,
+          "reference_image": "reference_image.png"
+        },
+        {
+          "bbox": [
+            0,
+            0,
+            358,
+            358
+          ],
+          "score": 0.32121849060058594,
+          "scale": 1.6,
+          "reference_index": 0,
+          "timestamp": 82.082,
+          "lpips_score": 0.5141829252243042,
+          "clip_score": 0.5274273753166199,
+          "confidence": 0.6351679563522339,
+          "reference_image": "reference_image.png"
+        },
+        {
+          "bbox": [
+            0,
+            0,
+            358,
+            358
+          ],
+          "score": 0.32102876901626587,
+          "scale": 1.6,
+          "reference_index": 0,
+          "timestamp": 83.083,
+          "lpips_score": 0.5093234777450562,
+          "clip_score": 0.5175901651382446,
+          "confidence": 0.6314642131328583,
+          "reference_image": "reference_image.png"
+        },
+        {
+          "bbox": [
+            0,
+            0,
+            358,
+            358
+          ],
+          "score": 0.295458048582077,
+          "scale": 1.6,
+          "reference_index": 0,
+          "timestamp": 84.08399999999999,
+          "lpips_score": 0.5361902713775635,
+          "clip_score": 0.5588651895523071,
+          "confidence": 0.6453850269317627,
+          "reference_image": "reference_image.png"
+        },
+        {
+          "bbox": [
+            0,
+            0,
+            358,
+            358
+          ],
+          "score": 0.3229770064353943,
+          "scale": 1.6,
+          "reference_index": 0,
+          "timestamp": 85.085,
+          "lpips_score": 0.5212759375572205,
+          "clip_score": 0.5093386769294739,
+          "confidence": 0.6243503540754318,
+          "reference_image": "reference_image.png"
+        },
+        {
+          "bbox": [
+            0,
+            0,
+            358,
+            358
+          ],
+          "score": 0.34386688470840454,
+          "scale": 1.6,
+          "reference_index": 0,
+          "timestamp": 86.086,
+          "lpips_score": 0.5372542142868042,
+          "clip_score": 0.4872988760471344,
+          "confidence": 0.6093358844518661,
+          "reference_image": "reference_image.png"
+        },
+        {
+          "bbox": [
+            0,
+            0,
+            358,
+            358
+          ],
+          "score": 0.3504209816455841,
+          "scale": 1.6,
+          "reference_index": 0,
+          "timestamp": 89.089,
+          "lpips_score": 0.5451386570930481,
+          "clip_score": 0.5101552605628967,
+          "confidence": 0.6187929660081863,
+          "reference_image": "reference_image.png"
+        },
+        {
+          "bbox": [
+            0,
+            0,
+            358,
+            358
+          ],
+          "score": 0.3678966164588928,
+          "scale": 1.6,
+          "reference_index": 0,
+          "timestamp": 90.08999999999999,
+          "lpips_score": 0.5362119078636169,
+          "clip_score": 0.5278289318084717,
+          "confidence": 0.6298614889383316,
+          "reference_image": "reference_image.png"
+        },
+        {
+          "bbox": [
+            0,
+            0,
+            358,
+            358
+          ],
+          "score": 0.3038055896759033,
+          "scale": 1.6,
+          "reference_index": 0,
+          "timestamp": 91.091,
+          "lpips_score": 0.5190114974975586,
+          "clip_score": 0.5122627019882202,
+          "confidence": 0.6263784766197205,
+          "reference_image": "reference_image.png"
+        },
+        {
+          "bbox": [
+            65,
+            10,
+            134,
+            134
+          ],
+          "score": 0.3425237238407135,
+          "scale": 0.6,
+          "reference_index": 0,
+          "timestamp": 92.092,
+          "lpips_score": 0.6020525097846985,
+          "clip_score": 0.467359721660614,
+          "confidence": 0.5831667333841324,
+          "reference_image": "reference_image.png"
+        },
+        {
+          "bbox": [
+            77,
+            8,
+            134,
+            134
+          ],
+          "score": 0.37577277421951294,
+          "scale": 0.6,
+          "reference_index": 0,
+          "timestamp": 93.09299999999999,
+          "lpips_score": 0.620921790599823,
+          "clip_score": 0.48664236068725586,
+          "confidence": 0.5880907326936722,
+          "reference_image": "reference_image.png"
+        },
+        {
+          "bbox": [
+            81,
+            5,
+            134,
+            134
+          ],
+          "score": 0.30339184403419495,
+          "scale": 0.6,
+          "reference_index": 0,
+          "timestamp": 94.094,
+          "lpips_score": 0.6142627000808716,
+          "clip_score": 0.4404814839363098,
+          "confidence": 0.566675066947937,
+          "reference_image": "reference_image.png"
+        },
+        {
+          "bbox": [
+            1,
+            2,
+            358,
+            358
+          ],
+          "score": 0.29698216915130615,
+          "scale": 1.6,
+          "reference_index": 0,
+          "timestamp": 94.094,
+          "lpips_score": 0.536209225654602,
+          "clip_score": 0.4861977696418762,
+          "confidence": 0.6090465784072876,
+          "reference_image": "reference_image.png"
+        },
+        {
+          "bbox": [
+            84,
+            2,
+            134,
+            134
+          ],
+          "score": 0.40299129486083984,
+          "scale": 0.6,
+          "reference_index": 0,
+          "timestamp": 95.095,
+          "lpips_score": 0.6190527677536011,
+          "clip_score": 0.4882827699184418,
+          "confidence": 0.5893781930208206,
+          "reference_image": "reference_image.png"
+        },
+        {
+          "bbox": [
+            88,
+            1,
+            134,
+            134
+          ],
+          "score": 0.3310666084289551,
+          "scale": 0.6,
+          "reference_index": 0,
+          "timestamp": 96.09599999999999,
+          "lpips_score": 0.5809720158576965,
+          "clip_score": 0.4656745195388794,
+          "confidence": 0.5875942558050156,
+          "reference_image": "reference_image.png"
+        },
+        {
+          "bbox": [
+            87,
+            0,
+            134,
+            134
+          ],
+          "score": 0.36070311069488525,
+          "scale": 0.6,
+          "reference_index": 0,
+          "timestamp": 98.098,
+          "lpips_score": 0.6321001052856445,
+          "clip_score": 0.5547051429748535,
+          "confidence": 0.6193275451660156,
+          "reference_image": "reference_image.png"
+        },
+        {
+          "bbox": [
+            88,
+            0,
+            134,
+            134
+          ],
+          "score": 0.3740237355232239,
+          "scale": 0.6,
+          "reference_index": 0,
+          "timestamp": 99.09899999999999,
+          "lpips_score": 0.5932276844978333,
+          "clip_score": 0.6166943907737732,
+          "confidence": 0.6600402742624283,
+          "reference_image": "reference_image.png"
+        },
+        {
+          "bbox": [
+            85,
+            0,
+            134,
+            134
+          ],
+          "score": 0.3819376230239868,
+          "scale": 0.6,
+          "reference_index": 0,
+          "timestamp": 100.1,
+          "lpips_score": 0.6670482158660889,
+          "clip_score": 0.5346337556838989,
+          "confidence": 0.6005548238754272,
+          "reference_image": "reference_image.png"
+        },
+        {
+          "bbox": [
+            27,
+            31,
+            134,
+            134
+          ],
+          "score": 0.5155364274978638,
+          "scale": 0.6,
+          "reference_index": 0,
+          "timestamp": 108.10799999999999,
+          "lpips_score": 0.6192213296890259,
+          "clip_score": 0.4403807818889618,
+          "confidence": 0.5653850585222244,
+          "reference_image": "reference_image.png"
+        },
+        {
+          "bbox": [
+            17,
+            62,
+            134,
+            134
+          ],
+          "score": 0.4704284071922302,
+          "scale": 0.6,
+          "reference_index": 0,
+          "timestamp": 109.109,
+          "lpips_score": 0.6185470223426819,
+          "clip_score": 0.3525742292404175,
+          "confidence": 0.5216503590345383,
+          "reference_image": "reference_image.png"
+        },
+        {
+          "bbox": [
+            18,
+            62,
+            134,
+            134
+          ],
+          "score": 0.5051308870315552,
+          "scale": 0.6,
+          "reference_index": 0,
+          "timestamp": 110.10999999999999,
+          "lpips_score": 0.6141363978385925,
+          "clip_score": 0.424720823764801,
+          "confidence": 0.5588263124227524,
+          "reference_image": "reference_image.png"
+        },
+        {
+          "bbox": [
+            67,
+            57,
+            358,
+            358
+          ],
+          "score": 0.5342328548431396,
+          "scale": 1.6,
+          "reference_index": 0,
+          "timestamp": 111.11099999999999,
+          "lpips_score": 0.5217969417572021,
+          "clip_score": 0.4313398599624634,
+          "confidence": 0.5852206945419312,
+          "reference_image": "reference_image.png"
+        },
+        {
+          "bbox": [
+            82,
+            61,
+            358,
+            358
+          ],
+          "score": 0.5298035144805908,
+          "scale": 1.6,
+          "reference_index": 0,
+          "timestamp": 112.112,
+          "lpips_score": 0.5107828974723816,
+          "clip_score": 0.4218750298023224,
+          "confidence": 0.5832417905330658,
+          "reference_image": "reference_image.png"
+        },
+        {
+          "bbox": [
+            0,
+            93,
+            336,
+            336
+          ],
+          "score": 0.4634525179862976,
+          "scale": 1.5,
+          "reference_index": 0,
+          "timestamp": 114.11399999999999,
+          "lpips_score": 0.5593580007553101,
+          "clip_score": 0.5154919624328613,
+          "confidence": 0.6179064810276031,
+          "reference_image": "reference_image.png"
+        },
+        {
+          "bbox": [
+            37,
+            45,
+            134,
+            134
+          ],
+          "score": 0.37463289499282837,
+          "scale": 0.6,
+          "reference_index": 0,
+          "timestamp": 115.115,
+          "lpips_score": 0.5428625345230103,
+          "clip_score": 0.4605923295021057,
+          "confidence": 0.5945805311203003,
+          "reference_image": "reference_image.png"
+        },
+        {
+          "bbox": [
+            43,
+            60,
+            134,
+            134
+          ],
+          "score": 0.38554632663726807,
+          "scale": 0.6,
+          "reference_index": 0,
+          "timestamp": 116.11599999999999,
+          "lpips_score": 0.551586389541626,
+          "clip_score": 0.44494402408599854,
+          "confidence": 0.5845754146575928,
+          "reference_image": "reference_image.png"
+        }
+      ],
+      "max_confidence": 0.6792797893285751,
+      "thresholds_used": {
+        "lpips": 0.7,
+        "clip": 0.2
+      }
+    }
+  },
+  "task_id": "debug-task-id",
+  "data_type": "<class 'dict'>",
+  "data_keys": [
+    "TT_Start.mp4"
+  ]
+}

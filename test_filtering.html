@@ -1,0 +1,154 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Test Filtering</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/css/bootstrap.min.css" rel="stylesheet">
+</head>
+<body>
+    <div class="container mt-4">
+        <h1>Test Filtering</h1>
+        
+        <!-- Enhanced confidence filter -->
+        <div class="card mb-4">
+            <div class="card-body">
+                <div class="row">
+                    <div class="col-md-12">
+                        <h5>Confidence Filters</h5>
+                    </div>
+                    <div class="col-md-4">
+                        <div class="mb-2">
+                            <label for="overallThreshold-1" class="form-label">Overall Confidence:</label>
+                            <input type="range" class="form-range overall-threshold" id="overallThreshold-1" min="0" max="100" value="0" data-video-index="1">
+                            <div class="form-text">
+                                Minimum: <span id="overallThresholdValue-1">0</span>%
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-md-4">
+                        <div class="mb-2">
+                            <label for="lpipsFilter-1" class="form-label">LPIPS Score:</label>
+                            <input type="range" class="form-range lpips-filter" id="lpipsFilter-1" min="0" max="100" value="0" data-video-index="1">
+                            <div class="form-text">
+                                Minimum: <span id="lpipsFilterValue-1">0</span>%
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-md-4">
+                        <div class="mb-2">
+                            <label for="clipFilter-1" class="form-label">CLIP Score:</label>
+                            <input type="range" class="form-range clip-filter" id="clipFilter-1" min="0" max="100" value="0" data-video-index="1">
+                            <div class="form-text">
+                                Minimum: <span id="clipFilterValue-1">0</span>%
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <div class="table-responsive">
+            <table class="table table-striped results-table" id="resultsTable-1">
+                <thead>
+                    <tr>
+                        <th>Timestamp</th>
+                        <th>Overall Confidence</th>
+                        <th>LPIPS Score</th>
+                        <th>CLIP Score</th>
+                        <th>Reference Image</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr class="table-success" 
+                        data-confidence="0.723930906658173"
+                        data-lpips="0.6587313413619995"
+                        data-clip="0.7772258520126343">
+                        <td class="timestamp" data-timestamp="0.0">0.000s</td>
+                        <td class="confidence">72.39%</td>
+                        <td class="lpips-score">65.87%</td>
+                        <td class="clip-score">77.72%</td>
+                        <td>
+                            <span class="badge bg-secondary">reference.png</span>
+                        </td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
+        
+        <p class="text-muted">
+            <span id="visibleCount-1">1</span> of 1 match(es) found
+        </p>
+    </div>
+
+    <script>
+        // Add event listeners for new filters
+        document.addEventListener('DOMContentLoaded', function() {
+            // Add event listeners for overall threshold sliders
+            document.querySelectorAll('.overall-threshold').forEach(function(slider) {
+                slider.addEventListener('input', function() {
+                    const videoIndex = this.dataset.videoIndex;
+                    document.getElementById('overallThresholdValue-' + videoIndex).textContent = this.value;
+                    applyFilters(videoIndex);
+                });
+            });
+            
+            // Add event listeners for LPIPS filter sliders
+            document.querySelectorAll('.lpips-filter').forEach(function(slider) {
+                slider.addEventListener('input', function() {
+                    const videoIndex = this.dataset.videoIndex;
+                    document.getElementById('lpipsFilterValue-' + videoIndex).textContent = this.value;
+                    applyFilters(videoIndex);
+                });
+            });
+            
+            // Add event listeners for CLIP filter sliders
+            document.querySelectorAll('.clip-filter').forEach(function(slider) {
+                slider.addEventListener('input', function() {
+                    const videoIndex = this.dataset.videoIndex;
+                    document.getElementById('clipFilterValue-' + videoIndex).textContent = this.value;
+                    applyFilters(videoIndex);
+                });
+            });
+        });
+        
+        function applyFilters(videoIndex) {
+            const overallThreshold = document.getElementById('overallThreshold-' + videoIndex).value;
+            const lpipsThreshold = document.getElementById('lpipsFilter-' + videoIndex).value;
+            const clipThreshold = document.getElementById('clipFilter-' + videoIndex).value;
+            
+            const resultsTable = document.getElementById('resultsTable-' + videoIndex);
+            const visibleCount = document.getElementById('visibleCount-' + videoIndex);
+            
+            if (!resultsTable) return;
+            
+            let visibleRowCount = 0;
+            resultsTable.querySelectorAll('tbody tr').forEach(function(row) {
+                // Skip error rows
+                if (row.classList.contains('table-danger')) {
+                    row.style.display = '';
+                    visibleRowCount++;
+                    return;
+                }
+                
+                const overallConfidence = parseFloat(row.getAttribute('data-confidence')) * 100;
+                const lpipsScore = parseFloat(row.getAttribute('data-lpips')) * 100 || 0;
+                const clipScore = parseFloat(row.getAttribute('data-clip')) * 100 || 0;
+                
+                // Check all thresholds (convert to percentages for comparison)
+                if (overallConfidence >= overallThreshold &&
+                    lpipsScore >= lpipsThreshold &&
+                    clipScore >= clipThreshold) {
+                    row.style.display = '';
+                    visibleRowCount++;
+                } else {
+                    row.style.display = 'none';
+                }
+            });
+            
+            // Update visible count for this video
+            if (visibleCount) {
+                visibleCount.textContent = visibleRowCount;
+            }
+        }
+    </script>
+</body>
+</html>

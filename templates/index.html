@@ -53,6 +53,80 @@
                         <div class="form-text">Extract one frame every X seconds (default: 1.0)</div>
                     </div>
                     
+                    <!-- Advanced Settings Panel -->
+                    <div class="card mt-3">
+                        <div class="card-header" id="advancedSettingsHeading">
+                            <h5 class="mb-0">
+                                <button class="btn btn-link" type="button" data-bs-toggle="collapse" data-bs-target="#advancedSettingsPanel" aria-expanded="false" aria-controls="advancedSettingsPanel">
+                                    Advanced Settings
+                                </button>
+                            </h5>
+                        </div>
+                        <div id="advancedSettingsPanel" class="collapse" aria-labelledby="advancedSettingsHeading">
+                            <div class="card-body">
+                                <!-- Frame Processing -->
+                                <div class="mb-3">
+                                    <label for="frameStride" class="form-label">Frame Stride</label>
+                                    <input type="number" class="form-control" id="frameStride" name="frameStride" value="1" min="1" max="10">
+                                    <div class="form-text">Process every Nth frame (default: 1)</div>
+                                </div>
+                                
+                                <div class="mb-3">
+                                    <label for="resolutionTarget" class="form-label">Resolution Target</label>
+                                    <input type="number" class="form-control" id="resolutionTarget" name="resolutionTarget" value="1080" min="480" max="4320">
+                                    <div class="form-text">Target resolution for processing (longest side in pixels, default: 1080)</div>
+                                </div>
+                                
+                                <!-- Verification Thresholds -->
+                                <div class="mb-3">
+                                    <label for="lpipsThreshold" class="form-label">LPIPS Threshold: <span id="lpipsThresholdValue">0.35</span></label>
+                                    <input type="range" class="form-range" id="lpipsThreshold" name="lpipsThreshold" min="0.1" max="0.8" step="0.01" value="0.35">
+                                    <div class="form-text">Lower values are more strict (default: 0.35)</div>
+                                </div>
+                                
+                                <div class="mb-3">
+                                    <label for="clipThreshold" class="form-label">CLIP Threshold: <span id="clipThresholdValue">0.33</span></label>
+                                    <input type="range" class="form-range" id="clipThreshold" name="clipThreshold" min="0.1" max="0.8" step="0.01" value="0.33">
+                                    <div class="form-text">Higher values are more strict (default: 0.33)</div>
+                                </div>
+                                
+                                <!-- Temporal Parameters -->
+                                <div class="mb-3">
+                                    <label for="nmsThreshold" class="form-label">NMS IoU Threshold: <span id="nmsThresholdValue">0.5</span></label>
+                                    <input type="range" class="form-range" id="nmsThreshold" name="nmsThreshold" min="0.1" max="0.9" step="0.05" value="0.5">
+                                    <div class="form-text">IoU threshold for non-maximum suppression (default: 0.5)</div>
+                                </div>
+                                
+                                <div class="row">
+                                    <div class="col-md-6">
+                                        <div class="mb-3">
+                                            <label for="debounceN" class="form-label">Debounce N: <span id="debounceNValue">3</span></label>
+                                            <input type="range" class="form-range" id="debounceN" name="debounceN" min="1" max="10" value="3">
+                                            <div class="form-text">Minimum consecutive frames (default: 3)</div>
+                                        </div>
+                                    <div class="col-md-6">
+                                        <div class="mb-3">
+                                            <label for="debounceM" class="form-label">Debounce M: <span id="debounceMValue">12</span></label>
+                                            <input type="range" class="form-range" id="debounceM" name="debounceM" min="5" max="30" value="12">
+                                            <div class="form-text">Window size for checking (default: 12)</div>
+                                        </div>
+                                    </div>
+                                </div>
+                                
+                                <!-- Presets -->
+                                <div class="mb-3">
+                                    <label class="form-label">Presets</label>
+                                    <div>
+                                        <button type="button" class="btn btn-outline-primary btn-sm preset-btn" data-preset="precision">High Precision</button>
+                                        <button type="button" class="btn btn-outline-primary btn-sm preset-btn" data-preset="recall">High Recall</button>
+                                        <button type="button" class="btn btn-outline-primary btn-sm preset-btn" data-preset="balanced">Balanced</button>
+                                        <button type="button" class="btn btn-outline-primary btn-sm preset-btn" data-preset="performance">Performance</button>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    
                     <button type="submit" class="btn btn-primary" id="analyzeBtn">Analyze Videos</button>
                     <button type="reset" class="btn btn-secondary">Reset</button>
                 </form>
