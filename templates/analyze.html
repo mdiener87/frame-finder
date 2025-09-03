@@ -87,6 +87,15 @@
             height: 20px;
             margin-top: 10px;
         }
+        
+        .videos-list-container {
+            max-height: 300px;
+            overflow-y: auto;
+        }
+        
+        .cancel-btn {
+            margin-left: 10px;
+        }
     </style>
 </head>
 <body>
@@ -146,7 +155,7 @@
                                     <small>(Select one or multiple videos)</small></p>
                                     <input type="file" id="videos-files" accept="video/*" multiple class="d-none">
                                 </div>
-                                <div id="videos-list" class="mt-3">
+                                <div id="videos-list" class="mt-3 videos-list-container">
                                     <ul id="selected-videos" class="list-group"></ul>
                                 </div>
                                 
@@ -167,6 +176,10 @@
                         <div class="card">
                             <div class="card-body">
                                 <div class="d-grid gap-2 d-md-flex justify-content-md-end">
+                                    <button id="cancel-btn" class="btn btn-secondary btn-lg d-none">
+                                        <span class="spinner-border spinner-border-sm d-none" role="status" aria-hidden="true"></span>
+                                        <span class="cancel-text">Cancel Analysis</span>
+                                    </button>
                                     <button id="analyze-btn" class="btn btn-primary btn-lg" disabled>
                                         <span class="spinner-border spinner-border-sm d-none" role="status" aria-hidden="true"></span>
                                         <span class="spinner-text">Analyze Videos</span>
@@ -180,11 +193,10 @@
                 <div id="analysis-status" class="row mt-4 d-none">
                     <div class="col-md-12">
                         <div class="alert" role="alert"></div>
-                        <div id="upload-progress-container" class="mt-2 d-none">
+                        <div id="upload-progress-container" class="mt-2">
                             <div class="progress upload-progress">
                                 <div id="upload-progress-bar" class="progress-bar" role="progressbar" style="width: 0%"></div>
                             </div>
-                            <div id="upload-progress-text" class="text-center mt-1">Uploading files...</div>
                         </div>
                     </div>
                 </div>
@@ -220,14 +232,16 @@
         let referenceFile = null;
         let videoFiles = [];
         let analysisId = null;
+        let isAnalyzing = false;
 
         // Reference image upload handling
         document.getElementById('reference-upload').addEventListener('click', () => {
+            if (isAnalyzing) return;
             document.getElementById('reference-file').click();
         });
 
         document.getElementById('reference-file').addEventListener('change', (e) => {
-            if (e.target.files.length > 0) {
+            if (e.target.files.length > 0 && !isAnalyzing) {
                 referenceFile = e.target.files[0];
                 const reader = new FileReader();
                 reader.onload = (e) => {
@@ -241,11 +255,12 @@
 
         // Video files upload handling
         document.getElementById('videos-upload').addEventListener('click', () => {
+            if (isAnalyzing) return;
             document.getElementById('videos-files').click();
         });
 
         document.getElementById('videos-files').addEventListener('change', (e) => {
-            if (e.target.files.length > 0) {
+            if (e.target.files.length > 0 && !isAnalyzing) {
                 // Add new files to existing list
                 for (let file of e.target.files) {
                     if (file.type.startsWith('video/')) {
@@ -263,15 +278,18 @@
             const fileInput = document.getElementById(id === 'reference-upload' ? 'reference-file' : 'videos-files');
             
             dropArea.addEventListener('dragover', (e) => {
+                if (isAnalyzing) return;
                 e.preventDefault();
                 dropArea.classList.add('drag-over');
             });
             
             dropArea.addEventListener('dragleave', () => {
+                if (isAnalyzing) return;
                 dropArea.classList.remove('drag-over');
             });
             
             dropArea.addEventListener('drop', (e) => {
+                if (isAnalyzing) return;
                 e.preventDefault();
                 dropArea.classList.remove('drag-over');
                 
@@ -308,7 +326,7 @@
                 li.className = 'list-group-item d-flex justify-content-between align-items-center';
                 li.innerHTML = `
                     <span>${file.name}</span>
-                    <button class="btn btn-sm btn-danger remove-video" data-index="${index}">Remove</button>
+                    <button class="btn btn-sm btn-danger remove-video ${isAnalyzing ? 'disabled' : ''}" data-index="${index}">Remove</button>
                 `;
                 list.appendChild(li);
             });
@@ -316,6 +334,7 @@
             // Add event listeners to remove buttons
             document.querySelectorAll('.remove-video').forEach(btn => {
                 btn.addEventListener('click', (e) => {
+                    if (isAnalyzing) return;
                     const index = parseInt(e.target.getAttribute('data-index'));
                     videoFiles.splice(index, 1);
                     updateVideoList();
@@ -349,27 +368,100 @@
         }
 
         function checkReadyToAnalyze() {
-            const ready = referenceFile !== null && videoFiles.length > 0;
+            const ready = referenceFile !== null && videoFiles.length > 0 && !isAnalyzing;
             document.getElementById('analyze-btn').disabled = !ready;
         }
 
+        function setAnalyzingState(analyzing) {
+            isAnalyzing = analyzing;
+            
+            // Update button states
+            document.getElementById('analyze-btn').disabled = analyzing;
+            document.getElementById('cancel-btn').classList.toggle('d-none', !analyzing);
+            
+            // Update remove buttons
+            document.querySelectorAll('.remove-video').forEach(btn => {
+                if (analyzing) {
+                    btn.classList.add('disabled');
+                } else {
+                    btn.classList.remove('disabled');
+                }
+            });
+            
+            // Update upload areas
+            document.getElementById('reference-upload').style.pointerEvents = analyzing ? 'none' : 'auto';
+            document.getElementById('videos-upload').style.pointerEvents = analyzing ? 'none' : 'auto';
+            
+            // Update file inputs
+            document.getElementById('reference-file').disabled = analyzing;
+            document.getElementById('videos-files').disabled = analyzing;
+        }
+
+        // Cancel button handling
+        document.getElementById('cancel-btn').addEventListener('click', async () => {
+            if (!isAnalyzing || !analysisId) return;
+            
+            // Show canceling state
+            const cancelBtn = document.getElementById('cancel-btn');
+            const spinner = cancelBtn.querySelector('.spinner-border');
+            const text = cancelBtn.querySelector('.cancel-text');
+            
+            spinner.classList.remove('d-none');
+            text.textContent = 'Canceling...';
+            
+            try {
+                // Send cancel request to backend
+                const response = await fetch(`/api/cancel/${analysisId}`, {
+                    method: 'POST'
+                });
+                
+                if (!response.ok) {
+                    const errorData = await response.json();
+                    throw new Error(errorData.error || 'Failed to cancel analysis');
+                }
+                
+                const data = await response.json();
+                showStatus(data.message || 'Analysis cancellation requested.', 'alert-warning');
+            } catch (error) {
+                console.error('Cancel error:', error);
+                showStatus('Error canceling analysis: ' + error.message, 'alert-danger');
+            }
+            
+            // Stop polling and reset UI
+            resetAnalyzeButton();
+            setAnalyzingState(false);
+        });
+
         // Analysis button handling
         document.getElementById('analyze-btn').addEventListener('click', async () => {
-            if (!referenceFile || videoFiles.length === 0) return;
+            if (!referenceFile || videoFiles.length === 0 || isAnalyzing) return;
+            
+            // Reset results panel
+            document.getElementById('results-content').innerHTML = `
+                <div class="text-center">
+                    <div class="spinner-border" role="status">
+                        <span class="visually-hidden">Analyzing...</span>
+                    </div>
+                    <p class="mt-2">Starting analysis...</p>
+                </div>
+            `;
+            
+            // Set analyzing state
+            setAnalyzingState(true);
             
             // Show loading state
             const analyzeBtn = document.getElementById('analyze-btn');
             const spinner = analyzeBtn.querySelector('.spinner-border');
             const text = analyzeBtn.querySelector('.spinner-text');
             
-            analyzeBtn.disabled = true;
             spinner.classList.remove('d-none');
             text.textContent = 'Analyzing...';
             
             try {
                 // Show upload progress
-                document.getElementById('upload-progress-container').classList.remove('d-none');
+                document.getElementById('analysis-status').classList.remove('d-none');
                 showStatus('Preparing to upload files...', 'alert-info');
+                updateProgressBar(0);
                 
                 // Enable results tab
                 document.getElementById('results-tab').disabled = false;
@@ -411,9 +503,6 @@
                 
                 analysisId = data.analysis_id;
                 
-                // Switch to results tab using vanilla JavaScript
-                switchToResultsTab();
-                
                 // Start polling for results
                 pollForResults(analysisId);
                 
@@ -429,10 +518,74 @@
                 }
                 
                 showStatus('Error starting analysis: ' + errorMessage, 'alert-danger');
-                document.getElementById('upload-progress-container').classList.add('d-none');
                 resetAnalyzeButton();
+                setAnalyzingState(false);
             }
         });
+
+        function updateProgressBar(percent) {
+            const progressBar = document.getElementById('upload-progress-bar');
+            progressBar.style.width = percent + '%';
+            progressBar.setAttribute('aria-valuenow', percent);
+        }
+
+        function pollForResults(analysisId) {
+            const poll = async () => {
+                if (!isAnalyzing) return; // Stop polling if canceled
+                
+                try {
+                    const response = await fetch(`/api/analysis/${analysisId}`);
+                    
+                    if (!response.ok) {
+                        const errorText = await response.text();
+                        throw new Error(`HTTP ${response.status}: ${errorText}`);
+                    }
+                    
+                    const data = await response.json();
+                    
+                    if (data.error) {
+                        throw new Error(data.error);
+                    }
+                    
+                    if (data.status === 'processing') {
+                        const status = data.current_status || {};
+                        showStatus(`Processing ${status.current_video || 'video'} (${status.progress || '0/0'})...`, 'alert-info');
+                        // Update progress bar if we have progress info
+                        if (status.progress) {
+                            const parts = status.progress.split('/');
+                            if (parts.length === 2) {
+                                const current = parseInt(parts[0]);
+                                const total = parseInt(parts[1]);
+                                if (!isNaN(current) && !isNaN(total) && total > 0) {
+                                    const percent = Math.round((current / total) * 100);
+                                    updateProgressBar(percent);
+                                }
+                            }
+                        }
+                        setTimeout(poll, 2000);
+                    } else if (data.status === 'completed') {
+                        showStatus('Analysis complete!', 'alert-success');
+                        updateProgressBar(100);
+                        showResults(data);
+                        resetAnalyzeButton();
+                        setAnalyzingState(false);
+                        // Switch to results tab
+                        switchToResultsTab();
+                    } else if (data.status === 'failed') {
+                        showStatus('Analysis failed: ' + (data.error || 'Unknown error'), 'alert-danger');
+                        resetAnalyzeButton();
+                        setAnalyzingState(false);
+                    }
+                } catch (error) {
+                    console.error('Polling error:', error);
+                    showStatus('Error during analysis: ' + error.message, 'alert-danger');
+                    resetAnalyzeButton();
+                    setAnalyzingState(false);
+                }
+            };
+            
+            poll();
+        }
 
         function switchToResultsTab() {
             // Hide analysis tab content
@@ -444,51 +597,6 @@
             document.getElementById('results-tab').classList.add('active');
         }
 
-        function pollForResults(analysisId) {
-            const poll = async () => {
-                try {
-                    const response = await fetch(`/api/analysis/${analysisId}`);
-                    
-                    // Debug: Log the raw response
-                    const text = await response.text();
-                    console.log('Raw response from /api/analysis/' + analysisId + ':', text);
-                    
-                    // Try to parse as JSON
-                    let data;
-                    try {
-                        data = JSON.parse(text);
-                    } catch (parseError) {
-                        console.error('Failed to parse JSON:', parseError);
-                        console.error('Response text was:', text);
-                        throw new Error('Invalid JSON response from server: ' + text.substring(0, 100) + '...');
-                    }
-                    
-                    if (!response.ok) {
-                        throw new Error(data.error || 'Failed to get results');
-                    }
-                    
-                    if (data.status === 'processing') {
-                        const status = data.current_status || {};
-                        showStatus(`Processing ${status.current_video || 'video'} (${status.progress || '0/0'})...`, 'alert-info');
-                        setTimeout(poll, 2000);
-                    } else if (data.status === 'completed') {
-                        showStatus('Analysis complete!', 'alert-success');
-                        showResults(data);
-                        resetAnalyzeButton();
-                    } else if (data.status === 'failed') {
-                        showStatus('Analysis failed: ' + (data.error || 'Unknown error'), 'alert-danger');
-                        resetAnalyzeButton();
-                    }
-                } catch (error) {
-                    console.error('Polling error:', error);
-                    showStatus('Error during analysis: ' + error.message, 'alert-danger');
-                    resetAnalyzeButton();
-                }
-            };
-            
-            poll();
-        }
-
         function resetAnalyzeButton() {
             const analyzeBtn = document.getElementById('analyze-btn');
             const spinner = analyzeBtn.querySelector('.spinner-border');
@@ -498,8 +606,13 @@
             spinner.classList.add('d-none');
             text.textContent = 'Analyze Videos';
             
-            // Hide upload progress
-            document.getElementById('upload-progress-container').classList.add('d-none');
+            // Reset cancel button
+            const cancelBtn = document.getElementById('cancel-btn');
+            const cancelSpinner = cancelBtn.querySelector('.spinner-border');
+            const cancelText = cancelBtn.querySelector('.cancel-text');
+            
+            cancelSpinner.classList.add('d-none');
+            cancelText.textContent = 'Cancel Analysis';
         }
 
         function showStatus(message, alertClass) {

@@ -6,7 +6,7 @@ Supports analysis of single or multiple videos with a clean results interface.
 
 import os
 import sys
-from flask import Flask, request, jsonify, send_from_directory, render_template, redirect, url_for
+from flask import Flask, request, jsonify, send_from_directory, render_template
 from frame_analyzer import FrameAnalyzer
 import threading
 import uuid
@@ -27,6 +27,8 @@ analyzer = FrameAnalyzer()
 
 # In-memory storage for analysis results (in production, use a database)
 analysis_results: Dict[str, Dict] = {}
+analysis_threads: Dict[str, threading.Thread] = {}
+analysis_cancel_flags: Dict[str, bool] = {}
 
 @app.route('/')
 def index():
@@ -121,14 +123,20 @@ def analyze_videos():
             "video_paths": video_paths,
             "temp_dir": temp_dir,
             "results": {},
-            "comparison": {}
+            "comparison": {},
+            "current_video": "",
+            "progress": "0/0"
         }
+        
+        # Set cancel flag to False
+        analysis_cancel_flags[analysis_id] = False
         
         # Start analysis in background thread
         thread = threading.Thread(
             target=perform_analysis,
             args=(analysis_id, reference_path, video_paths, temp_dir)
         )
+        analysis_threads[analysis_id] = thread
         thread.start()
         print(f"Started analysis thread for {analysis_id}")
         
@@ -146,6 +154,32 @@ def analyze_videos():
             'error': f'Internal server error: {str(e)}'
         }), 500
 
+@app.route('/api/cancel/<analysis_id>', methods=['POST'])
+def cancel_analysis(analysis_id: str):
+    """Cancel a running analysis."""
+    try:
+        if analysis_id in analysis_results:
+            # Set cancel flag
+            analysis_cancel_flags[analysis_id] = True
+            
+            # Update status
+            analysis_results[analysis_id]["status"] = "cancelled"
+            
+            return jsonify({
+                "status": "success",
+                "message": "Analysis cancellation requested"
+            })
+        else:
+            return jsonify({
+                'error': 'Analysis not found'
+            }), 404
+            
+    except Exception as e:
+        print(f"Error in cancel_analysis for {analysis_id}: {str(e)}")
+        return jsonify({
+            'error': f'Internal server error: {str(e)}'
+        }), 500
+
 def perform_analysis(analysis_id: str, reference_path: str, 
                     video_paths: List[str], temp_dir: str):
     """Perform analysis in background."""
@@ -155,6 +189,12 @@ def perform_analysis(analysis_id: str, reference_path: str,
         
         # Analyze each video
         for i, video_path in enumerate(video_paths):
+            # Check if cancellation was requested
+            if analysis_cancel_flags.get(analysis_id, False):
+                print(f"Analysis {analysis_id} cancelled by user")
+                analysis_results[analysis_id]["status"] = "cancelled"
+                return
+            
             try:
                 print(f"Analyzing video {i+1}/{len(video_paths)}: {os.path.basename(video_path)}")
                 
@@ -186,6 +226,12 @@ def perform_analysis(analysis_id: str, reference_path: str,
                     "matches": [],
                     "video_name": os.path.basename(video_path)
                 }
+        
+        # Check if cancellation was requested after processing
+        if analysis_cancel_flags.get(analysis_id, False):
+            print(f"Analysis {analysis_id} cancelled by user")
+            analysis_results[analysis_id]["status"] = "cancelled"
+            return
         
         # Store raw results
         analysis_results[analysis_id]["results"] = results
