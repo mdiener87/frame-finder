@@ -210,6 +210,18 @@ def process_videos(reference_paths: List[str],
     # Ensure thumbnail output directory exists
     thumb_dir = os.path.join("static", "thumbnails")
     os.makedirs(thumb_dir, exist_ok=True)
+
+    # Wipe previous run thumbnails to avoid accumulation
+    try:
+        for fn in os.listdir(thumb_dir):
+            fp = os.path.join(thumb_dir, fn)
+            if os.path.isfile(fp):
+                try:
+                    os.remove(fp)
+                except Exception:
+                    pass
+    except Exception:
+        pass
     total_videos = len(video_paths)
 
     for i, video_path in enumerate(video_paths):
@@ -269,6 +281,18 @@ def process_videos(reference_paths: List[str],
 
             # Persist preview images for top 5 matches by confidence
             top5 = sorted(matches, key=lambda m: m.get("confidence", 0.0), reverse=True)[:5]
+
+            # Remove any existing previews for this video (from earlier saves/runs)
+            try:
+                vid_prefix = f"{os.path.splitext(video_name)[0]}_"
+                for fn in os.listdir(thumb_dir):
+                    if fn.startswith(vid_prefix) and (fn.endswith(".jpg") or fn.endswith(".jpeg") or fn.endswith(".png")):
+                        try:
+                            os.remove(os.path.join(thumb_dir, fn))
+                        except Exception:
+                            pass
+            except Exception:
+                pass
 
             def _save_images(video_name_: str, frame_bgr_: np.ndarray) -> Tuple[str, str]:
                 base = f"{os.path.splitext(video_name_)[0]}_{uuid.uuid4().hex}"
