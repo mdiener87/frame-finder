@@ -107,6 +107,30 @@
         const formatted = `${hrs.toString().padStart(2, '0')}:${mins.toString().padStart(2, '0')}:${secs.toFixed(3).padStart(6, '0')}`;
         return formatted;
     }
+
+    // Apply confidence filter to all result tables
+    function applyConfidenceFilter(thresholdPercent) {
+        const threshold = parseFloat(thresholdPercent);
+        document.querySelectorAll('.results-table').forEach(function(resultsTable) {
+            const videoIndex = resultsTable.id.replace('resultsTable-', '');
+            const visibleCount = document.getElementById('visibleCount-' + videoIndex);
+
+            let visibleRowCount = 0;
+            resultsTable.querySelectorAll('tbody tr').forEach(function(row) {
+                const confidence = parseFloat(row.getAttribute('data-confidence'));
+                if (confidence >= threshold / 100.0) {
+                    row.style.display = '';
+                    visibleRowCount++;
+                } else {
+                    row.style.display = 'none';
+                }
+            });
+
+            if (visibleCount) {
+                visibleCount.textContent = visibleRowCount;
+            }
+        });
+    }
     
     // Update timestamp displays with formatted time
     document.addEventListener('DOMContentLoaded', function() {
@@ -122,32 +146,12 @@
         if (globalSlider && globalValueDisplay) {
             // Set initial value display
             globalValueDisplay.textContent = globalSlider.value;
-            
+            // Apply initial filter immediately on load
+            applyConfidenceFilter(globalSlider.value);
+
             globalSlider.addEventListener('input', function() {
-                const threshold = this.value;
-                globalValueDisplay.textContent = threshold;
-                
-                // Filter rows in all tables based on confidence threshold
-                document.querySelectorAll('.results-table').forEach(function(resultsTable) {
-                    const videoIndex = resultsTable.id.replace('resultsTable-', '');
-                    const visibleCount = document.getElementById('visibleCount-' + videoIndex);
-                    
-                    let visibleRowCount = 0;
-                    resultsTable.querySelectorAll('tbody tr').forEach(function(row) {
-                        const confidence = parseFloat(row.getAttribute('data-confidence'));
-                        if (confidence >= threshold / 100.0) {
-                            row.style.display = '';
-                            visibleRowCount++;
-                        } else {
-                            row.style.display = 'none';
-                        }
-                    });
-                    
-                    // Update visible count for this video
-                    if (visibleCount) {
-                        visibleCount.textContent = visibleRowCount;
-                    }
-                });
+                globalValueDisplay.textContent = this.value;
+                applyConfidenceFilter(this.value);
             });
         }
     });
