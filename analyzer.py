@@ -49,6 +49,25 @@ def extract_frames(video_path: str, interval: float = 1.0) -> List[Tuple[Image.I
 # ==============================
 # Feature matching + homography scoring
 # ==============================
+def _cuda_available() -> bool:
+    """Return True if OpenCV CUDA is available and a device is present.
+    Can be forced off via env FRAME_FINDER_USE_CUDA=0, or forced on with =1.
+    """
+    force = os.getenv("FRAME_FINDER_USE_CUDA")
+    if force is not None:
+        return force not in ("0", "false", "False")
+    try:
+        # In some builds, cv2.cuda may not exist
+        if not hasattr(cv2, "cuda"):
+            return False
+        return int(cv2.cuda.getCudaEnabledDeviceCount() or 0) > 0
+    except Exception:
+        return False
+
+
+USE_CUDA = _cuda_available()
+
+
 class RefFeatures:
     def __init__(self, path: str, max_size: int = 1024):
         self.path = path
@@ -67,6 +86,27 @@ class RefFeatures:
 
 
 def compute_frame_features(frame_bgr: np.ndarray, detector) -> Tuple[Any, np.ndarray, np.ndarray]:
+    """Compute keypoints/desc for a frame. If CUDA is available, try GPU ORB.
+    Fallback to CPU ORB on any failure. Returns (keypoints, descriptors, gray_cpu).
+    """
+    if USE_CUDA and hasattr(cv2, "cuda") and hasattr(cv2.cuda, "ORB_create"):
+        try:
+            gpu_src = cv2.cuda_GpuMat()
+            gpu_src.upload(frame_bgr)
+            gpu_gray = cv2.cuda.cvtColor(gpu_src, cv2.COLOR_BGR2GRAY)
+            # Create CUDA ORB only once per call (fast enough), or could cache globally
+            orb_gpu = cv2.cuda_ORB_create(nfeatures=3000)
+            # detectAndComputeAsync returns (keypoints (CPU list), descriptors (GpuMat))
+            kp, desc_gpu = orb_gpu.detectAndComputeAsync(gpu_gray, None)
+            desc = desc_gpu.download() if desc_gpu is not None else None
+            # Also keep a CPU gray copy for downstream homography
+            gray_cpu = gpu_gray.download()
+            if kp is not None and desc is not None:
+                return kp, desc, gray_cpu
+        except Exception:
+            # Fall back to CPU path below
+            pass
+
     gray = cv2.cvtColor(frame_bgr, cv2.COLOR_BGR2GRAY)
     kp, desc = detector.detectAndCompute(gray, None)
     return kp, desc, gray
@@ -79,7 +119,7 @@ def match_and_score(ref: RefFeatures, frame_bgr: np.ndarray) -> Tuple[float, Dic
     if desc_f is None or ref.desc is None or len(desc_f) < 8 or len(ref.desc) < 8:
         return 0.0, {"reason": "no_descriptors"}
 
-    # KNN match + ratio test
+    # KNN match + ratio test (CPU matcher; robust and compatible)
     bf = cv2.BFMatcher(cv2.NORM_HAMMING, crossCheck=False)
     matches_knn = bf.knnMatch(ref.desc, desc_f, k=2)
     good = []

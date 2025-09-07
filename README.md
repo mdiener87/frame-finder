@@ -79,6 +79,13 @@ Frame Finder extracts frames from MP4 video files at regular intervals and compa
 6. Temporal clustering reduces duplicate detections
 7. Results are displayed with timestamps, confidence scores, and thumbnails
 
+### GPU Acceleration
+
+- Auto-detects CUDA via OpenCV: if a CUDA-enabled OpenCV is installed and a GPU is available, frame feature extraction uses `cv2.cuda_ORB_create` with device memory to accelerate processing.
+- Fallback: If CUDA is unavailable, all processing runs on CPU with identical behavior.
+- Override: Set `FRAME_FINDER_USE_CUDA=1` to force-enable when supported, or `FRAME_FINDER_USE_CUDA=0` to force CPU.
+- Note: This path uses OpenCV’s CUDA modules; PyTorch is not required for GPU acceleration.
+
 ### Configuration
 
 - Frame extraction interval: Configurable in UI (0.1-60 seconds, supports decimal values)
