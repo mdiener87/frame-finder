@@ -1,20 +1,19 @@
 # Frame Finder
 
-A lightweight Flask-based web tool that identifies specific visual props in video files by comparing frames against reference images using image embedding similarity.
+A lightweight Flask-based web tool that identifies specific visual props in video files by comparing frames against reference images using OpenCV feature matching + geometric verification.
 
 ## Overview
 
-Frame Finder extracts frames from MP4 video files at regular intervals and compares them against reference images using CLIP (Contrastive Language-Image Pre-training) model to find visual matches. While the initial use case is identifying the "Think Tank AI" prop from Star Trek: Voyager, the tool is designed to work with arbitrary inputs.
+Frame Finder extracts frames from MP4 video files at regular intervals and compares them against reference images using ORB keypoints, BF matching with a ratio test, and RANSAC homography verification. This runs fully offline (no model downloads) and is tuned for high precision. While the initial use case is identifying the "Think Tank AI" prop from Star Trek: Voyager, the tool is designed to work with arbitrary inputs.
 
 ## Features
 
 - Upload reference images (JPG/PNG) and video files (MP4)
 - Upload negative reference images to reduce false positives
 - Extract frames from videos at configurable intervals (supports decimal values)
-- Compare frames against reference images using CLIP similarity with delta scoring
-- Apply image normalization (CLAHE on L channel) for consistent lighting
-- GPU acceleration for faster processing
-- Batch frame processing for improved throughput
+- Compare frames against reference images using ORB feature matching + homography
+- Offline, zero-network analysis (no external models)
+- Efficient CPU-only processing; GPU not required
 - Temporal clustering to reduce duplicate detections
 - Adaptive thresholding per video for better accuracy
 - Display results with timestamps, confidence scores, and thumbnails
@@ -67,21 +66,18 @@ Frame Finder extracts frames from MP4 video files at regular intervals and compa
 ### Core Components
 
 - **Flask**: Web framework for handling requests and rendering templates
-- **OpenCV**: Video processing and frame extraction
+- **OpenCV**: Video processing, ORB features, BF matching, homography
 - **PIL/Pillow**: Image processing utilities
-- **Transformers (Hugging Face)**: CLIP model integration for image similarity
-- **PyTorch**: Underlying framework for CLIP model
 
 ### Processing Workflow
 
-1. User uploads reference images, negative reference images (optional), and video files
-2. Reference embeddings are computed once and cached for efficiency
-3. Videos are processed to extract frames at regular intervals (supports decimal values)
-4. Each frame is normalized using CLAHE on L channel for consistent lighting
-5. Each frame is compared against reference images using CLIP embeddings with delta scoring
-6. Matches above a confidence threshold are collected
-7. Temporal clustering is applied to reduce duplicate detections
-8. Results are displayed with timestamps, confidence scores, and thumbnails
+1. User uploads reference images, optional negative references, and video files
+2. Reference keypoints/descriptors are computed once and cached
+3. Videos are processed to extract frames at regular intervals (supports decimals)
+4. Each frame is matched to references using BF+ratio test; RANSAC homography finds inliers
+5. Per-frame confidence is computed from inlier count and inlier ratio
+6. Temporal clustering reduces duplicate detections
+7. Results are displayed with timestamps, confidence scores, and thumbnails
 
 ### Configuration
 
@@ -130,8 +126,7 @@ The modular architecture allows for easy extension:
 - SQLite database for storing and querying results
 - Support for additional video formats
 - Advanced filtering and sorting of results
-- Model selection (CLIP-ViT-Large, SigLIP)
-- Two-stage filtering (OpenCV gate → CLIP re-check)
+- Optional second-stage verifier (e.g., CLIP) when network/GPU available
 - Micro-tuning around peaks
 
 ## License
@@ -140,6 +135,5 @@ This project is licensed under the MIT License.
 
 ## Acknowledgments
 
-- OpenAI CLIP model for image similarity
-- Hugging Face Transformers for easy model integration
+- OpenCV for computer vision primitives
 - Flask for the web framework
