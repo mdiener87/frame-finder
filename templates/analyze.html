@@ -96,6 +96,10 @@
         .cancel-btn {
             margin-left: 10px;
         }
+        
+        .analysis-mode-toggle {
+            margin-bottom: 15px;
+        }
     </style>
 </head>
 <body>
@@ -110,6 +114,34 @@
             <div class="col-md-12">
                 <h1>Frame Finder - Video Analysis</h1>
                 <p class="lead">Upload a reference image and videos to find where the reference appears.</p>
+            </div>
+        </div>
+
+        <!-- Analysis Mode Toggle -->
+        <div class="row mt-3">
+            <div class="col-md-12">
+                <div class="card analysis-mode-toggle">
+                    <div class="card-body">
+                        <h6>Analysis Mode</h6>
+                        <div class="form-check form-check-inline">
+                            <input class="form-check-input" type="radio" name="analysisMode" id="standardMode" value="standard" checked>
+                            <label class="form-check-label" for="standardMode">Standard Accuracy</label>
+                        </div>
+                        <div class="form-check form-check-inline">
+                            <input class="form-check-input" type="radio" name="analysisMode" id="enhancedMode" value="enhanced">
+                            <label class="form-check-label" for="enhancedMode">Enhanced Accuracy</label>
+                        </div>
+                        <div class="form-check form-check-inline">
+                            <input class="form-check-input" type="radio" name="analysisMode" id="highPrecisionMode" value="high_precision">
+                            <label class="form-check-label" for="highPrecisionMode">High Precision</label>
+                        </div>
+                        <div class="mt-2">
+                            <small class="text-muted">
+                                <span id="modeDescription">Standard accuracy mode with balanced detection.</span>
+                            </small>
+                        </div>
+                    </div>
+                </div>
             </div>
         </div>
 
@@ -209,6 +241,11 @@
                         <div class="card">
                             <div class="card-header">
                                 <h5>Analysis Results</h5>
+                                <div class="mt-2">
+                                    <small class="text-muted">
+                                        Analysis Mode: <span id="results-mode-indicator">Standard</span>
+                                    </small>
+                                </div>
                             </div>
                             <div class="card-body results-container">
                                 <div id="results-content">
@@ -233,6 +270,20 @@
         let videoFiles = [];
         let analysisId = null;
         let isAnalyzing = false;
+
+        // Mode descriptions
+        const modeDescriptions = {
+            'standard': 'Standard accuracy mode with balanced detection.',
+            'enhanced': 'Enhanced accuracy mode with higher frame rate processing (0.25s intervals).',
+            'high_precision': 'High precision mode with strict detection criteria and detailed analysis.'
+        };
+
+        // Update mode description when mode changes
+        document.querySelectorAll('input[name="analysisMode"]').forEach(radio => {
+            radio.addEventListener('change', function() {
+                document.getElementById('modeDescription').textContent = modeDescriptions[this.value];
+            });
+        });
 
         // Reference image upload handling
         document.getElementById('reference-upload').addEventListener('click', () => {
@@ -436,6 +487,17 @@
         document.getElementById('analyze-btn').addEventListener('click', async () => {
             if (!referenceFile || videoFiles.length === 0 || isAnalyzing) return;
             
+            // Get selected analysis mode
+            const selectedMode = document.querySelector('input[name="analysisMode"]:checked').value;
+            
+            // Update results mode indicator
+            const modeNames = {
+                'standard': 'Standard',
+                'enhanced': 'Enhanced Accuracy',
+                'high_precision': 'High Precision'
+            };
+            document.getElementById('results-mode-indicator').textContent = modeNames[selectedMode];
+            
             // Reset results panel
             document.getElementById('results-content').innerHTML = `
                 <div class="text-center">
@@ -474,6 +536,9 @@
                 videoFiles.forEach((file) => {
                     formData.append('videos', file);
                 });
+                
+                // Add analysis mode
+                formData.append('analysis_mode', selectedMode);
                 
                 // Show upload progress
                 showStatus('Uploading files... This may take a while for large files.', 'alert-info');
@@ -573,6 +638,10 @@
                         switchToResultsTab();
                     } else if (data.status === 'failed') {
                         showStatus('Analysis failed: ' + (data.error || 'Unknown error'), 'alert-danger');
+                        resetAnalyzeButton();
+                        setAnalyzingState(false);
+                    } else if (data.status === 'cancelled') {
+                        showStatus('Analysis cancelled by user.', 'alert-warning');
                         resetAnalyzeButton();
                         setAnalyzingState(false);
                     }
@@ -707,10 +776,10 @@
                 `;
                 
                 if (fullResult && fullResult.matches && fullResult.matches.length > 0) {
-                    // Sort matches by similarity and take top 5
+                    // Sort matches by similarity and take top 10
                     const topMatches = [...fullResult.matches]
                         .sort((a, b) => b.similarity - a.similarity)
-                        .slice(0, 5);
+                        .slice(0, 10);
                     
                     html += '<div class="mb-3">';
                     topMatches.forEach(match => {

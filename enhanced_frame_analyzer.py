@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 """
-Frame Analyzer for finding reference images in videos.
-This implementation focuses on precision to minimize false positives.
+Enhanced Frame Analyzer for finding reference images in videos.
+This implementation focuses on accuracy and proper timestamp reporting.
 """
 
 import cv2
@@ -19,9 +19,9 @@ print(f"Using device: {DEVICE}")
 # Model configuration
 MODEL_NAME = "openai/clip-vit-base-patch32"
 
-class FrameAnalyzer:
+class EnhancedFrameAnalyzer:
     def __init__(self):
-        """Initialize the FrameAnalyzer with CLIP model."""
+        """Initialize the EnhancedFrameAnalyzer with CLIP model."""
         print("Loading CLIP model...")
         self.model = CLIPModel.from_pretrained(MODEL_NAME).to(DEVICE).eval()
         self.processor = CLIPProcessor.from_pretrained(MODEL_NAME)
@@ -245,9 +245,9 @@ class FrameAnalyzer:
         }
 
 def main():
-    """Main function for testing the analyzer with the provided examples."""
+    """Main function for testing the enhanced analyzer with the provided examples."""
     # Initialize analyzer
-    analyzer = FrameAnalyzer()
+    analyzer = EnhancedFrameAnalyzer()
     
     # Define paths
     base_path = "examples/thinktank"
@@ -256,7 +256,7 @@ def main():
     negative_video = os.path.join(base_path, "TT_Negative.mp4")
     
     print("\n" + "="*60)
-    print("FRAME FINDER - TESTING WITH EXAMPLE FILES")
+    print("ENHANCED FRAME FINDER - TESTING WITH EXAMPLE FILES")
     print("="*60)
     
     # Test with positive video

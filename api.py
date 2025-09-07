@@ -47,6 +47,7 @@ def analyze_videos():
     Expected form data:
     - reference: reference image file
     - videos: one or more video files
+    - analysis_mode: analysis mode (standard, enhanced, high_precision)
     
     Returns:
     {
@@ -63,6 +64,20 @@ def analyze_videos():
             return jsonify({
                 'error': 'Missing reference image'
             }), 400
+        
+        # Get analysis mode
+        analysis_mode = request.form.get('analysis_mode', 'standard')
+        print(f"Analysis mode: {analysis_mode}")
+        
+        # Set frame interval based on mode
+        if analysis_mode == 'enhanced':
+            frame_interval = 0.25  # Higher frequency for better accuracy
+        elif analysis_mode == 'high_precision':
+            frame_interval = 0.1   # Very high frequency for high precision
+        else:
+            frame_interval = 0.5   # Standard interval
+        
+        print(f"Using frame interval: {frame_interval}s")
         
         # Check file count
         video_files = request.files.getlist('videos')
@@ -124,8 +139,8 @@ def analyze_videos():
             "temp_dir": temp_dir,
             "results": {},
             "comparison": {},
-            "current_video": "",
-            "progress": "0/0"
+            "analysis_mode": analysis_mode,
+            "frame_interval": frame_interval
         }
         
         # Set cancel flag to False
@@ -134,7 +149,7 @@ def analyze_videos():
         # Start analysis in background thread
         thread = threading.Thread(
             target=perform_analysis,
-            args=(analysis_id, reference_path, video_paths, temp_dir)
+            args=(analysis_id, reference_path, video_paths, temp_dir, frame_interval)
         )
         analysis_threads[analysis_id] = thread
         thread.start()
@@ -181,11 +196,11 @@ def cancel_analysis(analysis_id: str):
         }), 500
 
 def perform_analysis(analysis_id: str, reference_path: str, 
-                    video_paths: List[str], temp_dir: str):
+                    video_paths: List[str], temp_dir: str, frame_interval: float):
     """Perform analysis in background."""
     try:
         results = {}
-        print(f"Starting analysis for {len(video_paths)} videos")
+        print(f"Starting analysis for {len(video_paths)} videos with frame interval {frame_interval}s")
         
         # Analyze each video
         for i, video_path in enumerate(video_paths):
@@ -202,11 +217,11 @@ def perform_analysis(analysis_id: str, reference_path: str,
                 analysis_results[analysis_id]["current_video"] = os.path.basename(video_path)
                 analysis_results[analysis_id]["progress"] = f"{i+1}/{len(video_paths)}"
                 
-                # Run detection
+                # Run detection with specified frame interval
                 result = analyzer.detect_reference_in_video(
                     reference_path, 
                     video_path, 
-                    frame_interval=1.0  # Reasonable default
+                    frame_interval=frame_interval
                 )
                 
                 # Add video name to result for easier identification
