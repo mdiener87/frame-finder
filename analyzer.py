@@ -1,75 +1,34 @@
-# analyzer.py
+"""
+Robust reference-frame finder using OpenCV feature matching + homography.
+
+This replaces the prior CLIP-based logic to work fully offline and provide
+clear, high-precision matches with calibrated confidences.
+"""
+
 import os
+from typing import List, Dict, Any, Tuple
+import uuid
+
 import cv2
 import numpy as np
 from PIL import Image
-import torch
-from transformers import CLIPModel, CLIPProcessor
-
-# ==============================
-# MODE SWITCH (baseline | advanced)
-# ==============================
-MODE = "baseline"   # <-- change to "advanced" for precision mode
-
-# ------------------------------
-# Baseline defaults (raw CLIP cosine)
-# ------------------------------
-BASELINE_FRAME_INTERVAL = 0.5      # seconds (2 fps)
-BASELINE_THRESHOLD = 0.30          # raw cosine on ViT-B/32 ~0.28–0.40 for good matches
-BASELINE_CLUSTER_WINDOW_S = 1.0
-
-# ------------------------------
-# Advanced defaults (delta scoring, adaptive threshold)
-# ------------------------------
-ADV_FRAME_INTERVAL = 0.5           # coarse pass; refine is optional
-ADV_CONFIDENCE_THRESHOLD = None    # None => adaptive (μ + zσ)
-ADV_ADAPTIVE_Z = 3.5               # stricter = fewer FPs
-ADV_CLUSTER_WINDOW_S = 1.0
-ADV_USE_ORB_GATE = True            # helps kill hull FPs cheaply
-ADV_ORB_MIN_GOOD = 18              # tune 14–24 depending on clip/ref
-ADV_ORB_DIST_PERCENTILE = 35       # 30–45 typically works
-ADV_USE_NORMALIZATION = True       # CLAHE on L channel in LAB
-ADV_NEGATIVE_SCORING = True        # enable delta scoring if negative refs provided
-
-# ==============================
-# Model / device
-# ==============================
-DEVICE = "cuda" if torch.cuda.is_available() else "cpu"
-MODEL_ID = "openai/clip-vit-base-patch32"  # try "openai/clip-vit-large-patch14" if you have VRAM
-
-model = CLIPModel.from_pretrained(MODEL_ID).to(DEVICE).eval()
-processor = CLIPProcessor.from_pretrained(MODEL_ID)
 
 # ==============================
 # Allowed extensions
 # ==============================
-ALLOWED_EXTENSIONS = {'png', 'jpg', 'jpeg', 'mp4'}
+ALLOWED_EXTENSIONS = {"png", "jpg", "jpeg", "mp4"}
 
 
 def allowed_file(filename: str) -> bool:
-    return '.' in filename and filename.rsplit('.', 1)[1].lower() in ALLOWED_EXTENSIONS
-
-
-# ==============================
-# Image normalization (used in advanced mode)
-# ==============================
-def normalize_pil(img: Image.Image) -> Image.Image:
-    """CLAHE on L channel to stabilize lighting/compression artifacts."""
-    arr = np.array(img.convert("RGB"))
-    lab = cv2.cvtColor(arr, cv2.COLOR_RGB2LAB)
-    l, a, b = cv2.split(lab)
-    l = cv2.createCLAHE(2.0, (8, 8)).apply(l)
-    lab = cv2.merge((l, a, b))
-    out = cv2.cvtColor(lab, cv2.COLOR_LAB2RGB)
-    return Image.fromarray(out)
+    return "." in filename and filename.rsplit(".", 1)[1].lower() in ALLOWED_EXTENSIONS
 
 
 # ==============================
 # Frame extraction
 # ==============================
-def extract_frames(video_path: str, interval: float = 1.0):
+def extract_frames(video_path: str, interval: float = 1.0) -> List[Tuple[Image.Image, float]]:
     """Return list of (PIL.Image, timestamp_seconds) sampled by modulo frame step."""
-    frames = []
+    frames: List[Tuple[Image.Image, float]] = []
     cap = cv2.VideoCapture(video_path)
     if not cap.isOpened():
         raise ValueError(f"Could not open video file: {video_path}")
@@ -89,92 +48,130 @@ def extract_frames(video_path: str, interval: float = 1.0):
 
 
 # ==============================
-# CLIP encoding helpers (batched)
+# Feature matching + homography scoring
 # ==============================
-@torch.no_grad()
-def encode_images_batched(pil_list, batch_size: int = 32, normalize: bool = False):
-    """Return L2-normalized image features tensor of shape (N, D) on DEVICE."""
-    feats = []
-    for i in range(0, len(pil_list), batch_size):
-        batch = pil_list[i:i + batch_size]
-        if normalize:
-            batch = [normalize_pil(im) for im in batch]
-        inputs = processor(images=batch, return_tensors="pt").to(DEVICE)
-        f = model.get_image_features(**inputs)
-        f = torch.nn.functional.normalize(f, dim=-1)
-        feats.append(f)
-    if len(feats) == 0:
-        return torch.empty((0, model.visual_projection.out_features), device=DEVICE)
-    return torch.cat(feats, dim=0)
-
-
-# ==============================
-# Reference embeddings cache
-# ==============================
-class EmbeddingsCache:
-    def __init__(self, image_paths, normalize=False):
-        self.paths = list(image_paths or [])
-        self.normalize = normalize
-        self.pils = [Image.open(p) for p in self.paths]
-        self.feats = encode_images_batched(self.pils, normalize=self.normalize)
-
-    @property
-    def empty(self):
-        return self.feats.numel() == 0
-
-    def best_sim(self, frame_feats: torch.Tensor) -> (torch.Tensor, torch.Tensor):
-        """Return (best_sim_values, best_indices) for each frame feat."""
-        # frame_feats: (F, D); self.feats: (R, D)
-        sims = frame_feats @ self.feats.T  # (F, R)
-        best_vals, best_idx = sims.max(dim=1)
-        return best_vals, best_idx
-
-
-# ==============================
-# Optional ORB gate (cheap geometric check)
-# ==============================
-class ORBGate:
-    def __init__(self, ref_pils, min_good=18, dist_percentile=35):
-        self.min_good = min_good
-        self.dist_percentile = dist_percentile
-        # Precompute descriptors for refs
-        self.orb = cv2.ORB_create()
-        self.ref_descs = []
-        for im in ref_pils:
-            g = cv2.cvtColor(np.array(im.convert("RGB")), cv2.COLOR_RGB2GRAY)
-            k, d = self.orb.detectAndCompute(g, None)
-            self.ref_descs.append(d)
-
-        self.bf = cv2.BFMatcher(cv2.NORM_HAMMING, crossCheck=True)
-
-    def passes(self, frame_pil: Image.Image) -> bool:
-        g = cv2.cvtColor(np.array(frame_pil.convert("RGB")), cv2.COLOR_RGB2GRAY)
-        kf, df = self.orb.detectAndCompute(g, None)
-        if df is None or len(df) == 0:
+def _cuda_available() -> bool:
+    """Return True if OpenCV CUDA is available and a device is present.
+    Can be forced off via env FRAME_FINDER_USE_CUDA=0, or forced on with =1.
+    """
+    force = os.getenv("FRAME_FINDER_USE_CUDA")
+    if force is not None:
+        return force not in ("0", "false", "False")
+    try:
+        # In some builds, cv2.cuda may not exist
+        if not hasattr(cv2, "cuda"):
             return False
-        for dr in self.ref_descs:
-            if dr is None or len(dr) == 0:
-                continue
-            matches = self.bf.match(df, dr)
-            if not matches:
-                continue
-            dists = np.array([m.distance for m in matches], dtype=np.float32)
-            cutoff = np.percentile(dists, self.dist_percentile)
-            good = int((dists <= cutoff).sum())
-            if good >= self.min_good:
-                return True
+        return int(cv2.cuda.getCudaEnabledDeviceCount() or 0) > 0
+    except Exception:
         return False
 
 
-# ==============================
-# Temporal clustering
-# ==============================
-def cluster_peaks(matches, window_s: float = 1.0):
-    """Matches: list of dicts with 'timestamp' and 'confidence'."""
+USE_CUDA = _cuda_available()
+
+
+class RefFeatures:
+    def __init__(self, path: str, max_size: int = 1024):
+        self.path = path
+        self.image_bgr = cv2.imread(path, cv2.IMREAD_COLOR)
+        if self.image_bgr is None:
+            raise ValueError(f"Failed to read image: {path}")
+        h, w = self.image_bgr.shape[:2]
+        scale = min(1.0, max_size / max(h, w))
+        if scale < 0.999:
+            self.image_bgr = cv2.resize(self.image_bgr, (int(w * scale), int(h * scale)), interpolation=cv2.INTER_AREA)
+        self.gray = cv2.cvtColor(self.image_bgr, cv2.COLOR_BGR2GRAY)
+
+        # ORB is fast and robust enough; increase features for better recall.
+        self.detector = cv2.ORB_create(nfeatures=3000, scaleFactor=1.2, nlevels=8)
+        self.kp, self.desc = self.detector.detectAndCompute(self.gray, None)
+
+
+def compute_frame_features(frame_bgr: np.ndarray, detector) -> Tuple[Any, np.ndarray, np.ndarray]:
+    """Compute keypoints/desc for a frame. If CUDA is available, try GPU ORB.
+    Fallback to CPU ORB on any failure. Returns (keypoints, descriptors, gray_cpu).
+    """
+    if USE_CUDA and hasattr(cv2, "cuda") and hasattr(cv2.cuda, "ORB_create"):
+        try:
+            gpu_src = cv2.cuda_GpuMat()
+            gpu_src.upload(frame_bgr)
+            gpu_gray = cv2.cuda.cvtColor(gpu_src, cv2.COLOR_BGR2GRAY)
+            # Create CUDA ORB only once per call (fast enough), or could cache globally
+            orb_gpu = cv2.cuda_ORB_create(nfeatures=3000)
+            # detectAndComputeAsync returns (keypoints (CPU list), descriptors (GpuMat))
+            kp, desc_gpu = orb_gpu.detectAndComputeAsync(gpu_gray, None)
+            desc = desc_gpu.download() if desc_gpu is not None else None
+            # Also keep a CPU gray copy for downstream homography
+            gray_cpu = gpu_gray.download()
+            if kp is not None and desc is not None:
+                return kp, desc, gray_cpu
+        except Exception:
+            # Fall back to CPU path below
+            pass
+
+    gray = cv2.cvtColor(frame_bgr, cv2.COLOR_BGR2GRAY)
+    kp, desc = detector.detectAndCompute(gray, None)
+    return kp, desc, gray
+
+
+def match_and_score(ref: RefFeatures, frame_bgr: np.ndarray) -> Tuple[float, Dict[str, Any]]:
+    """Return (confidence [0..1], meta) for one ref vs frame using ORB+homography."""
+    # Reuse the same ORB params as ref
+    kp_f, desc_f, gray_f = compute_frame_features(frame_bgr, ref.detector)
+    if desc_f is None or ref.desc is None or len(desc_f) < 8 or len(ref.desc) < 8:
+        return 0.0, {"reason": "no_descriptors"}
+
+    # KNN match + ratio test (CPU matcher; robust and compatible)
+    bf = cv2.BFMatcher(cv2.NORM_HAMMING, crossCheck=False)
+    matches_knn = bf.knnMatch(ref.desc, desc_f, k=2)
+    good = []
+    for m, n in matches_knn:
+        if m.distance < 0.75 * n.distance:
+            good.append(m)
+
+    if len(good) < 10:
+        return 0.0, {"reason": "too_few_good_matches", "good": len(good)}
+
+    src_pts = np.float32([ref.kp[m.queryIdx].pt for m in good]).reshape(-1, 1, 2)
+    dst_pts = np.float32([kp_f[m.trainIdx].pt for m in good]).reshape(-1, 1, 2)
+
+    H, mask = cv2.findHomography(src_pts, dst_pts, cv2.RANSAC, 5.0)
+    if H is None or mask is None:
+        return 0.0, {"reason": "no_homography", "good": len(good)}
+
+    inliers = int(mask.sum())
+    inlier_ratio = inliers / max(1, len(good))
+
+    # Confidence calibration:
+    # - Encourage higher inlier counts and ratios.
+    # - Soft-cap counts at 40 to map into [0,1].
+    c_count = min(1.0, inliers / 40.0)
+    c_ratio = min(1.0, inlier_ratio / 0.6)  # 0.6 ratio ~ strong geometric consistency
+    confidence = 0.7 * c_count + 0.3 * c_ratio
+
+    # Additional sanity: ensure projected polygon is plausible (non-degenerate)
+    h, w = ref.gray.shape[:2]
+    corners = np.float32([[0, 0], [w, 0], [w, h], [0, h]]).reshape(-1, 1, 2)
+    proj = cv2.perspectiveTransform(corners, H)
+    area = cv2.contourArea(proj.reshape(-1, 2))
+    if area <= 10.0:
+        confidence *= 0.2
+
+    meta = {
+        "inliers": inliers,
+        "matches": len(good),
+        "inlier_ratio": inlier_ratio,
+        "proj_area": float(area),
+    }
+    return float(confidence), meta
+
+
+def cluster_peaks(matches: List[Dict[str, Any]], window_s: float = 1.0) -> List[Dict[str, Any]]:
+    """Collapse nearby timestamps; keep the highest-confidence per window."""
     if not matches:
         return []
     matches.sort(key=lambda m: m["timestamp"])
-    out, cur = [], [matches[0]]
+    out: List[Dict[str, Any]] = []
+    cur = [matches[0]]
     for m in matches[1:]:
         if m["timestamp"] - cur[-1]["timestamp"] <= window_s:
             cur.append(m)
@@ -186,160 +183,171 @@ def cluster_peaks(matches, window_s: float = 1.0):
 
 
 # ==============================
-# Adaptive threshold for advanced mode
-# ==============================
-def adaptive_threshold_from_frames(frames, ref_cache: EmbeddingsCache,
-                                   neg_cache: EmbeddingsCache | None,
-                                   normalize: bool, stride: int = 10, z: float = 3.5):
-    sample_pils = [frames[i][0] for i in range(0, len(frames), max(1, stride))]
-    if len(sample_pils) == 0:
-        return 1.0  # effectively disable
-    frame_feats = encode_images_batched(sample_pils, normalize=normalize)
-    # raw best sim to refs
-    ref_best, _ = ref_cache.best_sim(frame_feats)
-    scores = ref_best
-    if neg_cache and not neg_cache.empty and ADV_NEGATIVE_SCORING:
-        # subtract max sim to negatives
-        neg_best, _ = neg_cache.best_sim(frame_feats)
-        scores = ref_best - neg_best
-    arr = scores.float().detach().cpu().numpy()
-    mu, sd = float(arr.mean()), float(arr.std() + 1e-6)
-    return mu + z * sd
-
-
-# ==============================
 # Public API: process_videos
 # ==============================
-def process_videos(reference_paths, video_paths, frame_interval=1.0,
-                   confidence_threshold=0.5, negative_paths=None, progress_callback=None):
+def process_videos(reference_paths: List[str],
+                   video_paths: List[str],
+                   frame_interval: float = 1.0,
+                   confidence_threshold: float = 0.75,
+                   negative_paths: List[str] | None = None,
+                   progress_callback=None) -> Dict[str, Any]:
     """
     Args:
-        reference_paths (list[str]): paths to positive reference images
-        video_paths     (list[str]): paths to mp4 files
-        frame_interval  (float)    : seconds between frames
-        confidence_threshold (float|None): if None in advanced mode, uses adaptive
-        negative_paths (list[str]|None): optional background negatives (advanced)
-        progress_callback (callable) : callback function to report progress (optional)
+        reference_paths: paths to positive reference images
+        video_paths    : paths to mp4 files
+        frame_interval : seconds between frames extracted
+        confidence_threshold: retained for UI compatibility; analyzer returns all matches
+        negative_paths : currently unused; reserved for future background suppression
+        progress_callback: optional callable for UI progress updates
+
     Returns:
-        dict[str, list[dict]]: { video_name: [ {timestamp, confidence, reference_image} ... ] }
+        { video_name: { matches: [...], max_confidence: float, threshold_used: float } }
     """
-    # Choose mode config
-    if MODE == "baseline":
-        interval = frame_interval if frame_interval else BASELINE_FRAME_INTERVAL
-        thr = confidence_threshold if confidence_threshold is not None else BASELINE_THRESHOLD
-        normalize = False
-        use_neg = False
-        use_orb = False
-        cluster_window = BASELINE_CLUSTER_WINDOW_S
-    elif MODE == "advanced":
-        interval = frame_interval if frame_interval else ADV_FRAME_INTERVAL
-        thr = confidence_threshold  # may be None => adaptive
-        normalize = ADV_USE_NORMALIZATION
-        use_neg = ADV_NEGATIVE_SCORING
-        use_orb = ADV_USE_ORB_GATE
-        cluster_window = ADV_CLUSTER_WINDOW_S
-    else:
-        raise ValueError(f"Unknown MODE: {MODE}")
+    # Precompute reference features once
+    refs: List[RefFeatures] = [RefFeatures(p) for p in (reference_paths or [])]
 
-    # Build caches
-    ref_cache = EmbeddingsCache(reference_paths, normalize=normalize)
-    neg_cache = EmbeddingsCache(negative_paths, normalize=normalize) if (negative_paths and use_neg) else None
+    results: Dict[str, Any] = {}
+    # Ensure thumbnail output directory exists
+    thumb_dir = os.path.join("static", "thumbnails")
+    os.makedirs(thumb_dir, exist_ok=True)
 
-    # ORB gate (advanced)
-    orb_gate = ORBGate(ref_cache.pils, ADV_ORB_MIN_GOOD, ADV_ORB_DIST_PERCENTILE) if (MODE == "advanced" and use_orb) else None
-
-    results = {}
-
-    # Calculate total number of videos for progress tracking
+    # Wipe previous run thumbnails to avoid accumulation
+    try:
+        for fn in os.listdir(thumb_dir):
+            fp = os.path.join(thumb_dir, fn)
+            if os.path.isfile(fp):
+                try:
+                    os.remove(fp)
+                except Exception:
+                    pass
+    except Exception:
+        pass
     total_videos = len(video_paths)
 
     for i, video_path in enumerate(video_paths):
         video_name = os.path.basename(video_path)
-        matches = []
+        matches: List[Dict[str, Any]] = []
+        max_conf = 0.0
         try:
-            # Report which video is being processed
             if progress_callback:
                 progress_callback({
-                    'current_video': video_name,
-                    'video_index': i,
-                    'total_videos': total_videos,
-                    'status': 'processing_video'
+                    "current_video": video_name,
+                    "video_index": i,
+                    "total_videos": total_videos,
+                    "status": "processing_video",
                 })
-            
-            frames = extract_frames(video_path, interval=interval)
 
-            # adaptive threshold (advanced, if None supplied)
-            vid_thr = thr
-            if MODE == "advanced" and thr is None:
-                vid_thr = adaptive_threshold_from_frames(
-                    frames, ref_cache, neg_cache, normalize=normalize,
-                    stride=10, z=ADV_ADAPTIVE_Z
-                )
+            frames = extract_frames(video_path, interval=max(0.1, float(frame_interval)))
+            total_frames = len(frames)
 
-            # batch encode frames (respect normalization mode)
-            frame_pils = [f for (f, _) in frames]
-            frame_ts = [t for (_, t) in frames]
+            # Store only matched frames we may need to persist later
+            matched_frames: Dict[int, np.ndarray] = {}
 
-            # optional ORB gating
-            if orb_gate is not None:
-                gated = [(f, t) for (f, t) in frames if orb_gate.passes(f)]
-                if not gated:
-                    results[video_name] = []
-                    continue
-                frame_pils = [f for (f, _) in gated]
-                frame_ts = [t for (_, t) in gated]
+            for j, (pil_img, ts) in enumerate(frames):
+                frame_bgr = cv2.cvtColor(np.array(pil_img.convert("RGB")), cv2.COLOR_RGB2BGR)
 
-            if len(frame_pils) == 0:
-                results[video_name] = []
-                continue
+                best_conf = 0.0
+                best_ref_name = None
+                # Score each reference; keep best per frame
+                for rp, ref in zip(reference_paths, refs):
+                    conf, _meta = match_and_score(ref, frame_bgr)
+                    if conf > best_conf:
+                        best_conf = conf
+                        best_ref_name = os.path.basename(rp)
 
-            frame_feats = encode_images_batched(frame_pils, normalize=normalize)
+                if best_conf > 0.0:
+                    matches.append({
+                        "timestamp": float(ts),
+                        "confidence": float(best_conf),
+                        "reference_image": best_ref_name,
+                        "frame_index": j,
+                    })
+                    matched_frames[j] = frame_bgr
+                    max_conf = max(max_conf, float(best_conf))
 
-            # Best sim to refs (top-1 per frame)
-            ref_best, ref_idx = ref_cache.best_sim(frame_feats)
-            scores = ref_best
-
-            # Delta scoring with negatives (advanced)
-            if MODE == "advanced" and neg_cache and not neg_cache.empty and use_neg:
-                neg_best, _ = neg_cache.best_sim(frame_feats)
-                scores = ref_best - neg_best
-
-            # Collect hits (top-1 per frame only)
-            scores_np = scores.float().detach().cpu().numpy()
-            ref_idx_np = ref_idx.detach().cpu().numpy()
-            total_frames = len(frame_ts)
-            for j, (ts, s, ridx) in enumerate(zip(frame_ts, scores_np, ref_idx_np)):
-                matches.append({
-                    "timestamp": float(ts),
-                    "confidence": float(s),
-                    "reference_image": os.path.basename(reference_paths[ridx]) if len(reference_paths) else None
-                })
-                
-                # Report progress within the video
                 if progress_callback and total_frames > 0:
                     progress_callback({
-                        'current_video': video_name,
-                        'video_index': i,
-                        'total_videos': total_videos,
-                        'current_frame': j,
-                        'total_frames': total_frames,
-                        'status': 'processing_frames'
+                        "current_video": video_name,
+                        "video_index": i,
+                        "total_videos": total_videos,
+                        "current_frame": j + 1,
+                        "total_frames": total_frames,
+                        "status": "processing_frames",
                     })
 
-            # Temporal clustering
-            matches = cluster_peaks(matches, window_s=cluster_window)
-            
-            # Calculate max confidence for UI display
-            max_confidence = max([m["confidence"] for m in matches], default=0.0)
+            # Collapse nearby duplicates (preserves frame_index)
+            matches = cluster_peaks(matches, window_s=1.0)
+            max_conf = max([m.get("confidence", 0.0) for m in matches], default=0.0)
+
+            # Persist preview images for top 5 matches by confidence
+            top5 = sorted(matches, key=lambda m: m.get("confidence", 0.0), reverse=True)[:5]
+
+            # Remove any existing previews for this video (from earlier saves/runs)
+            try:
+                vid_prefix = f"{os.path.splitext(video_name)[0]}_"
+                for fn in os.listdir(thumb_dir):
+                    if fn.startswith(vid_prefix) and (fn.endswith(".jpg") or fn.endswith(".jpeg") or fn.endswith(".png")):
+                        try:
+                            os.remove(os.path.join(thumb_dir, fn))
+                        except Exception:
+                            pass
+            except Exception:
+                pass
+
+            def _save_images(video_name_: str, frame_bgr_: np.ndarray) -> Tuple[str, str]:
+                base = f"{os.path.splitext(video_name_)[0]}_{uuid.uuid4().hex}"
+                full_name = base + "_full.jpg"
+                thumb_name = base + "_thumb.jpg"
+                full_path = os.path.join(thumb_dir, full_name)
+                thumb_path = os.path.join(thumb_dir, thumb_name)
+                # Save full
+                cv2.imwrite(full_path, frame_bgr_, [int(cv2.IMWRITE_JPEG_QUALITY), 92])
+                # Save thumb (width ~ 240px)
+                h, w = frame_bgr_.shape[:2]
+                target_w = 240
+                scale = target_w / max(1, w)
+                new_size = (target_w, max(1, int(round(h * scale))))
+                thumb_bgr = cv2.resize(frame_bgr_, new_size, interpolation=cv2.INTER_AREA)
+                cv2.imwrite(thumb_path, thumb_bgr, [int(cv2.IMWRITE_JPEG_QUALITY), 85])
+                # Return URLs for browser
+                return f"/static/thumbnails/{full_name}", f"/static/thumbnails/{thumb_name}"
+
+            for m in top5:
+                fi = m.get("frame_index")
+                if fi is None:
+                    continue
+                frm = matched_frames.get(fi)
+                if frm is None:
+                    continue
+                full_url, thumb_url = _save_images(video_name, frm)
+                m["image_full_url"] = full_url
+                m["image_thumb_url"] = thumb_url
 
         except Exception as e:
             matches = [{"error": str(e)}]
-            max_confidence = 0.0
+            max_conf = 0.0
 
         results[video_name] = {
             "matches": matches,
-            "max_confidence": max_confidence,
-            "threshold_used": vid_thr
+            "max_confidence": max_conf,
+            "threshold_used": float(confidence_threshold),
         }
 
     return results
+
+
+if __name__ == "__main__":
+    # Simple local sanity check using the thinktank examples (if present)
+    ref = ["examples/thinktank/ReferenceImage.png"]
+    vids = [
+        "examples/thinktank/TT_Positive.mp4",
+        "examples/thinktank/TT_Negative.mp4",
+    ]
+    existing_refs = [p for p in ref if os.path.exists(p)]
+    existing_vids = [v for v in vids if os.path.exists(v)]
+    if existing_refs and existing_vids:
+        out = process_videos(existing_refs, existing_vids, frame_interval=1.0, confidence_threshold=0.75)
+        import json
+        print(json.dumps(out, indent=2))
+    else:
+        print("Example files not found; nothing to run.")

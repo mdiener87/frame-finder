@@ -37,32 +37,24 @@ def test_dependencies():
         print("✗ NumPy not installed")
         return False
     
-    try:
-        import torch
-        print("✓ PyTorch installed")
-    except ImportError:
-        print("✗ PyTorch not installed")
-        return False
-    
-    try:
-        from transformers import CLIPProcessor, CLIPModel
-        print("✓ Transformers installed")
-    except ImportError:
-        print("✗ Transformers not installed")
-        return False
+    # PyTorch/Transformers no longer required for the analyzer
     
     return True
 
-def test_clip_model():
-    """Test if CLIP model can be loaded"""
+def test_cv_features():
+    """Basic OpenCV feature detection sanity check."""
     try:
-        from transformers import CLIPProcessor, CLIPModel
-        model = CLIPModel.from_pretrained("openai/clip-vit-base-patch32")
-        processor = CLIPProcessor.from_pretrained("openai/clip-vit-base-patch32")
-        print("✓ CLIP model loaded successfully")
+        import numpy as np
+        import cv2
+        img = np.zeros((200, 200), dtype=np.uint8)
+        cv2.rectangle(img, (50, 50), (150, 150), 255, -1)
+        orb = cv2.ORB_create(nfeatures=500)
+        kp, desc = orb.detectAndCompute(img, None)
+        assert kp is not None and desc is not None
+        print("✓ OpenCV ORB features computed")
         return True
     except Exception as e:
-        print(f"✗ Error loading CLIP model: {e}")
+        print(f"✗ OpenCV feature test failed: {e}")
         return False
 
 def test_file_structure():
@@ -105,8 +97,8 @@ if __name__ == "__main__":
     print("1. Testing dependencies:")
     deps_ok = test_dependencies()
     
-    print("\n2. Testing CLIP model:")
-    model_ok = test_clip_model()
+    print("\n2. Testing OpenCV features:")
+    model_ok = test_cv_features()
     
     print("\n3. Testing file structure:")
     structure_ok = test_file_structure()

@@ -52,6 +52,7 @@
                                             <th>Timestamp</th>
                                             <th>Confidence Score</th>
                                             <th>Reference Image</th>
+                                            <th>Preview</th>
                                         </tr>
                                     </thead>
                                     <tbody>
@@ -68,6 +69,11 @@
                                                     <td>
                                                         {% if match.reference_image %}
                                                             <span class="badge bg-secondary">{{ match.reference_image|basename }}</span>
+                                                        {% endif %}
+                                                    </td>
+                                                    <td>
+                                                        {% if match.image_thumb_url %}
+                                                            <img src="{{ match.image_thumb_url }}" data-full-src="{{ match.image_full_url }}" class="result-thumb img-thumbnail" alt="Preview" style="max-width: 140px; cursor: zoom-in;">
                                                         {% endif %}
                                                     </td>
                                                 </tr>
@@ -107,6 +113,30 @@
         const formatted = `${hrs.toString().padStart(2, '0')}:${mins.toString().padStart(2, '0')}:${secs.toFixed(3).padStart(6, '0')}`;
         return formatted;
     }
+
+    // Apply confidence filter to all result tables
+    function applyConfidenceFilter(thresholdPercent) {
+        const threshold = parseFloat(thresholdPercent);
+        document.querySelectorAll('.results-table').forEach(function(resultsTable) {
+            const videoIndex = resultsTable.id.replace('resultsTable-', '');
+            const visibleCount = document.getElementById('visibleCount-' + videoIndex);
+
+            let visibleRowCount = 0;
+            resultsTable.querySelectorAll('tbody tr').forEach(function(row) {
+                const confidence = parseFloat(row.getAttribute('data-confidence'));
+                if (confidence >= threshold / 100.0) {
+                    row.style.display = '';
+                    visibleRowCount++;
+                } else {
+                    row.style.display = 'none';
+                }
+            });
+
+            if (visibleCount) {
+                visibleCount.textContent = visibleRowCount;
+            }
+        });
+    }
     
     // Update timestamp displays with formatted time
     document.addEventListener('DOMContentLoaded', function() {
@@ -122,34 +152,65 @@
         if (globalSlider && globalValueDisplay) {
             // Set initial value display
             globalValueDisplay.textContent = globalSlider.value;
-            
+            // Apply initial filter immediately on load
+            applyConfidenceFilter(globalSlider.value);
+
             globalSlider.addEventListener('input', function() {
-                const threshold = this.value;
-                globalValueDisplay.textContent = threshold;
-                
-                // Filter rows in all tables based on confidence threshold
-                document.querySelectorAll('.results-table').forEach(function(resultsTable) {
-                    const videoIndex = resultsTable.id.replace('resultsTable-', '');
-                    const visibleCount = document.getElementById('visibleCount-' + videoIndex);
-                    
-                    let visibleRowCount = 0;
-                    resultsTable.querySelectorAll('tbody tr').forEach(function(row) {
-                        const confidence = parseFloat(row.getAttribute('data-confidence'));
-                        if (confidence >= threshold / 100.0) {
-                            row.style.display = '';
-                            visibleRowCount++;
-                        } else {
-                            row.style.display = 'none';
-                        }
-                    });
-                    
-                    // Update visible count for this video
-                    if (visibleCount) {
-                        visibleCount.textContent = visibleRowCount;
-                    }
-                });
+                globalValueDisplay.textContent = this.value;
+                applyConfidenceFilter(this.value);
             });
         }
+    });
+</script>
+<script>
+    // Simple hover preview for full-resolution images
+    document.addEventListener('DOMContentLoaded', function () {
+        let previewEl;
+        function ensurePreview() {
+            if (!previewEl) {
+                previewEl = document.createElement('div');
+                previewEl.style.position = 'fixed';
+                previewEl.style.pointerEvents = 'none';
+                previewEl.style.border = '1px solid rgba(0,0,0,0.15)';
+                previewEl.style.boxShadow = '0 4px 12px rgba(0,0,0,0.2)';
+                previewEl.style.background = '#fff';
+                previewEl.style.padding = '4px';
+                previewEl.style.zIndex = '9999';
+                previewEl.style.display = 'none';
+                const img = document.createElement('img');
+                img.style.maxWidth = '480px';
+                img.style.maxHeight = '360px';
+                img.style.display = 'block';
+                previewEl.appendChild(img);
+                document.body.appendChild(previewEl);
+            }
+        }
+
+        document.querySelectorAll('img.result-thumb[data-full-src]').forEach(function (thumb) {
+            thumb.addEventListener('mouseenter', function (e) {
+                ensurePreview();
+                previewEl.firstChild.src = thumb.getAttribute('data-full-src');
+                previewEl.style.display = 'block';
+            });
+            thumb.addEventListener('mousemove', function (e) {
+                if (!previewEl) return;
+                const margin = 12;
+                let x = e.clientX + margin;
+                let y = e.clientY + margin;
+                const rect = previewEl.getBoundingClientRect();
+                if (x + rect.width > window.innerWidth) x = e.clientX - rect.width - margin;
+                if (y + rect.height > window.innerHeight) y = e.clientY - rect.height - margin;
+                previewEl.style.left = x + 'px';
+                previewEl.style.top = y + 'px';
+            });
+            thumb.addEventListener('mouseleave', function () {
+                if (previewEl) previewEl.style.display = 'none';
+            });
+            thumb.addEventListener('click', function () {
+                // On click, open full image in a new tab
+                window.open(thumb.getAttribute('data-full-src'), '_blank');
+            });
+        });
     });
 </script>
 {% endblock %}

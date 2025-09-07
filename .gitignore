@@ -12,6 +12,9 @@ venv/
 # Copyright stuff
 *.mp4
 
+# Image Extraction
+static/thumbnails/
+
 # Logs and temp files
 *.log
 *.tmp
