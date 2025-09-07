@@ -7,6 +7,7 @@ clear, high-precision matches with calibrated confidences.
 
 import os
 from typing import List, Dict, Any, Tuple
+import uuid
 
 import cv2
 import numpy as np
@@ -206,6 +207,9 @@ def process_videos(reference_paths: List[str],
     refs: List[RefFeatures] = [RefFeatures(p) for p in (reference_paths or [])]
 
     results: Dict[str, Any] = {}
+    # Ensure thumbnail output directory exists
+    thumb_dir = os.path.join("static", "thumbnails")
+    os.makedirs(thumb_dir, exist_ok=True)
     total_videos = len(video_paths)
 
     for i, video_path in enumerate(video_paths):
@@ -224,6 +228,9 @@ def process_videos(reference_paths: List[str],
             frames = extract_frames(video_path, interval=max(0.1, float(frame_interval)))
             total_frames = len(frames)
 
+            # Store only matched frames we may need to persist later
+            matched_frames: Dict[int, np.ndarray] = {}
+
             for j, (pil_img, ts) in enumerate(frames):
                 frame_bgr = cv2.cvtColor(np.array(pil_img.convert("RGB")), cv2.COLOR_RGB2BGR)
 
@@ -241,7 +248,9 @@ def process_videos(reference_paths: List[str],
                         "timestamp": float(ts),
                         "confidence": float(best_conf),
                         "reference_image": best_ref_name,
+                        "frame_index": j,
                     })
+                    matched_frames[j] = frame_bgr
                     max_conf = max(max_conf, float(best_conf))
 
                 if progress_callback and total_frames > 0:
@@ -254,9 +263,41 @@ def process_videos(reference_paths: List[str],
                         "status": "processing_frames",
                     })
 
-            # Collapse nearby duplicates
+            # Collapse nearby duplicates (preserves frame_index)
             matches = cluster_peaks(matches, window_s=1.0)
             max_conf = max([m.get("confidence", 0.0) for m in matches], default=0.0)
+
+            # Persist preview images for top 5 matches by confidence
+            top5 = sorted(matches, key=lambda m: m.get("confidence", 0.0), reverse=True)[:5]
+
+            def _save_images(video_name_: str, frame_bgr_: np.ndarray) -> Tuple[str, str]:
+                base = f"{os.path.splitext(video_name_)[0]}_{uuid.uuid4().hex}"
+                full_name = base + "_full.jpg"
+                thumb_name = base + "_thumb.jpg"
+                full_path = os.path.join(thumb_dir, full_name)
+                thumb_path = os.path.join(thumb_dir, thumb_name)
+                # Save full
+                cv2.imwrite(full_path, frame_bgr_, [int(cv2.IMWRITE_JPEG_QUALITY), 92])
+                # Save thumb (width ~ 240px)
+                h, w = frame_bgr_.shape[:2]
+                target_w = 240
+                scale = target_w / max(1, w)
+                new_size = (target_w, max(1, int(round(h * scale))))
+                thumb_bgr = cv2.resize(frame_bgr_, new_size, interpolation=cv2.INTER_AREA)
+                cv2.imwrite(thumb_path, thumb_bgr, [int(cv2.IMWRITE_JPEG_QUALITY), 85])
+                # Return URLs for browser
+                return f"/static/thumbnails/{full_name}", f"/static/thumbnails/{thumb_name}"
+
+            for m in top5:
+                fi = m.get("frame_index")
+                if fi is None:
+                    continue
+                frm = matched_frames.get(fi)
+                if frm is None:
+                    continue
+                full_url, thumb_url = _save_images(video_name, frm)
+                m["image_full_url"] = full_url
+                m["image_thumb_url"] = thumb_url
 
         except Exception as e:
             matches = [{"error": str(e)}]
