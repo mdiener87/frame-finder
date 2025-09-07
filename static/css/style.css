@@ -19,10 +19,6 @@ body {
     object-fit: cover;
 }
 
-#negativePreview .thumbnail-preview {
-    border: 2px solid #dc3545; /* Red border for negative references */
-}
-
 #referencePreview .thumbnail-preview {
     border: 2px solid #28a745; /* Green border for positive references */
 }
@@ -44,6 +40,37 @@ body {
 .confidence {
     font-weight: bold;
     color: #198754;
+}
+
+/* Results table polish */
+.results-table tbody tr:hover {
+    background-color: #f8f9fa;
+}
+
+.results-table thead th.sortable {
+    cursor: pointer;
+    user-select: none;
+}
+
+/* Sticky headers for result tables within scroll container */
+.results-scroll {
+    max-height: 60vh;
+    overflow-y: auto;
+}
+.results-scroll .results-table thead th {
+    position: sticky;
+    top: 0;
+    z-index: 2;
+    background: var(--bs-body-bg);
+    border-bottom: 2px solid var(--bs-border-color);
+}
+
+img.result-thumb {
+    transition: transform 0.12s ease-in-out, box-shadow 0.12s ease-in-out;
+}
+img.result-thumb:hover {
+    transform: translateY(-1px);
+    box-shadow: 0 0.25rem 0.6rem rgba(0,0,0,0.12);
 }
 
 .progress-bar-animated {
@@ -79,4 +106,28 @@ body {
 .form-control:focus {
     border-color: #86b7fe;
     box-shadow: 0 0 0 0.25rem rgba(13, 110, 253, 0.25);
+}
+
+/* Drag-and-drop zones */
+.dropzone {
+    position: relative;
+    border: 2px dashed #ced4da;
+    border-radius: 0.5rem;
+    background: var(--bs-body-bg);
+    transition: border-color 0.12s ease-in-out, background 0.12s ease-in-out;
+    padding: 1rem;
+    text-align: center;
+}
+.dropzone.dragover {
+    border-color: #0d6efd;
+    background: rgba(13,110,253,0.05);
+}
+.dropzone .dz-input {
+    position: absolute;
+    inset: 0;
+    opacity: 0;
+    cursor: pointer;
+}
+.dropzone .dz-instructions {
+    color: var(--bs-secondary-color);
 }

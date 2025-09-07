@@ -11,6 +11,12 @@
     <nav class="navbar navbar-expand-lg navbar-dark bg-dark">
         <div class="container">
             <a class="navbar-brand" href="/">Frame Finder</a>
+            <div class="d-flex ms-auto align-items-center">
+                <div class="form-check form-switch text-light">
+                    <input class="form-check-input" type="checkbox" id="themeToggle">
+                    <label class="form-check-label" for="themeToggle">Dark mode</label>
+                </div>
+            </div>
         </div>
     </nav>
 
@@ -30,6 +36,28 @@
     </div>
 
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    <script>
+        // Simple dark mode toggle using Bootstrap 5.3 data-bs-theme
+        (function() {
+            const root = document.documentElement;
+            const key = 'frameFinderTheme';
+            function applyTheme(val){ root.setAttribute('data-bs-theme', val); }
+            function load(){ try { return localStorage.getItem(key) || 'light'; } catch(e){ return 'light'; } }
+            function save(val){ try { localStorage.setItem(key, val); } catch(e){} }
+            const initial = load();
+            applyTheme(initial);
+            document.addEventListener('DOMContentLoaded', function(){
+                const toggle = document.getElementById('themeToggle');
+                if (toggle) {
+                    toggle.checked = initial === 'dark';
+                    toggle.addEventListener('change', function(){
+                        const val = this.checked ? 'dark' : 'light';
+                        applyTheme(val); save(val);
+                    });
+                }
+            });
+        })();
+    </script>
     <script src="{{ url_for('static', filename='js/main.js') }}"></script>
     {% block scripts %}{% endblock %}
 </body>

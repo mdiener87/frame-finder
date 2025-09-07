@@ -9,7 +9,7 @@ Frame Finder extracts frames from MP4 video files at regular intervals and compa
 ## Features
 
 - Upload reference images (JPG/PNG) and video files (MP4)
-- Upload negative reference images to reduce false positives
+- Drag-and-drop upload for references and videos
 - Extract frames from videos at configurable intervals (supports decimal values)
 - Compare frames against reference images using ORB feature matching + homography
 - Offline, zero-network analysis (no external models)
@@ -51,7 +51,7 @@ Frame Finder extracts frames from MP4 video files at regular intervals and compa
 
 1. Navigate to the web interface
 2. Upload one or more reference images (JPG/PNG)
-3. Optionally upload negative reference images (images that should NOT be detected)
+3. Optionally drag-and-drop files into the upload areas
 4. Upload one or more video files (MP4)
 5. Adjust processing parameters if needed:
    - Frame extraction interval (default: 1.0 frame/second, supports decimal values)
@@ -71,7 +71,7 @@ Frame Finder extracts frames from MP4 video files at regular intervals and compa
 
 ### Processing Workflow
 
-1. User uploads reference images, optional negative references, and video files
+1. User uploads reference images and video files (or drag-and-drop)
 2. Reference keypoints/descriptors are computed once and cached
 3. Videos are processed to extract frames at regular intervals (supports decimals)
 4. Each frame is matched to references using BF+ratio test; RANSAC homography finds inliers
@@ -90,7 +90,6 @@ Frame Finder extracts frames from MP4 video files at regular intervals and compa
 
 - Frame extraction interval: Configurable in UI (0.1-60 seconds, supports decimal values)
 - Confidence threshold: Adjustable slider (0-100%, default: 75%)
-- Negative reference images: Optional upload to reduce false positives
 - Thumbnail size: Configurable in image processing functions
 
 ## Development

@@ -45,13 +45,13 @@
                                 </div>
                             </div>
                             
-                            <div class="table-responsive">
+                            <div class="table-responsive results-scroll">
                                 <table class="table table-striped results-table" id="resultsTable-{{ loop.index }}">
                                     <thead>
                                         <tr>
-                                            <th>Timestamp</th>
-                                            <th>Confidence Score</th>
-                                            <th>Reference Image</th>
+                                            <th class="sortable" data-sort="timestamp">Timestamp</th>
+                                            <th class="sortable" data-sort="confidence">Confidence Score</th>
+                                            <th class="sortable" data-sort="reference">Reference Image</th>
                                             <th>Preview</th>
                                         </tr>
                                     </thead>
@@ -151,6 +151,8 @@
         
         if (globalSlider && globalValueDisplay) {
             // Set initial value display
+            const stored = (function(){ try { return localStorage.getItem('frameFinderGlobalThreshold'); } catch(e){ return null; } })();
+            if (stored !== null) globalSlider.value = stored;
             globalValueDisplay.textContent = globalSlider.value;
             // Apply initial filter immediately on load
             applyConfidenceFilter(globalSlider.value);
@@ -158,13 +160,60 @@
             globalSlider.addEventListener('input', function() {
                 globalValueDisplay.textContent = this.value;
                 applyConfidenceFilter(this.value);
+                try { localStorage.setItem('frameFinderGlobalThreshold', this.value); } catch(e){}
             });
         }
     });
 </script>
 <script>
+    // Table sorting for results
+    function sortResultsTable(table, key, dir = 'asc') {
+        const tbody = table.querySelector('tbody');
+        if (!tbody) return;
+        const rows = Array.from(tbody.querySelectorAll('tr'));
+
+        const comparer = (a, b) => {
+            if (key === 'timestamp') {
+                const ta = parseFloat(a.querySelector('.timestamp').getAttribute('data-timestamp')) || 0;
+                const tb = parseFloat(b.querySelector('.timestamp').getAttribute('data-timestamp')) || 0;
+                return ta - tb;
+            } else if (key === 'confidence') {
+                const ca = parseFloat(a.getAttribute('data-confidence')) || 0;
+                const cb = parseFloat(b.getAttribute('data-confidence')) || 0;
+                return ca - cb;
+            } else if (key === 'reference') {
+                const ra = (a.querySelector('td:nth-child(3) .badge')?.textContent || '').toLowerCase();
+                const rb = (b.querySelector('td:nth-child(3) .badge')?.textContent || '').toLowerCase();
+                return ra.localeCompare(rb);
+            }
+            return 0;
+        };
+
+        rows.sort(comparer);
+        if (dir === 'desc') rows.reverse();
+        rows.forEach(r => tbody.appendChild(r));
+    }
+
     // Simple hover preview for full-resolution images
     document.addEventListener('DOMContentLoaded', function () {
+        // Default sort: timestamp ascending for each table
+        document.querySelectorAll('.results-table').forEach(function (t) {
+            sortResultsTable(t, 'timestamp', 'asc');
+        });
+
+        // Click-to-sort behavior
+        document.querySelectorAll('.results-table thead th.sortable').forEach(function (th) {
+            th.style.cursor = 'pointer';
+            th.addEventListener('click', function () {
+                const table = th.closest('table');
+                const key = th.getAttribute('data-sort');
+                const current = th.getAttribute('data-dir') || 'asc';
+                const next = current === 'asc' ? 'desc' : 'asc';
+                th.setAttribute('data-dir', next);
+                sortResultsTable(table, key, next);
+            });
+        });
+
         let previewEl;
         function ensurePreview() {
             if (!previewEl) {

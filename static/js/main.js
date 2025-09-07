@@ -65,30 +65,6 @@ function listSelectedVideos() {
     }
 }
 
-// Preview negative reference images
-function previewNegativeReferences() {
-    const negativeInput = document.getElementById('negative_references');
-    const preview = document.getElementById('negativePreview');
-    
-    if (negativeInput && preview) {
-        preview.innerHTML = '';
-        
-        for (let i = 0; i < negativeInput.files.length; i++) {
-            const file = negativeInput.files[i];
-            if (file.type.startsWith('image/')) {
-                const reader = new FileReader();
-                reader.onload = function(e) {
-                    const img = document.createElement('img');
-                    img.src = e.target.result;
-                    img.className = 'thumbnail-preview img-thumbnail me-2 mb-2';
-                    img.alt = file.name;
-                    preview.appendChild(img);
-                };
-                reader.readAsDataURL(file);
-            }
-        }
-    }
-}
 
 // Handle form submission
 function handleFormSubmission() {
@@ -143,16 +119,7 @@ function handleFormSubmission() {
                 }
             }
             
-            // Handle negative reference images properly
-            const negativeInput = document.getElementById('negative_references');
-            if (negativeInput && negativeInput.files.length > 0) {
-                // Clear the existing negative_references entries
-                formData.delete('negative_references');
-                // For multiple file uploads, we need to append all files individually
-                for (let i = 0; i < negativeInput.files.length; i++) {
-                    formData.append('negative_references', negativeInput.files[i]);
-                }
-            }
+            // No negative references anymore
             
             // Handle video files properly
             const videoInput = document.getElementById('videos');
@@ -445,10 +412,7 @@ document.addEventListener('DOMContentLoaded', function() {
         referenceInput.addEventListener('change', previewReferenceImages);
     }
 
-    const negativeInput = document.getElementById('negative_references');
-    if (negativeInput) {
-        negativeInput.addEventListener('change', previewNegativeReferences);
-    }
+    // Removed negative references UI
 
     const videoInput = document.getElementById('videos');
     if (videoInput) {
@@ -471,4 +435,96 @@ document.addEventListener('DOMContentLoaded', function() {
     }
 
     handleFormSubmission();
+
+    // --- Drag & drop support ---
+    let droppedReferences = [];
+    let droppedVideos = [];
+
+    function setupDropzone(zoneId, onFiles) {
+        const dz = document.getElementById(zoneId);
+        if (!dz) return;
+        const input = dz.querySelector('input[type="file"]');
+        function stop(e){ e.preventDefault(); e.stopPropagation(); }
+        ['dragenter','dragover','dragleave','drop'].forEach(evt => dz.addEventListener(evt, stop));
+        ['dragenter','dragover'].forEach(evt => dz.addEventListener(evt, () => dz.classList.add('dragover')));
+        ;['dragleave','drop'].forEach(evt => dz.addEventListener(evt, () => dz.classList.remove('dragover')));
+        dz.addEventListener('drop', (e) => {
+            const files = Array.from(e.dataTransfer.files || []);
+            onFiles(files);
+        });
+        // Do NOT bind input change here; existing listeners handle previews/listing.
+    }
+
+    function addRefFiles(files){
+        const imgs = files.filter(f => f.type.startsWith('image/'));
+        if (imgs.length === 0) return;
+        droppedReferences = droppedReferences.concat(imgs);
+        previewReferenceImages();
+    }
+    function addVideoFiles(files){
+        const vids = files.filter(f => f.type === 'video/mp4' || f.name.toLowerCase().endsWith('.mp4'));
+        if (vids.length === 0) return;
+        droppedVideos = droppedVideos.concat(vids);
+        listSelectedVideos();
+    }
+
+    setupDropzone('refDrop', addRefFiles);
+    setupDropzone('vidDrop', addVideoFiles);
+
+    // Override previews to include dropped files
+    const _origPreviewRefs = previewReferenceImages;
+    window.previewReferenceImages = function(){
+        _origPreviewRefs();
+        const preview = document.getElementById('referencePreview');
+        if (!preview) return;
+        droppedReferences.forEach(file => {
+            const reader = new FileReader();
+            reader.onload = function(e){
+                const img = document.createElement('img');
+                img.src = e.target.result;
+                img.className = 'thumbnail-preview img-thumbnail me-2 mb-2';
+                img.alt = file.name;
+                preview.appendChild(img);
+            };
+            reader.readAsDataURL(file);
+        });
+    }
+
+    const _origListVideos = listSelectedVideos;
+    window.listSelectedVideos = function(){
+        _origListVideos();
+        const list = document.getElementById('videoList');
+        if (!list) return;
+        if (droppedVideos.length > 0) {
+            if (!list.innerHTML.includes('<ul')) {
+                list.innerHTML = '<h6>Selected Videos:</h6><ul class="list-group">';
+            }
+            droppedVideos.forEach(file => {
+                const fileSizeMB = (file.size / (1024*1024)).toFixed(2);
+                list.innerHTML += `<li class="list-group-item d-flex justify-content-between align-items-center">${file.name}<span class="badge bg-primary rounded-pill">${fileSizeMB} MB</span></li>`;
+            });
+            if (!list.innerHTML.endsWith('</ul>')) list.innerHTML += '</ul>';
+        }
+    }
+
+    // Hook FormData assembly to include dropped files too
+    const form = document.getElementById('uploadForm');
+    if (form) {
+        const originalSubmitHandler = form.onsubmit; // not used; we add listener in handleFormSubmission
+        form.addEventListener('submit', function(){
+            // Inject dropped files by patching fetch FormData creation
+            const origFetch = window.fetch;
+            window.fetch = function(input, init){
+                try {
+                    if (init && init.body instanceof FormData) {
+                        // Append dropped references
+                        droppedReferences.forEach(f => init.body.append('reference_images', f));
+                        // Append dropped videos
+                        droppedVideos.forEach(f => init.body.append('videos', f));
+                    }
+                } catch(e){}
+                return origFetch(input, init);
+            };
+        }, { once: true });
+    }
 });

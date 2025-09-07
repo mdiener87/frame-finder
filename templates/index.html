@@ -12,7 +12,7 @@
             <div class="card-header" id="settingsHeading">
                 <h5 class="mb-0">
                     <button class="btn btn-link" type="button" data-bs-toggle="collapse" data-bs-target="#settingsPanel" aria-expanded="true" aria-controls="settingsPanel">
-                        Settings
+                        Analysis Settings
                     </button>
                 </h5>
             </div>
@@ -21,21 +21,24 @@
                     <form id="uploadForm" action="/upload" method="POST" enctype="multipart/form-data">
                         <div class="mb-3">
                             <label for="reference_images" class="form-label">Reference Images</label>
-                            <input class="form-control" type="file" id="reference_images" name="reference_images" multiple accept=".png,.jpg,.jpeg">
+                            <div id="refDrop" class="dropzone">
+                                <div class="dz-instructions">
+                                    <strong>Drag & drop</strong> images here or click to select
+                                </div>
+                                <input class="form-control dz-input" type="file" id="reference_images" name="reference_images" multiple accept=".png,.jpg,.jpeg">
+                            </div>
                             <div class="form-text">Upload one or more reference images (PNG, JPG, JPEG)</div>
                             <div id="referencePreview" class="mt-2"></div>
                         </div>
                     
                     <div class="mb-3">
-                        <label for="negative_references" class="form-label">Negative Reference Images</label>
-                        <input class="form-control" type="file" id="negative_references" name="negative_references" multiple accept=".png,.jpg,.jpeg">
-                        <div class="form-text">Upload images that should NOT be detected (e.g., hull/background images)</div>
-                        <div id="negativePreview" class="mt-2"></div>
-                    </div>
-                    
-                    <div class="mb-3">
                         <label for="videos" class="form-label">Video Files</label>
-                        <input class="form-control" type="file" id="videos" name="videos" multiple accept=".mp4">
+                        <div id="vidDrop" class="dropzone">
+                            <div class="dz-instructions">
+                                <strong>Drag & drop</strong> videos here or click to select
+                            </div>
+                            <input class="form-control dz-input" type="file" id="videos" name="videos" multiple accept=".mp4">
+                        </div>
                         <div class="form-text">Upload one or more video files (MP4)</div>
                     </div>
                     
