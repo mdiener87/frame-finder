@@ -3,6 +3,15 @@
 body {
     font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
 }
+/* Keep space for fixed navbar */
+body { padding-top: 56px; }
+
+#appContainer {
+    height: calc(100vh - 56px);
+    display: flex;
+    flex-direction: column;
+    overflow: hidden; /* prevent page scroll; inner containers manage overflow */
+}
 
 .navbar-brand {
     font-weight: bold;
@@ -73,6 +82,35 @@ img.result-thumb:hover {
     box-shadow: 0 0.25rem 0.6rem rgba(0,0,0,0.12);
 }
 
+/* Results page layout: filter + scrollable list + sticky footer */
+.results-page {
+    display: flex;
+    flex-direction: column;
+    flex: 1 1 auto;
+    min-height: 0; /* allow inner scroll */
+    gap: 0.75rem;
+}
+.results-filter .card-body { padding-top: .5rem; padding-bottom: .5rem; }
+.results-list {
+    flex: 1 1 auto;
+    min-height: 0;
+    overflow-y: auto;
+}
+.results-list .results-table thead th {
+    position: sticky;
+    top: 0;
+    z-index: 2;
+    background: var(--bs-body-bg);
+    border-bottom: 2px solid var(--bs-border-color);
+}
+.results-footer {
+    position: sticky;
+    bottom: 0;
+    background: var(--bs-body-bg);
+    border-top: 1px solid var(--bs-border-color);
+    padding: .5rem 0;
+}
+
 .progress-bar-animated {
     animation: progress-bar-stripes 1s linear infinite;
 }
@@ -130,4 +168,12 @@ img.result-thumb:hover {
 }
 .dropzone .dz-instructions {
     color: var(--bs-secondary-color);
+}
+
+/* Results page root should fill remaining viewport and allow inner scroll */
+.results-root {
+    display: flex;
+    flex-direction: column;
+    flex: 1 1 auto;
+    min-height: 0; /* critical so children can scroll */
 }
