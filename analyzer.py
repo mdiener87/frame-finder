@@ -189,7 +189,6 @@ def process_videos(reference_paths: List[str],
                    video_paths: List[str],
                    frame_interval: float = 1.0,
                    confidence_threshold: float = 0.75,
-                   negative_paths: List[str] | None = None,
                    progress_callback=None) -> Dict[str, Any]:
     """
     Args:
@@ -197,7 +196,6 @@ def process_videos(reference_paths: List[str],
         video_paths    : paths to mp4 files
         frame_interval : seconds between frames extracted
         confidence_threshold: retained for UI compatibility; analyzer returns all matches
-        negative_paths : currently unused; reserved for future background suppression
         progress_callback: optional callable for UI progress updates
 
     Returns:

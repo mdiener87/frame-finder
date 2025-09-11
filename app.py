@@ -43,7 +43,7 @@ def index():
     """Render the main upload page"""
     return render_template('index.html')
 
-def process_videos_background(task_id, reference_paths, video_paths, frame_interval, confidence_threshold, negative_paths):
+def process_videos_background(task_id, reference_paths, video_paths, frame_interval, confidence_threshold):
     """Process videos in background and update progress"""
     try:
         # Update task status to processing
@@ -53,7 +53,6 @@ def process_videos_background(task_id, reference_paths, video_paths, frame_inter
             'current_video': '',
             'results': None,
             'reference_paths': reference_paths,
-            'negative_paths': negative_paths,
             'frame_interval': frame_interval,
             'confidence_threshold': confidence_threshold,
             'error': None,
@@ -81,7 +80,7 @@ def process_videos_background(task_id, reference_paths, video_paths, frame_inter
                         processing_tasks[task_id]['progress'] = max(0, min(100, total_progress))
         
         # Process videos (this will take time) with progress callback
-        results = process_videos(reference_paths, video_paths, frame_interval, confidence_threshold, negative_paths, progress_callback)
+        results = process_videos(reference_paths, video_paths, frame_interval, confidence_threshold, progress_callback)
         
         # Check if task was cancelled during processing
         if task_id in processing_tasks and processing_tasks[task_id].get('cancelled', False):
@@ -94,7 +93,6 @@ def process_videos_background(task_id, reference_paths, video_paths, frame_inter
             'progress': 100,
             'results': results,
             'reference_paths': reference_paths,
-            'negative_paths': negative_paths,
             'frame_interval': frame_interval,
             'confidence_threshold': confidence_threshold,
             'error': None,
@@ -126,7 +124,6 @@ def upload_files():
             return redirect(url_for('index'))
     
     reference_images = request.files.getlist('reference_images')
-    negative_references = request.files.getlist('negative_references')
     videos = request.files.getlist('videos')
     video_directory_files = request.files.getlist('videoDirectory')
     
@@ -152,10 +149,9 @@ def upload_files():
     # Create temporary directories for uploaded files
     temp_dir = tempfile.mkdtemp()
     ref_images_dir = os.path.join(temp_dir, 'reference_images')
-    neg_images_dir = os.path.join(temp_dir, 'negative_references')
     videos_dir = os.path.join(temp_dir, 'videos')
     os.makedirs(ref_images_dir, exist_ok=True)
-    os.makedirs(neg_images_dir, exist_ok=True)
+    # No negative references directory
     os.makedirs(videos_dir, exist_ok=True)
     
     # Save reference images
@@ -167,14 +163,7 @@ def upload_files():
             ref_image.save(filepath)
             reference_paths.append(filepath)
     
-    # Save negative reference images
-    negative_paths = []
-    for neg_image in negative_references:
-        if neg_image and allowed_file(neg_image.filename):
-            filename = secure_filename(neg_image.filename)
-            filepath = os.path.join(neg_images_dir, filename)
-            neg_image.save(filepath)
-            negative_paths.append(filepath)
+    # Negative references removed
     
     # Save videos (both individual files and directory files)
     video_paths = []
@@ -217,7 +206,7 @@ def upload_files():
     # Start background processing
     thread = threading.Thread(
         target=process_videos_background,
-        args=(task_id, reference_paths, video_paths, frame_interval, confidence_threshold, negative_paths)
+        args=(task_id, reference_paths, video_paths, frame_interval, confidence_threshold)
     )
     thread.start()
     
@@ -278,7 +267,6 @@ def export_results(task_id):
     
     # Get other task information
     reference_paths = task.get('reference_paths', [])
-    negative_paths = task.get('negative_paths', [])
     results = task.get('results', {})
     
     # Format data according to our JSON schema
@@ -287,7 +275,7 @@ def export_results(task_id):
         'date': datetime.datetime.utcnow().isoformat() + 'Z',
         'minConfidenceLevel': min(confidence_thresholds.values()) if confidence_thresholds else 0.0,
         'referenceImages': [os.path.basename(path) for path in reference_paths],
-        'negativeImages': [os.path.basename(path) for path in negative_paths],
+        # 'negativeImages' removed
         'analyzedVideos': list(results.keys()),
         'analysisResults': []
     }

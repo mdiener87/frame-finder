@@ -3,108 +3,110 @@
 {% block title %}Frame Finder - Results{% endblock %}
 
 {% block content %}
-<div class="row">
-    <div class="col-md-12">
+<div class="results-root">
         <h1>Analysis Results</h1>
         <p class="lead">Found matches in your video files</p>
         
         {% if results %}
-            <!-- Global confidence filter -->
-            <div class="card mb-4">
-                <div class="card-body">
-                    <div class="row">
-                        <div class="col-md-6">
-                            <h5>Global Confidence Filter</h5>
-                        </div>
-                        <div class="col-md-6">
-                            <div class="mb-2">
-                                <label for="globalDynamicThreshold" class="form-label">Filter by Confidence:</label>
-                                <input type="range" class="form-range" id="globalDynamicThreshold" min="0" max="100" value="75">
-                                <div class="form-text">
-                                    Minimum confidence: <span id="globalDynamicThresholdValue">75</span>%
-                                </div>
-                            </div>
-                        </div>
+            <!-- Global confidence filter (condensed) -->
+            <div class="card mb-2 results-filter">
+                <div class="card-body py-2">
+                    <div class="d-flex flex-wrap align-items-center gap-3">
+                        <strong>Global Confidence:</strong>
+                        <input type="range" class="form-range" id="globalDynamicThreshold" min="0" max="100" value="75" style="max-width: 280px;">
+                        <div class="form-text m-0">Min: <span id="globalDynamicThresholdValue">75</span>%</div>
                     </div>
                 </div>
             </div>
-            
-            {% for video_name, video_data in results.items() %}
-                <div class="card result-card mb-4">
-                    <div class="card-header">
-                        <h3>{{ video_name }}</h3>
-                    </div>
-                    <div class="card-body">
-                        {% if video_data.matches %}
-                            <div class="row mb-3">
-                                <div class="col-md-12">
-                                    <p class="text-muted">
-                                        <span id="visibleCount-{{ loop.index }}">{{ video_data.matches|length }}</span> of {{ video_data.matches|length }} match(es) found |
-                                        Max confidence: <span class="max-confidence">{{ "%.2f"|format(video_data.max_confidence * 100) }}%</span>
-                                    </p>
+
+            <div class="results-page">
+                <div class="results-list">
+                {% for video_name, video_data in results.items() %}
+                    <div class="card result-card mb-4">
+                        <div class="card-header">
+                            <h3>{{ video_name }}</h3>
+                        </div>
+                        <div class="card-body">
+                            {% if video_data.matches %}
+                                <div class="row mb-3">
+                                    <div class="col-md-12">
+                                        <p class="text-muted">
+                                            <span id="visibleCount-{{ loop.index }}">{{ video_data.matches|length }}</span> of {{ video_data.matches|length }} match(es) found |
+                                            Max confidence: <span class="max-confidence">{{ "%.2f"|format(video_data.max_confidence * 100) }}%</span>
+                                        </p>
+                                    </div>
                                 </div>
-                            </div>
-                            
-                            <div class="table-responsive">
-                                <table class="table table-striped results-table" id="resultsTable-{{ loop.index }}">
-                                    <thead>
-                                        <tr>
-                                            <th>Timestamp</th>
-                                            <th>Confidence Score</th>
-                                            <th>Reference Image</th>
-                                            <th>Preview</th>
-                                        </tr>
-                                    </thead>
-                                    <tbody>
-                                        {% for match in video_data.matches %}
-                                            {% if match.error %}
+                                
+                                <div class="table-responsive">
+                                    <table class="table table-striped results-table" id="resultsTable-{{ loop.index }}">
+                                        <thead>
+                                            <tr>
+                                                <th class="sortable" data-sort="timestamp">Timestamp</th>
+                                                <th class="sortable" data-sort="confidence">Confidence Score</th>
+                                                <th class="sortable" data-sort="reference">Reference Image</th>
+                                                <th>Preview</th>
+                                            </tr>
+                                        </thead>
+                                        <tbody>
+                                            {% for match in video_data.matches %}
+                                                {% if match.error %}
                                                 <tr class="table-danger">
-                                                    <td colspan="3">Error: {{ match.error }}</td>
-                                                </tr>
-                                            {% else %}
-                                                <tr class="{{ 'table-success' if match.confidence > 0.8 else 'table-warning' if match.confidence > 0.6 else 'table-secondary' }}"
-                                                    data-confidence="{{ match.confidence }}">
-                                                    <td class="timestamp" data-timestamp="{{ match.timestamp }}">{{ "%.3f"|format(match.timestamp) }}s</td>
-                                                    <td class="confidence">{{ "%.2f"|format(match.confidence * 100) }}%</td>
-                                                    <td>
-                                                        {% if match.reference_image %}
-                                                            <span class="badge bg-secondary">{{ match.reference_image|basename }}</span>
-                                                        {% endif %}
-                                                    </td>
-                                                    <td>
-                                                        {% if match.image_thumb_url %}
-                                                            <img src="{{ match.image_thumb_url }}" data-full-src="{{ match.image_full_url }}" class="result-thumb img-thumbnail" alt="Preview" style="max-width: 140px; cursor: zoom-in;">
-                                                        {% endif %}
-                                                    </td>
-                                                </tr>
-                                            {% endif %}
-                                        {% endfor %}
-                                    </tbody>
-                                </table>
-                            </div>
-                        {% else %}
-                            <p class="text-muted">No matches found.</p>
-                        {% endif %}
+                                                    <td colspan="4">Error: {{ match.error }}</td>
+                                                    </tr>
+                                                {% else %}
+                                                    <tr class="{{ 'table-success' if match.confidence > 0.8 else 'table-warning' if match.confidence > 0.6 else 'table-secondary' }}"
+                                                        data-confidence="{{ match.confidence }}">
+                                                        <td class="timestamp" data-timestamp="{{ match.timestamp }}">{{ "%.3f"|format(match.timestamp) }}s</td>
+                                                        <td class="confidence">{{ "%.2f"|format(match.confidence * 100) }}%</td>
+                                                        <td>
+                                                            {% if match.reference_image %}
+                                                                <span class="badge bg-secondary">{{ match.reference_image|basename }}</span>
+                                                            {% endif %}
+                                                        </td>
+                                                        <td>
+                                                            {% if match.image_thumb_url %}
+                                                                <img src="{{ match.image_thumb_url }}" data-full-src="{{ match.image_full_url }}" class="result-thumb img-thumbnail" alt="Preview" style="max-width: 140px; cursor: zoom-in;">
+                                                            {% endif %}
+                                                        </td>
+                                                    </tr>
+                                                {% endif %}
+                                            {% endfor %}
+                                        </tbody>
+                                    </table>
+                                </div>
+                            {% else %}
+                                <p class="text-muted">No matches found.</p>
+                            {% endif %}
+                        </div>
+                    </div>
+                {% endfor %}
+                </div>
+                <div class="results-footer">
+                    <div class="d-flex gap-2">
+                        <a href="/" class="btn btn-primary">Analyze More Videos</a>
+                        <button id="exportBtn" class="btn btn-success" onclick="exportResults()" data-task-id="{{ task_id }}">Export Results</button>
                     </div>
                 </div>
-            {% endfor %}
+            </div>
         {% else %}
             <div class="alert alert-info">
                 <h4>No results to display</h4>
                 <p>No matches were found in the analyzed videos.</p>
             </div>
         {% endif %}
-        
-        <div class="mt-3">
-            <a href="/" class="btn btn-primary">Analyze More Videos</a>
-            <button id="exportBtn" class="btn btn-success" onclick="exportResults()" data-task-id="{{ task_id }}">Export Results</button>
-        </div>
-    </div>
 </div>
 {% endblock %}
 
 {% block scripts %}
 <script>
+    // Lock outer page scroll on results, only inner list scrolls
+    document.addEventListener('DOMContentLoaded', function() {
+        try { document.documentElement.style.overflow = 'hidden'; document.body.style.overflow = 'hidden'; } catch(e){}
+    });
+    window.addEventListener('beforeunload', function(){
+        try { document.documentElement.style.overflow = ''; document.body.style.overflow = ''; } catch(e){}
+    });
+
     // Format seconds to hh:mm:ss format
     function formatTime(seconds) {
         const hrs = Math.floor(seconds / 3600);
@@ -151,6 +153,8 @@
         
         if (globalSlider && globalValueDisplay) {
             // Set initial value display
+            const stored = (function(){ try { return localStorage.getItem('frameFinderGlobalThreshold'); } catch(e){ return null; } })();
+            if (stored !== null) globalSlider.value = stored;
             globalValueDisplay.textContent = globalSlider.value;
             // Apply initial filter immediately on load
             applyConfidenceFilter(globalSlider.value);
@@ -158,13 +162,60 @@
             globalSlider.addEventListener('input', function() {
                 globalValueDisplay.textContent = this.value;
                 applyConfidenceFilter(this.value);
+                try { localStorage.setItem('frameFinderGlobalThreshold', this.value); } catch(e){}
             });
         }
     });
 </script>
 <script>
+    // Table sorting for results
+    function sortResultsTable(table, key, dir = 'asc') {
+        const tbody = table.querySelector('tbody');
+        if (!tbody) return;
+        const rows = Array.from(tbody.querySelectorAll('tr'));
+
+        const comparer = (a, b) => {
+            if (key === 'timestamp') {
+                const ta = parseFloat(a.querySelector('.timestamp').getAttribute('data-timestamp')) || 0;
+                const tb = parseFloat(b.querySelector('.timestamp').getAttribute('data-timestamp')) || 0;
+                return ta - tb;
+            } else if (key === 'confidence') {
+                const ca = parseFloat(a.getAttribute('data-confidence')) || 0;
+                const cb = parseFloat(b.getAttribute('data-confidence')) || 0;
+                return ca - cb;
+            } else if (key === 'reference') {
+                const ra = (a.querySelector('td:nth-child(3) .badge')?.textContent || '').toLowerCase();
+                const rb = (b.querySelector('td:nth-child(3) .badge')?.textContent || '').toLowerCase();
+                return ra.localeCompare(rb);
+            }
+            return 0;
+        };
+
+        rows.sort(comparer);
+        if (dir === 'desc') rows.reverse();
+        rows.forEach(r => tbody.appendChild(r));
+    }
+
     // Simple hover preview for full-resolution images
     document.addEventListener('DOMContentLoaded', function () {
+        // Default sort: timestamp ascending for each table
+        document.querySelectorAll('.results-table').forEach(function (t) {
+            sortResultsTable(t, 'timestamp', 'asc');
+        });
+
+        // Click-to-sort behavior
+        document.querySelectorAll('.results-table thead th.sortable').forEach(function (th) {
+            th.style.cursor = 'pointer';
+            th.addEventListener('click', function () {
+                const table = th.closest('table');
+                const key = th.getAttribute('data-sort');
+                const current = th.getAttribute('data-dir') || 'asc';
+                const next = current === 'asc' ? 'desc' : 'asc';
+                th.setAttribute('data-dir', next);
+                sortResultsTable(table, key, next);
+            });
+        });
+
         let previewEl;
         function ensurePreview() {
             if (!previewEl) {

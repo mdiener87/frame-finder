@@ -3,6 +3,15 @@
 body {
     font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
 }
+/* Keep space for fixed navbar */
+body { padding-top: 56px; }
+
+#appContainer {
+    height: calc(100vh - 56px);
+    display: flex;
+    flex-direction: column;
+    overflow: hidden; /* prevent page scroll; inner containers manage overflow */
+}
 
 .navbar-brand {
     font-weight: bold;
@@ -17,10 +26,6 @@ body {
     max-width: 100px;
     max-height: 100px;
     object-fit: cover;
-}
-
-#negativePreview .thumbnail-preview {
-    border: 2px solid #dc3545; /* Red border for negative references */
 }
 
 #referencePreview .thumbnail-preview {
@@ -44,6 +49,66 @@ body {
 .confidence {
     font-weight: bold;
     color: #198754;
+}
+
+/* Results table polish */
+.results-table tbody tr:hover {
+    background-color: #f8f9fa;
+}
+
+.results-table thead th.sortable {
+    cursor: pointer;
+    user-select: none;
+}
+
+/* Sticky headers for result tables within scroll container */
+.results-scroll {
+    max-height: 60vh;
+    overflow-y: auto;
+}
+.results-scroll .results-table thead th {
+    position: sticky;
+    top: 0;
+    z-index: 2;
+    background: var(--bs-body-bg);
+    border-bottom: 2px solid var(--bs-border-color);
+}
+
+img.result-thumb {
+    transition: transform 0.12s ease-in-out, box-shadow 0.12s ease-in-out;
+}
+img.result-thumb:hover {
+    transform: translateY(-1px);
+    box-shadow: 0 0.25rem 0.6rem rgba(0,0,0,0.12);
+}
+
+/* Results page layout: filter + scrollable list + sticky footer */
+.results-page {
+    display: flex;
+    flex-direction: column;
+    flex: 1 1 auto;
+    min-height: 0; /* allow inner scroll */
+    gap: 0.75rem;
+}
+.results-filter .card-body { padding-top: .5rem; padding-bottom: .5rem; }
+.results-list {
+    flex: 1 1 auto;
+    min-height: 0;
+    overflow-y: auto;
+}
+.results-list .results-table thead th {
+    position: sticky;
+    top: 0;
+    z-index: 2;
+    background: var(--bs-body-bg);
+    border-bottom: 2px solid var(--bs-border-color);
+}
+.results-footer {
+    position: sticky;
+    bottom: 0;
+    background: var(--bs-body-bg);
+    border-top: 1px solid var(--bs-border-color);
+    padding: .5rem 0;
 }
 
 .progress-bar-animated {
@@ -79,4 +144,36 @@ body {
 .form-control:focus {
     border-color: #86b7fe;
     box-shadow: 0 0 0 0.25rem rgba(13, 110, 253, 0.25);
+}
+
+/* Drag-and-drop zones */
+.dropzone {
+    position: relative;
+    border: 2px dashed #ced4da;
+    border-radius: 0.5rem;
+    background: var(--bs-body-bg);
+    transition: border-color 0.12s ease-in-out, background 0.12s ease-in-out;
+    padding: 1rem;
+    text-align: center;
+}
+.dropzone.dragover {
+    border-color: #0d6efd;
+    background: rgba(13,110,253,0.05);
+}
+.dropzone .dz-input {
+    position: absolute;
+    inset: 0;
+    opacity: 0;
+    cursor: pointer;
+}
+.dropzone .dz-instructions {
+    color: var(--bs-secondary-color);
+}
+
+/* Results page root should fill remaining viewport and allow inner scroll */
+.results-root {
+    display: flex;
+    flex-direction: column;
+    flex: 1 1 auto;
+    min-height: 0; /* critical so children can scroll */
 }
