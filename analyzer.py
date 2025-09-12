@@ -81,22 +81,34 @@ class RefFeatures:
             self.image_bgr = cv2.resize(self.image_bgr, (int(w * scale), int(h * scale)), interpolation=cv2.INTER_AREA)
         self.gray = cv2.cvtColor(self.image_bgr, cv2.COLOR_BGR2GRAY)
 
-        # ORB is fast and robust enough; increase features for better recall.
-        self.detector = cv2.ORB_create(nfeatures=3000, scaleFactor=1.2, nlevels=8)
-        self.kp, self.desc = self.detector.detectAndCompute(self.gray, None)
+        # Primary detector: ORB (fast, robust). Slightly raise features for recall.
+        self.detector_orb = cv2.ORB_create(nfeatures=4000, scaleFactor=1.2, nlevels=8)
+        self.kp_orb, self.desc_orb = self.detector_orb.detectAndCompute(self.gray, None)
+
+        # Fallback detector: AKAZE (often better on small textured regions)
+        self.detector_akaze = None
+        self.kp_akaze, self.desc_akaze = None, None
+        if hasattr(cv2, "AKAZE_create"):
+            try:
+                self.detector_akaze = cv2.AKAZE_create()
+                self.kp_akaze, self.desc_akaze = self.detector_akaze.detectAndCompute(self.gray, None)
+            except Exception:
+                # If AKAZE is unavailable in the build, continue with ORB only
+                self.detector_akaze = None
 
 
 def compute_frame_features(frame_bgr: np.ndarray, detector) -> Tuple[Any, np.ndarray, np.ndarray]:
     """Compute keypoints/desc for a frame. If CUDA is available, try GPU ORB.
     Fallback to CPU ORB on any failure. Returns (keypoints, descriptors, gray_cpu).
     """
-    if USE_CUDA and hasattr(cv2, "cuda") and hasattr(cv2.cuda, "ORB_create"):
+    det_name = getattr(detector, "__class__", type(detector)).__name__.lower()
+    if USE_CUDA and "orb" in det_name and hasattr(cv2, "cuda") and hasattr(cv2.cuda, "ORB_create"):
         try:
             gpu_src = cv2.cuda_GpuMat()
             gpu_src.upload(frame_bgr)
             gpu_gray = cv2.cuda.cvtColor(gpu_src, cv2.COLOR_BGR2GRAY)
             # Create CUDA ORB only once per call (fast enough), or could cache globally
-            orb_gpu = cv2.cuda_ORB_create(nfeatures=3000)
+            orb_gpu = cv2.cuda_ORB_create(nfeatures=4000)
             # detectAndComputeAsync returns (keypoints (CPU list), descriptors (GpuMat))
             kp, desc_gpu = orb_gpu.detectAndComputeAsync(gpu_gray, None)
             desc = desc_gpu.download() if desc_gpu is not None else None
@@ -113,43 +125,49 @@ def compute_frame_features(frame_bgr: np.ndarray, detector) -> Tuple[Any, np.nda
     return kp, desc, gray
 
 
-def match_and_score(ref: RefFeatures, frame_bgr: np.ndarray) -> Tuple[float, Dict[str, Any]]:
-    """Return (confidence [0..1], meta) for one ref vs frame using ORB+homography."""
-    # Reuse the same ORB params as ref
-    kp_f, desc_f, gray_f = compute_frame_features(frame_bgr, ref.detector)
-    if desc_f is None or ref.desc is None or len(desc_f) < 8 or len(ref.desc) < 8:
+def _match_homography_score(ref_kp, ref_desc, frame_kp, frame_desc, ref_gray, H_t=5.0,
+                            ratio_thresh: float = 0.75) -> Tuple[float, Dict[str, Any]]:
+    """Core matcher: KNN+ratio, homography, calibrated confidence.
+
+    Returns (confidence, meta). Confidence is 0 when matches are insufficient or
+    geometry is not consistent.
+    """
+    if ref_desc is None or frame_desc is None or len(ref_desc) < 8 or len(frame_desc) < 8:
         return 0.0, {"reason": "no_descriptors"}
 
-    # KNN match + ratio test (CPU matcher; robust and compatible)
     bf = cv2.BFMatcher(cv2.NORM_HAMMING, crossCheck=False)
-    matches_knn = bf.knnMatch(ref.desc, desc_f, k=2)
+    matches_knn = bf.knnMatch(ref_desc, frame_desc, k=2)
     good = []
     for m, n in matches_knn:
-        if m.distance < 0.75 * n.distance:
+        if m.distance < ratio_thresh * n.distance:
             good.append(m)
 
-    if len(good) < 10:
+    # Attempt homography with as few as 6 matches, but require strong consensus
+    if len(good) < 6:
         return 0.0, {"reason": "too_few_good_matches", "good": len(good)}
 
-    src_pts = np.float32([ref.kp[m.queryIdx].pt for m in good]).reshape(-1, 1, 2)
-    dst_pts = np.float32([kp_f[m.trainIdx].pt for m in good]).reshape(-1, 1, 2)
+    src_pts = np.float32([ref_kp[m.queryIdx].pt for m in good]).reshape(-1, 1, 2)
+    dst_pts = np.float32([frame_kp[m.trainIdx].pt for m in good]).reshape(-1, 1, 2)
 
-    H, mask = cv2.findHomography(src_pts, dst_pts, cv2.RANSAC, 5.0)
+    H, mask = cv2.findHomography(src_pts, dst_pts, cv2.RANSAC, H_t)
     if H is None or mask is None:
         return 0.0, {"reason": "no_homography", "good": len(good)}
 
     inliers = int(mask.sum())
     inlier_ratio = inliers / max(1, len(good))
 
-    # Confidence calibration:
-    # - Encourage higher inlier counts and ratios.
-    # - Soft-cap counts at 40 to map into [0,1].
-    c_count = min(1.0, inliers / 40.0)
-    c_ratio = min(1.0, inlier_ratio / 0.6)  # 0.6 ratio ~ strong geometric consistency
-    confidence = 0.7 * c_count + 0.3 * c_ratio
+    # Reject weak geometry for low-match cases
+    if inliers < 5 or inlier_ratio < 0.55:
+        return 0.0, {"reason": "weak_geometry", "good": len(good), "inliers": inliers, "inlier_ratio": float(inlier_ratio)}
 
-    # Additional sanity: ensure projected polygon is plausible (non-degenerate)
-    h, w = ref.gray.shape[:2]
+    # Confidence calibration:
+    # - Reward inlier count (cap at 30) and ratio (cap at 0.7)
+    c_count = min(1.0, inliers / 30.0)
+    c_ratio = min(1.0, inlier_ratio / 0.7)
+    confidence = 0.5 * c_count + 0.5 * c_ratio
+
+    # Projected quad plausibility
+    h, w = ref_gray.shape[:2]
     corners = np.float32([[0, 0], [w, 0], [w, h], [0, h]]).reshape(-1, 1, 2)
     proj = cv2.perspectiveTransform(corners, H)
     area = cv2.contourArea(proj.reshape(-1, 2))
@@ -157,12 +175,39 @@ def match_and_score(ref: RefFeatures, frame_bgr: np.ndarray) -> Tuple[float, Dic
         confidence *= 0.2
 
     meta = {
-        "inliers": inliers,
-        "matches": len(good),
-        "inlier_ratio": inlier_ratio,
+        "inliers": int(inliers),
+        "matches": int(len(good)),
+        "inlier_ratio": float(inlier_ratio),
         "proj_area": float(area),
     }
     return float(confidence), meta
+
+
+def match_and_score(ref: RefFeatures, frame_bgr: np.ndarray) -> Tuple[float, Dict[str, Any]]:
+    """Return (confidence [0..1], meta) for one ref vs frame using ORB(+AKAZE fallback) + homography.
+
+    This improves recall on small inserts by:
+    - Lowering homography attempt threshold (>=6 good matches)
+    - Trying AKAZE if ORB yields too few consistent matches
+    - Keeping strong geometric checks to avoid false positives
+    """
+    # Try ORB first (CPU or CUDA depending on availability)
+    kp_f_orb, desc_f_orb, _gray_f = compute_frame_features(frame_bgr, ref.detector_orb)
+    best_conf, best_meta = 0.0, {"reason": "init"}
+
+    conf_orb, meta_orb = _match_homography_score(ref.kp_orb, ref.desc_orb, kp_f_orb, desc_f_orb, ref.gray,
+                                                 H_t=5.0, ratio_thresh=0.75)
+    best_conf, best_meta = conf_orb, dict(meta_orb, method="ORB")
+
+    # If ORB is weak, try AKAZE fallback
+    if (best_conf < 0.25) and ref.detector_akaze is not None:
+        kp_f_akaze, desc_f_akaze, _ = compute_frame_features(frame_bgr, ref.detector_akaze)
+        conf_akaze, meta_akaze = _match_homography_score(ref.kp_akaze, ref.desc_akaze, kp_f_akaze, desc_f_akaze, ref.gray,
+                                                         H_t=5.0, ratio_thresh=0.8)
+        if conf_akaze > best_conf:
+            best_conf, best_meta = conf_akaze, dict(meta_akaze, method="AKAZE")
+
+    return float(best_conf), best_meta
 
 
 def cluster_peaks(matches: List[Dict[str, Any]], window_s: float = 1.0) -> List[Dict[str, Any]]:
@@ -335,12 +380,10 @@ def process_videos(reference_paths: List[str],
 
 
 if __name__ == "__main__":
-    # Simple local sanity check using the thinktank examples (if present)
-    ref = ["examples/thinktank/ReferenceImage.png"]
-    vids = [
-        "examples/thinktank/TT_Positive.mp4",
-        "examples/thinktank/TT_Negative.mp4",
-    ]
+    # Simple local sanity check using all thinktank examples (if present)
+    import glob
+    ref = sorted(sum([glob.glob(os.path.join("examples", "thinktank", ext)) for ext in ["*.png", "*.jpg", "*.jpeg"]], []))
+    vids = sorted(glob.glob(os.path.join("examples", "thinktank", "*.mp4")))
     existing_refs = [p for p in ref if os.path.exists(p)]
     existing_vids = [v for v in vids if os.path.exists(v)]
     if existing_refs and existing_vids:
