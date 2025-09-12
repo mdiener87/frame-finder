@@ -48,6 +48,71 @@ def extract_frames(video_path: str, interval: float = 1.0) -> List[Tuple[Image.I
 
 
 # ==============================
+# Frame preprocessing for enhanced detection
+# ==============================
+def preprocess_frame(frame_bgr: np.ndarray) -> np.ndarray:
+    """Enhance frame for better small object detection."""
+    # Sharpen for better edge detection
+    kernel = np.array([[-1,-1,-1], [-1,9,-1], [-1,-1,-1]])
+    sharpened = cv2.filter2D(frame_bgr, -1, kernel)
+    
+    # Contrast enhancement using CLAHE
+    lab = cv2.cvtColor(sharpened, cv2.COLOR_BGR2LAB)
+    l, a, b = cv2.split(lab)
+    clahe = cv2.createCLAHE(clipLimit=2.0, tileGridSize=(8,8))
+    l = clahe.apply(l)
+    enhanced = cv2.merge([l, a, b])
+    return cv2.cvtColor(enhanced, cv2.COLOR_LAB2BGR)
+
+
+# ==============================
+# Template matching for small objects
+# ==============================
+def template_match_score(ref_gray: np.ndarray, frame_gray: np.ndarray) -> Tuple[float, Dict[str, Any]]:
+    """Multi-scale template matching optimized for small objects."""
+    best_score = 0.0
+    best_scale = 1.0
+    best_location = (0, 0)
+    h_ref, w_ref = ref_gray.shape
+    h_frame, w_frame = frame_gray.shape
+    
+    # Try multiple scales - focus on smaller scales for small objects
+    scales = [0.4, 0.5, 0.6, 0.7, 0.8, 0.9, 1.0, 1.1, 1.2, 1.3, 1.5, 1.7, 2.0]
+    
+    for scale in scales:
+        scaled_w = int(w_ref * scale)
+        scaled_h = int(h_ref * scale)
+        
+        # Skip if scaled template is larger than frame
+        if scaled_w > w_frame or scaled_h > h_frame:
+            continue
+        
+        # Skip if template becomes too small to be meaningful
+        if scaled_w < 10 or scaled_h < 10:
+            continue
+            
+        scaled_ref = cv2.resize(ref_gray, (scaled_w, scaled_h), interpolation=cv2.INTER_AREA)
+        
+        # Use normalized cross correlation
+        result = cv2.matchTemplate(frame_gray, scaled_ref, cv2.TM_CCOEFF_NORMED)
+        _, max_val, _, max_loc = cv2.minMaxLoc(result)
+        
+        if max_val > best_score:
+            best_score = max_val
+            best_scale = scale
+            best_location = max_loc
+    
+    meta = {
+        "template_score": float(best_score),
+        "best_scale": float(best_scale),
+        "location": best_location,
+        "method": "template_matching"
+    }
+    
+    return float(best_score), meta
+
+
+# ==============================
 # Feature matching + homography scoring
 # ==============================
 def _cuda_available() -> bool:
@@ -81,8 +146,14 @@ class RefFeatures:
             self.image_bgr = cv2.resize(self.image_bgr, (int(w * scale), int(h * scale)), interpolation=cv2.INTER_AREA)
         self.gray = cv2.cvtColor(self.image_bgr, cv2.COLOR_BGR2GRAY)
 
-        # ORB is fast and robust enough; increase features for better recall.
-        self.detector = cv2.ORB_create(nfeatures=3000, scaleFactor=1.2, nlevels=8)
+        # Optimized ORB parameters for small object detection
+        self.detector = cv2.ORB_create(
+            nfeatures=5000,        # More features for better coverage
+            scaleFactor=1.1,       # Finer scale steps for small objects
+            nlevels=12,            # More scale levels
+            edgeThreshold=15,      # Lower edge threshold for small features
+            patchSize=15           # Smaller patch size for fine details
+        )
         self.kp, self.desc = self.detector.detectAndCompute(self.gray, None)
 
 
@@ -95,8 +166,8 @@ def compute_frame_features(frame_bgr: np.ndarray, detector) -> Tuple[Any, np.nda
             gpu_src = cv2.cuda_GpuMat()
             gpu_src.upload(frame_bgr)
             gpu_gray = cv2.cuda.cvtColor(gpu_src, cv2.COLOR_BGR2GRAY)
-            # Create CUDA ORB only once per call (fast enough), or could cache globally
-            orb_gpu = cv2.cuda_ORB_create(nfeatures=3000)
+            # Create CUDA ORB with optimized parameters for small objects
+            orb_gpu = cv2.cuda_ORB_create(nfeatures=5000)
             # detectAndComputeAsync returns (keypoints (CPU list), descriptors (GpuMat))
             kp, desc_gpu = orb_gpu.detectAndComputeAsync(gpu_gray, None)
             desc = desc_gpu.download() if desc_gpu is not None else None
@@ -128,8 +199,10 @@ def match_and_score(ref: RefFeatures, frame_bgr: np.ndarray) -> Tuple[float, Dic
         if m.distance < 0.75 * n.distance:
             good.append(m)
 
-    if len(good) < 10:
-        return 0.0, {"reason": "too_few_good_matches", "good": len(good)}
+    # Adaptive minimum matches based on reference features and object size
+    min_matches = max(4, min(10, len(ref.desc) // 20))
+    if len(good) < min_matches:
+        return 0.0, {"reason": "too_few_good_matches", "good": len(good), "min_required": min_matches}
 
     src_pts = np.float32([ref.kp[m.queryIdx].pt for m in good]).reshape(-1, 1, 2)
     dst_pts = np.float32([kp_f[m.trainIdx].pt for m in good]).reshape(-1, 1, 2)
@@ -163,6 +236,40 @@ def match_and_score(ref: RefFeatures, frame_bgr: np.ndarray) -> Tuple[float, Dic
         "proj_area": float(area),
     }
     return float(confidence), meta
+
+
+def hybrid_match_score(ref: RefFeatures, frame_bgr: np.ndarray) -> Tuple[float, Dict[str, Any]]:
+    """Combine feature matching and template matching for optimal small object detection."""
+    
+    # First, try enhanced frame preprocessing
+    enhanced_frame = preprocess_frame(frame_bgr)
+    
+    # Try feature matching on enhanced frame
+    feat_conf, feat_meta = match_and_score(ref, enhanced_frame)
+    
+    # For low feature confidence, try template matching as fallback
+    if feat_conf < 0.4:  # Lower threshold to give template matching a chance
+        frame_gray = cv2.cvtColor(enhanced_frame, cv2.COLOR_BGR2GRAY)
+        template_conf, template_meta = template_match_score(ref.gray, frame_gray)
+        
+        # Use template matching if it's significantly better
+        if template_conf > feat_conf * 1.2:  # 20% boost required to switch methods
+            # Normalize template matching score to be more comparable with feature matching
+            normalized_template = min(1.0, template_conf * 1.3)  # Slight boost for template scores
+            template_meta["normalized_score"] = normalized_template
+            template_meta["original_feature_score"] = feat_conf
+            return normalized_template, template_meta
+    
+    # Use feature matching result, but boost slightly if we got a decent template score
+    if feat_conf > 0.0:
+        frame_gray = cv2.cvtColor(enhanced_frame, cv2.COLOR_BGR2GRAY) 
+        template_conf, _ = template_match_score(ref.gray, frame_gray)
+        if template_conf > 0.3:  # Decent template match
+            feat_conf = min(1.0, feat_conf + template_conf * 0.1)  # Small boost
+            feat_meta["template_boost"] = template_conf * 0.1
+    
+    feat_meta["enhanced_preprocessing"] = True
+    return feat_conf, feat_meta
 
 
 def cluster_peaks(matches: List[Dict[str, Any]], window_s: float = 1.0) -> List[Dict[str, Any]]:
@@ -246,9 +353,9 @@ def process_videos(reference_paths: List[str],
 
                 best_conf = 0.0
                 best_ref_name = None
-                # Score each reference; keep best per frame
+                # Score each reference using hybrid approach; keep best per frame
                 for rp, ref in zip(reference_paths, refs):
-                    conf, _meta = match_and_score(ref, frame_bgr)
+                    conf, meta = hybrid_match_score(ref, frame_bgr)
                     if conf > best_conf:
                         best_conf = conf
                         best_ref_name = os.path.basename(rp)
