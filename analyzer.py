@@ -18,6 +18,57 @@ from PIL import Image
 # ==============================
 ALLOWED_EXTENSIONS = {"png", "jpg", "jpeg", "mp4"}
 
+# ==============================
+# Scanning Mode Presets
+# ==============================
+SCANNING_MODES = {
+    "fast": {
+        "name": "Fast Scan",
+        "description": "Quick analysis for obvious matches. Best for larger objects or initial exploration.",
+        "when_to_use": "Use when scanning many videos or looking for obvious, large objects",
+        "orb_params": {
+            "nfeatures": 2000,
+            "scaleFactor": 1.2,
+            "nlevels": 8,
+            "edgeThreshold": 25,
+            "patchSize": 25
+        },
+        "template_scales": [0.6, 0.8, 1.0, 1.2, 1.5],
+        "enable_preprocessing": False,
+        "min_matches_factor": 25  # Looser requirement: len(desc) // 25
+    },
+    "balanced": {
+        "name": "Balanced Scan", 
+        "description": "Good balance of speed and accuracy. Suitable for most use cases.",
+        "when_to_use": "Default choice for medium-sized objects and general analysis",
+        "orb_params": {
+            "nfeatures": 3500,
+            "scaleFactor": 1.15,
+            "nlevels": 10,
+            "edgeThreshold": 20,
+            "patchSize": 20
+        },
+        "template_scales": [0.5, 0.7, 0.85, 1.0, 1.15, 1.3, 1.6, 2.0],
+        "enable_preprocessing": True,
+        "min_matches_factor": 22  # len(desc) // 22
+    },
+    "thorough": {
+        "name": "Thorough Scan",
+        "description": "Maximum detail and accuracy. Best for small objects and difficult matches.",
+        "when_to_use": "Use for tiny props (like 57x159px), complex scenes, or when initial scans miss objects",
+        "orb_params": {
+            "nfeatures": 5000,
+            "scaleFactor": 1.1,
+            "nlevels": 12,
+            "edgeThreshold": 15,
+            "patchSize": 15
+        },
+        "template_scales": [0.4, 0.5, 0.6, 0.7, 0.8, 0.9, 1.0, 1.1, 1.2, 1.3, 1.5, 1.7, 2.0],
+        "enable_preprocessing": True,
+        "min_matches_factor": 20  # len(desc) // 20
+    }
+}
+
 
 def allowed_file(filename: str) -> bool:
     return "." in filename and filename.rsplit(".", 1)[1].lower() in ALLOWED_EXTENSIONS
@@ -68,16 +119,16 @@ def preprocess_frame(frame_bgr: np.ndarray) -> np.ndarray:
 # ==============================
 # Template matching for small objects
 # ==============================
-def template_match_score(ref_gray: np.ndarray, frame_gray: np.ndarray) -> Tuple[float, Dict[str, Any]]:
-    """Multi-scale template matching optimized for small objects."""
+def template_match_score(ref_gray: np.ndarray, frame_gray: np.ndarray, scales: List[float] = None) -> Tuple[float, Dict[str, Any]]:
+    """Multi-scale template matching with configurable scales."""
+    if scales is None:
+        scales = [0.4, 0.5, 0.6, 0.7, 0.8, 0.9, 1.0, 1.1, 1.2, 1.3, 1.5, 1.7, 2.0]
+    
     best_score = 0.0
     best_scale = 1.0
     best_location = (0, 0)
     h_ref, w_ref = ref_gray.shape
     h_frame, w_frame = frame_gray.shape
-    
-    # Try multiple scales - focus on smaller scales for small objects
-    scales = [0.4, 0.5, 0.6, 0.7, 0.8, 0.9, 1.0, 1.1, 1.2, 1.3, 1.5, 1.7, 2.0]
     
     for scale in scales:
         scaled_w = int(w_ref * scale)
@@ -135,8 +186,11 @@ USE_CUDA = _cuda_available()
 
 
 class RefFeatures:
-    def __init__(self, path: str, max_size: int = 1024):
+    def __init__(self, path: str, max_size: int = 1024, scanning_mode: str = "thorough"):
         self.path = path
+        self.scanning_mode = scanning_mode
+        self.mode_config = SCANNING_MODES.get(scanning_mode, SCANNING_MODES["thorough"])
+        
         self.image_bgr = cv2.imread(path, cv2.IMREAD_COLOR)
         if self.image_bgr is None:
             raise ValueError(f"Failed to read image: {path}")
@@ -146,14 +200,9 @@ class RefFeatures:
             self.image_bgr = cv2.resize(self.image_bgr, (int(w * scale), int(h * scale)), interpolation=cv2.INTER_AREA)
         self.gray = cv2.cvtColor(self.image_bgr, cv2.COLOR_BGR2GRAY)
 
-        # Optimized ORB parameters for small object detection
-        self.detector = cv2.ORB_create(
-            nfeatures=5000,        # More features for better coverage
-            scaleFactor=1.1,       # Finer scale steps for small objects
-            nlevels=12,            # More scale levels
-            edgeThreshold=15,      # Lower edge threshold for small features
-            patchSize=15           # Smaller patch size for fine details
-        )
+        # Use ORB parameters from scanning mode configuration
+        orb_params = self.mode_config["orb_params"]
+        self.detector = cv2.ORB_create(**orb_params)
         self.kp, self.desc = self.detector.detectAndCompute(self.gray, None)
 
 
@@ -199,8 +248,9 @@ def match_and_score(ref: RefFeatures, frame_bgr: np.ndarray) -> Tuple[float, Dic
         if m.distance < 0.75 * n.distance:
             good.append(m)
 
-    # Adaptive minimum matches based on reference features and object size
-    min_matches = max(4, min(10, len(ref.desc) // 20))
+    # Use adaptive minimum matches from scanning mode configuration
+    min_matches_factor = ref.mode_config["min_matches_factor"]
+    min_matches = max(4, min(10, len(ref.desc) // min_matches_factor))
     if len(good) < min_matches:
         return 0.0, {"reason": "too_few_good_matches", "good": len(good), "min_required": min_matches}
 
@@ -239,18 +289,22 @@ def match_and_score(ref: RefFeatures, frame_bgr: np.ndarray) -> Tuple[float, Dic
 
 
 def hybrid_match_score(ref: RefFeatures, frame_bgr: np.ndarray) -> Tuple[float, Dict[str, Any]]:
-    """Combine feature matching and template matching for optimal small object detection."""
+    """Combine feature matching and template matching based on scanning mode configuration."""
     
-    # First, try enhanced frame preprocessing
-    enhanced_frame = preprocess_frame(frame_bgr)
+    # Use preprocessing based on scanning mode configuration
+    if ref.mode_config["enable_preprocessing"]:
+        enhanced_frame = preprocess_frame(frame_bgr)
+    else:
+        enhanced_frame = frame_bgr.copy()
     
-    # Try feature matching on enhanced frame
+    # Try feature matching
     feat_conf, feat_meta = match_and_score(ref, enhanced_frame)
     
     # For low feature confidence, try template matching as fallback
     if feat_conf < 0.4:  # Lower threshold to give template matching a chance
         frame_gray = cv2.cvtColor(enhanced_frame, cv2.COLOR_BGR2GRAY)
-        template_conf, template_meta = template_match_score(ref.gray, frame_gray)
+        template_scales = ref.mode_config["template_scales"]
+        template_conf, template_meta = template_match_score(ref.gray, frame_gray, template_scales)
         
         # Use template matching if it's significantly better
         if template_conf > feat_conf * 1.2:  # 20% boost required to switch methods
@@ -258,17 +312,20 @@ def hybrid_match_score(ref: RefFeatures, frame_bgr: np.ndarray) -> Tuple[float, 
             normalized_template = min(1.0, template_conf * 1.3)  # Slight boost for template scores
             template_meta["normalized_score"] = normalized_template
             template_meta["original_feature_score"] = feat_conf
+            template_meta["scanning_mode"] = ref.scanning_mode
             return normalized_template, template_meta
     
     # Use feature matching result, but boost slightly if we got a decent template score
     if feat_conf > 0.0:
-        frame_gray = cv2.cvtColor(enhanced_frame, cv2.COLOR_BGR2GRAY) 
-        template_conf, _ = template_match_score(ref.gray, frame_gray)
+        frame_gray = cv2.cvtColor(enhanced_frame, cv2.COLOR_BGR2GRAY)
+        template_scales = ref.mode_config["template_scales"]
+        template_conf, _ = template_match_score(ref.gray, frame_gray, template_scales)
         if template_conf > 0.3:  # Decent template match
             feat_conf = min(1.0, feat_conf + template_conf * 0.1)  # Small boost
             feat_meta["template_boost"] = template_conf * 0.1
     
-    feat_meta["enhanced_preprocessing"] = True
+    feat_meta["enhanced_preprocessing"] = ref.mode_config["enable_preprocessing"]
+    feat_meta["scanning_mode"] = ref.scanning_mode
     return feat_conf, feat_meta
 
 
@@ -296,6 +353,7 @@ def process_videos(reference_paths: List[str],
                    video_paths: List[str],
                    frame_interval: float = 1.0,
                    confidence_threshold: float = 0.75,
+                   scanning_mode: str = "thorough",
                    progress_callback=None) -> Dict[str, Any]:
     """
     Args:
@@ -303,13 +361,14 @@ def process_videos(reference_paths: List[str],
         video_paths    : paths to mp4 files
         frame_interval : seconds between frames extracted
         confidence_threshold: retained for UI compatibility; analyzer returns all matches
+        scanning_mode: scanning intensity mode ("fast", "balanced", "thorough")
         progress_callback: optional callable for UI progress updates
 
     Returns:
-        { video_name: { matches: [...], max_confidence: float, threshold_used: float } }
+        { video_name: { matches: [...], max_confidence: float, threshold_used: float, scanning_mode: str } }
     """
-    # Precompute reference features once
-    refs: List[RefFeatures] = [RefFeatures(p) for p in (reference_paths or [])]
+    # Precompute reference features once with the specified scanning mode
+    refs: List[RefFeatures] = [RefFeatures(p, scanning_mode=scanning_mode) for p in (reference_paths or [])]
 
     results: Dict[str, Any] = {}
     # Ensure thumbnail output directory exists
@@ -436,6 +495,7 @@ def process_videos(reference_paths: List[str],
             "matches": matches,
             "max_confidence": max_conf,
             "threshold_used": float(confidence_threshold),
+            "scanning_mode": scanning_mode,
         }
 
     return results
@@ -443,6 +503,7 @@ def process_videos(reference_paths: List[str],
 
 if __name__ == "__main__":
     # Simple local sanity check using the thinktank examples (if present)
+    # Test with different scanning modes
     ref = ["examples/thinktank/ReferenceImage.png"]
     vids = [
         "examples/thinktank/TT_Positive.mp4",
@@ -451,8 +512,18 @@ if __name__ == "__main__":
     existing_refs = [p for p in ref if os.path.exists(p)]
     existing_vids = [v for v in vids if os.path.exists(v)]
     if existing_refs and existing_vids:
-        out = process_videos(existing_refs, existing_vids, frame_interval=1.0, confidence_threshold=0.75)
+        # Test with thorough mode (default)
+        print("=== THOROUGH MODE ===")
+        out = process_videos(existing_refs, existing_vids, frame_interval=1.0, confidence_threshold=0.75, scanning_mode="thorough")
         import json
         print(json.dumps(out, indent=2))
+        
+        print("\n=== Available Scanning Modes ===")
+        for mode_key, mode_config in SCANNING_MODES.items():
+            print(f"{mode_key.upper()}: {mode_config['name']}")
+            print(f"  Description: {mode_config['description']}")
+            print(f"  When to use: {mode_config['when_to_use']}")
+            print(f"  Features: {mode_config['orb_params']['nfeatures']}, Scales: {len(mode_config['template_scales'])}, Preprocessing: {mode_config['enable_preprocessing']}")
+            print()
     else:
         print("Example files not found; nothing to run.")

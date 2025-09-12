@@ -6,7 +6,7 @@ import json
 import datetime
 from flask import Flask, request, render_template, redirect, url_for, flash, jsonify
 from werkzeug.utils import secure_filename
-from analyzer import process_videos, allowed_file
+from analyzer import process_videos, allowed_file, SCANNING_MODES
 
 # Initialize Flask app
 app = Flask(__name__)
@@ -41,9 +41,9 @@ def format_time(seconds):
 @app.route('/')
 def index():
     """Render the main upload page"""
-    return render_template('index.html')
+    return render_template('index.html', scanning_modes=SCANNING_MODES)
 
-def process_videos_background(task_id, reference_paths, video_paths, frame_interval, confidence_threshold):
+def process_videos_background(task_id, reference_paths, video_paths, frame_interval, confidence_threshold, scanning_mode):
     """Process videos in background and update progress"""
     try:
         # Update task status to processing
@@ -55,6 +55,7 @@ def process_videos_background(task_id, reference_paths, video_paths, frame_inter
             'reference_paths': reference_paths,
             'frame_interval': frame_interval,
             'confidence_threshold': confidence_threshold,
+            'scanning_mode': scanning_mode,
             'error': None,
             'cancelled': False  # Add cancellation flag
         }
@@ -80,7 +81,7 @@ def process_videos_background(task_id, reference_paths, video_paths, frame_inter
                         processing_tasks[task_id]['progress'] = max(0, min(100, total_progress))
         
         # Process videos (this will take time) with progress callback
-        results = process_videos(reference_paths, video_paths, frame_interval, confidence_threshold, progress_callback)
+        results = process_videos(reference_paths, video_paths, frame_interval, confidence_threshold, scanning_mode, progress_callback)
         
         # Check if task was cancelled during processing
         if task_id in processing_tasks and processing_tasks[task_id].get('cancelled', False):
@@ -95,6 +96,7 @@ def process_videos_background(task_id, reference_paths, video_paths, frame_inter
             'reference_paths': reference_paths,
             'frame_interval': frame_interval,
             'confidence_threshold': confidence_threshold,
+            'scanning_mode': scanning_mode,
             'error': None,
             'cancelled': False
         }
@@ -199,6 +201,8 @@ def upload_files():
     frame_interval = float(request.form.get('frameInterval', 1.0))
     # Use a default confidence threshold of 75% since we removed the slider
     confidence_threshold = 0.75
+    # Get scanning mode from form
+    scanning_mode = request.form.get('scanningMode', 'balanced')
     
     # Create a unique task ID
     task_id = str(uuid.uuid4())
@@ -206,7 +210,7 @@ def upload_files():
     # Start background processing
     thread = threading.Thread(
         target=process_videos_background,
-        args=(task_id, reference_paths, video_paths, frame_interval, confidence_threshold)
+        args=(task_id, reference_paths, video_paths, frame_interval, confidence_threshold, scanning_mode)
     )
     thread.start()
     

@@ -56,6 +56,22 @@
                         <div class="form-text">Extract one frame every X seconds (default: 1.0)</div>
                     </div>
                     
+                    <div class="mb-3">
+                        <label for="scanningMode" class="form-label">Scanning Mode</label>
+                        <select class="form-control" id="scanningMode" name="scanningMode">
+                            {% for mode_key, mode_config in scanning_modes.items() %}
+                            <option value="{{ mode_key }}" {% if mode_key == 'balanced' %}selected{% endif %}>
+                                {{ mode_config.name }} - {{ mode_config.description }}
+                            </option>
+                            {% endfor %}
+                        </select>
+                        <div class="form-text">
+                            <div id="scanningModeHelp" class="mt-2">
+                                <strong>Balanced Scan:</strong> Good balance of speed and accuracy. Suitable for most use cases.
+                            </div>
+                        </div>
+                    </div>
+                    
                     <button type="submit" class="btn btn-primary" id="analyzeBtn">Analyze Videos</button>
                     <button type="reset" class="btn btn-secondary">Reset</button>
                 </form>
@@ -92,4 +108,39 @@
         </div>
     </div>
 </div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+    // Update scanning mode help text dynamically
+    document.addEventListener('DOMContentLoaded', function() {
+        const scanningModeSelect = document.getElementById('scanningMode');
+        const scanningModeHelp = document.getElementById('scanningModeHelp');
+        
+        const modeDescriptions = {
+            {% for mode_key, mode_config in scanning_modes.items() %}
+            '{{ mode_key }}': {
+                name: '{{ mode_config.name }}',
+                description: '{{ mode_config.description }}',
+                when_to_use: '{{ mode_config.when_to_use }}'
+            },
+            {% endfor %}
+        };
+        
+        function updateHelpText() {
+            const selectedMode = scanningModeSelect.value;
+            const modeInfo = modeDescriptions[selectedMode];
+            if (modeInfo) {
+                scanningModeHelp.innerHTML = `
+                    <strong>${modeInfo.name}:</strong> ${modeInfo.description}<br>
+                    <small class="text-muted">${modeInfo.when_to_use}</small>
+                `;
+            }
+        }
+        
+        // Update help text on page load and when selection changes
+        updateHelpText();
+        scanningModeSelect.addEventListener('change', updateHelpText);
+    });
+</script>
 {% endblock %}
