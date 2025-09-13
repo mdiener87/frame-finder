@@ -61,6 +61,24 @@ body { padding-top: 56px; }
     user-select: none;
 }
 
+/* Sort arrows: neutral (⇅), asc (▲), desc (▼) */
+.results-table thead th.sortable::after {
+    content: "\21F5"; /* ⇵ looks similar; use ⇅ (U+21C5) alternative */
+    content: "\21C5"; /* ⇅ neutral */
+    display: inline-block;
+    margin-left: 0.25rem;
+    font-size: 0.85em;
+    opacity: 0.6;
+}
+.results-table thead th.sortable[data-dir="asc"]::after {
+    content: "\25B2"; /* ▲ */
+    opacity: 0.9;
+}
+.results-table thead th.sortable[data-dir="desc"]::after {
+    content: "\25BC"; /* ▼ */
+    opacity: 0.9;
+}
+
 /* Sticky headers for result tables within scroll container */
 .results-scroll {
     max-height: 60vh;

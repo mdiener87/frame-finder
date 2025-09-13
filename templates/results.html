@@ -198,9 +198,14 @@
 
     // Simple hover preview for full-resolution images
     document.addEventListener('DOMContentLoaded', function () {
-        // Default sort: timestamp ascending for each table
+        // Default sort: confidence descending for each table
         document.querySelectorAll('.results-table').forEach(function (t) {
-            sortResultsTable(t, 'timestamp', 'asc');
+            sortResultsTable(t, 'confidence', 'desc');
+            // Update header indicators: clear then set for confidence
+            const ths = t.querySelectorAll('thead th.sortable');
+            ths.forEach(th => th.removeAttribute('data-dir'));
+            const confTh = t.querySelector('thead th.sortable[data-sort="confidence"]');
+            if (confTh) confTh.setAttribute('data-dir', 'desc');
         });
 
         // Click-to-sort behavior
@@ -211,6 +216,11 @@
                 const key = th.getAttribute('data-sort');
                 const current = th.getAttribute('data-dir') || 'asc';
                 const next = current === 'asc' ? 'desc' : 'asc';
+                // Clear indicators on siblings
+                table.querySelectorAll('thead th.sortable').forEach(sib => {
+                    if (sib !== th) sib.removeAttribute('data-dir');
+                });
+                // Set on active header
                 th.setAttribute('data-dir', next);
                 sortResultsTable(table, key, next);
             });
