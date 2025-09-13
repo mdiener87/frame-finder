@@ -121,6 +121,15 @@ img.result-thumb:hover {
     background: var(--bs-body-bg);
     border-bottom: 2px solid var(--bs-border-color);
 }
+.result-card-header { cursor: pointer; }
+.result-card-header .chevron::before {
+    content: "▾";
+    display: inline-block;
+    transition: transform 0.12s ease-in-out;
+}
+.result-card-header.collapsed .chevron::before {
+    transform: rotate(-90deg);
+}
 .results-footer {
     position: sticky;
     bottom: 0;
