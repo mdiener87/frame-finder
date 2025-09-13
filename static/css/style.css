@@ -177,3 +177,36 @@ img.result-thumb:hover {
     flex: 1 1 auto;
     min-height: 0; /* critical so children can scroll */
 }
+
+/* Video list with scrollable content */
+#videoList {
+    max-height: 300px;
+    overflow-y: auto;
+    margin: 0.5rem 0;
+}
+
+#videoList .list-group {
+    margin-bottom: 0;
+}
+
+/* Ensure main upload form doesn't push content out of view */
+#uploadForm {
+    display: flex;
+    flex-direction: column;
+    gap: 1rem;
+}
+
+/* Settings panel should be scrollable if content gets too long */
+#settingsPanel .card-body {
+    max-height: calc(100vh - 200px);
+    overflow-y: auto;
+}
+
+/* Progress panel positioning */
+#progressPanel {
+    position: sticky;
+    bottom: 0;
+    background: var(--bs-body-bg);
+    border-top: 1px solid var(--bs-border-color);
+    z-index: 10;
+}
