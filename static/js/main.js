@@ -33,7 +33,35 @@ function listSelectedVideos() {
     const list = document.getElementById('videoList');
     
     if (list) {
-        list.innerHTML = '<h6>Selected Videos:</h6><ul class="list-group">';
+        // Clear existing content first
+        list.innerHTML = '';
+        
+        let totalFiles = 0;
+        if (videoInput && videoInput.files.length > 0) {
+            totalFiles += videoInput.files.length;
+        }
+        if (directoryInput && directoryInput.files.length > 0) {
+            totalFiles += directoryInput.files.length;
+        }
+        
+        if (totalFiles === 0) {
+            return; // No videos to display
+        }
+        
+        // Create header with file count
+        const header = document.createElement('h6');
+        header.className = 'mb-2';
+        header.textContent = `Selected Videos (${totalFiles}):`;
+        list.appendChild(header);
+        
+        // Create scrollable container
+        const scrollContainer = document.createElement('div');
+        scrollContainer.className = 'border rounded';
+        scrollContainer.style.maxHeight = '300px';
+        scrollContainer.style.overflowY = 'auto';
+        
+        const videoList = document.createElement('ul');
+        videoList.className = 'list-group list-group-flush';
         
         // Handle individual file selection
         if (videoInput && videoInput.files.length > 0) {
@@ -41,10 +69,13 @@ function listSelectedVideos() {
                 const file = videoInput.files[i];
                 const fileSizeMB = (file.size / (1024*1024)).toFixed(2);
                 
-                list.innerHTML += `<li class="list-group-item d-flex justify-content-between align-items-center">
-                    ${file.name}
+                const listItem = document.createElement('li');
+                listItem.className = 'list-group-item d-flex justify-content-between align-items-center';
+                listItem.innerHTML = `
+                    <span class="text-truncate me-2" title="${file.name}">${file.name}</span>
                     <span class="badge bg-primary rounded-pill">${fileSizeMB} MB</span>
-                </li>`;
+                `;
+                videoList.appendChild(listItem);
             }
         }
         
@@ -53,15 +84,20 @@ function listSelectedVideos() {
             for (let i = 0; i < directoryInput.files.length; i++) {
                 const file = directoryInput.files[i];
                 const fileSizeMB = (file.size / (1024*1024)).toFixed(2);
+                const displayName = file.webkitRelativePath || file.name;
                 
-                list.innerHTML += `<li class="list-group-item d-flex justify-content-between align-items-center">
-                    ${file.webkitRelativePath || file.name}
+                const listItem = document.createElement('li');
+                listItem.className = 'list-group-item d-flex justify-content-between align-items-center';
+                listItem.innerHTML = `
+                    <span class="text-truncate me-2" title="${displayName}">${displayName}</span>
                     <span class="badge bg-primary rounded-pill">${fileSizeMB} MB</span>
-                </li>`;
+                `;
+                videoList.appendChild(listItem);
             }
         }
         
-        list.innerHTML += '</ul>';
+        scrollContainer.appendChild(videoList);
+        list.appendChild(scrollContainer);
     }
 }
 
@@ -494,16 +530,47 @@ document.addEventListener('DOMContentLoaded', function() {
     window.listSelectedVideos = function(){
         _origListVideos();
         const list = document.getElementById('videoList');
-        if (!list) return;
-        if (droppedVideos.length > 0) {
-            if (!list.innerHTML.includes('<ul')) {
-                list.innerHTML = '<h6>Selected Videos:</h6><ul class="list-group">';
+        if (!list || droppedVideos.length === 0) return;
+        
+        // If the list is empty but we have dropped videos, create the structure
+        if (list.children.length === 0) {
+            const header = document.createElement('h6');
+            header.className = 'mb-2';
+            header.textContent = `Selected Videos (${droppedVideos.length}):`;
+            list.appendChild(header);
+            
+            const scrollContainer = document.createElement('div');
+            scrollContainer.className = 'border rounded';
+            scrollContainer.style.maxHeight = '300px';
+            scrollContainer.style.overflowY = 'auto';
+            
+            const videoList = document.createElement('ul');
+            videoList.className = 'list-group list-group-flush';
+            
+            scrollContainer.appendChild(videoList);
+            list.appendChild(scrollContainer);
+        }
+        
+        // Find the video list container and add dropped videos
+        const videoList = list.querySelector('ul.list-group');
+        if (videoList) {
+            // Update header count
+            const header = list.querySelector('h6');
+            const totalCount = videoList.children.length + droppedVideos.length;
+            if (header) {
+                header.textContent = `Selected Videos (${totalCount}):`;
             }
+            
             droppedVideos.forEach(file => {
                 const fileSizeMB = (file.size / (1024*1024)).toFixed(2);
-                list.innerHTML += `<li class="list-group-item d-flex justify-content-between align-items-center">${file.name}<span class="badge bg-primary rounded-pill">${fileSizeMB} MB</span></li>`;
+                const listItem = document.createElement('li');
+                listItem.className = 'list-group-item d-flex justify-content-between align-items-center';
+                listItem.innerHTML = `
+                    <span class="text-truncate me-2" title="${file.name}">${file.name}</span>
+                    <span class="badge bg-success rounded-pill" title="Drag & dropped">${fileSizeMB} MB</span>
+                `;
+                videoList.appendChild(listItem);
             });
-            if (!list.innerHTML.endsWith('</ul>')) list.innerHTML += '</ul>';
         }
     }
 
