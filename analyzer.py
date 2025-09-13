@@ -354,7 +354,8 @@ def process_videos(reference_paths: List[str],
                    frame_interval: float = 1.0,
                    confidence_threshold: float = 0.75,
                    scanning_mode: str = "thorough",
-                   progress_callback=None) -> Dict[str, Any]:
+                   progress_callback=None,
+                   top_preview_count: int = 5) -> Dict[str, Any]:
     """
     Args:
         reference_paths: paths to positive reference images
@@ -363,6 +364,7 @@ def process_videos(reference_paths: List[str],
         confidence_threshold: retained for UI compatibility; analyzer returns all matches
         scanning_mode: scanning intensity mode ("fast", "balanced", "thorough")
         progress_callback: optional callable for UI progress updates
+        top_preview_count: number of top matches to persist as preview images (0 disables)
 
     Returns:
         { video_name: { matches: [...], max_confidence: float, threshold_used: float, scanning_mode: str } }
@@ -443,8 +445,16 @@ def process_videos(reference_paths: List[str],
             matches = cluster_peaks(matches, window_s=1.0)
             max_conf = max([m.get("confidence", 0.0) for m in matches], default=0.0)
 
-            # Persist preview images for top 5 matches by confidence
-            top5 = sorted(matches, key=lambda m: m.get("confidence", 0.0), reverse=True)[:5]
+            # Persist preview images for top-N matches by confidence (user-configurable)
+            try:
+                k = int(top_preview_count)
+            except Exception:
+                k = 5
+            # Clamp to [0, 100]
+            k = max(0, min(100, k))
+            topN = []
+            if k > 0:
+                topN = sorted(matches, key=lambda m: m.get("confidence", 0.0), reverse=True)[:k]
 
             # Remove any existing previews for this video (from earlier saves/runs)
             try:
@@ -476,7 +486,7 @@ def process_videos(reference_paths: List[str],
                 # Return URLs for browser
                 return f"/static/thumbnails/{full_name}", f"/static/thumbnails/{thumb_name}"
 
-            for m in top5:
+            for m in topN:
                 fi = m.get("frame_index")
                 if fi is None:
                     continue

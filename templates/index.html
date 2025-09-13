@@ -71,6 +71,15 @@
                             </div>
                         </div>
                     </div>
+
+                    <div class="mb-3">
+                        <label for="topPreviewCount" class="form-label">Top Images to Keep</label>
+                        <div class="d-flex align-items-center gap-3">
+                            <input type="range" class="form-range" id="topPreviewCount" name="topPreviewCount" min="0" max="100" value="5" step="1" style="max-width: 380px;">
+                            <div class="form-text m-0">Count: <span id="topPreviewCountValue">5</span></div>
+                        </div>
+                        <div class="form-text">Controls how many top matches to save as previews (0 disables).</div>
+                    </div>
                     
                     <button type="submit" class="btn btn-primary" id="analyzeBtn">Analyze Videos</button>
                     <button type="reset" class="btn btn-secondary">Reset</button>
@@ -116,6 +125,8 @@
     document.addEventListener('DOMContentLoaded', function() {
         const scanningModeSelect = document.getElementById('scanningMode');
         const scanningModeHelp = document.getElementById('scanningModeHelp');
+        const topPreviewSlider = document.getElementById('topPreviewCount');
+        const topPreviewValue = document.getElementById('topPreviewCountValue');
         
         const modeDescriptions = {
             {% for mode_key, mode_config in scanning_modes.items() %}
@@ -141,6 +152,23 @@
         // Update help text on page load and when selection changes
         updateHelpText();
         scanningModeSelect.addEventListener('change', updateHelpText);
+
+        // Initialize top preview slider value display
+        if (topPreviewSlider && topPreviewValue) {
+            // Persist last choice in localStorage
+            try {
+                const storedTop = localStorage.getItem('frameFinderTopPreviewCount');
+                if (storedTop !== null) {
+                    topPreviewSlider.value = storedTop;
+                    topPreviewValue.textContent = storedTop;
+                }
+            } catch (e) {}
+
+            topPreviewSlider.addEventListener('input', function() {
+                topPreviewValue.textContent = this.value;
+                try { localStorage.setItem('frameFinderTopPreviewCount', this.value); } catch(e) {}
+            });
+        }
     });
 </script>
 {% endblock %}

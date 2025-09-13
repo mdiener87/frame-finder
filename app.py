@@ -43,7 +43,7 @@ def index():
     """Render the main upload page"""
     return render_template('index.html', scanning_modes=SCANNING_MODES)
 
-def process_videos_background(task_id, reference_paths, video_paths, frame_interval, confidence_threshold, scanning_mode):
+def process_videos_background(task_id, reference_paths, video_paths, frame_interval, confidence_threshold, scanning_mode, top_preview_count):
     """Process videos in background and update progress"""
     try:
         # Update task status to processing
@@ -81,7 +81,7 @@ def process_videos_background(task_id, reference_paths, video_paths, frame_inter
                         processing_tasks[task_id]['progress'] = max(0, min(100, total_progress))
         
         # Process videos (this will take time) with progress callback
-        results = process_videos(reference_paths, video_paths, frame_interval, confidence_threshold, scanning_mode, progress_callback)
+        results = process_videos(reference_paths, video_paths, frame_interval, confidence_threshold, scanning_mode, progress_callback, top_preview_count)
         
         # Check if task was cancelled during processing
         if task_id in processing_tasks and processing_tasks[task_id].get('cancelled', False):
@@ -203,6 +203,13 @@ def upload_files():
     confidence_threshold = 0.75
     # Get scanning mode from form
     scanning_mode = request.form.get('scanningMode', 'balanced')
+    # Get top preview count from form (0 disables). Default 5.
+    try:
+        top_preview_count = int(request.form.get('topPreviewCount', 5))
+    except Exception:
+        top_preview_count = 5
+    # Clamp to [0, 100]
+    top_preview_count = max(0, min(100, top_preview_count))
     
     # Create a unique task ID
     task_id = str(uuid.uuid4())
@@ -210,7 +217,7 @@ def upload_files():
     # Start background processing
     thread = threading.Thread(
         target=process_videos_background,
-        args=(task_id, reference_paths, video_paths, frame_interval, confidence_threshold, scanning_mode)
+        args=(task_id, reference_paths, video_paths, frame_interval, confidence_threshold, scanning_mode, top_preview_count)
     )
     thread.start()
     
