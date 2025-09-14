@@ -71,7 +71,7 @@ Frame Finder extracts frames from MP4 video files at regular intervals and compa
 
 ### Results Page:
 
-![Frame Finder – Results Page](static/images/website--results-screenshot.png)
+![Frame Finder – Results Page](static/images/website-results-screenshot.png)
 
 - The results page lists all image matching results from the analysis engine, based on the input images and videos. 
 - By default, each video sorts the results by confidence score. A global confidence score filter at the top of the page can be used to actively filter the contents of all videos to the specified threshold. 
