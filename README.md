@@ -1,10 +1,12 @@
 # Frame Finder
 
-A lightweight Flask-based web tool that identifies specific visual props in video files by comparing frames against reference images using OpenCV feature matching + geometric verification.
+A lightweight Flask-based web tool that identifies specific visual props in video files by comparing frames against reference images using OpenCV feature matching + geometric verification. Frame Finder is an open-source project by [DienerTech LLC](https://diener.tech), created and maintained by Michael Diener.
+
+![Frame Finder – Analysis Settings](static/images/website-screenshot.png)
 
 ## Overview
 
-Frame Finder extracts frames from MP4 video files at regular intervals and compares them against reference images using ORB keypoints, BF matching with a ratio test, and RANSAC homography verification. This runs fully offline (no model downloads) and is tuned for high precision. While the initial use case is identifying the "Think Tank AI" prop from Star Trek: Voyager, the tool is designed to work with arbitrary inputs.
+Frame Finder extracts frames from MP4 video files at regular intervals and compares them against reference images using ORB keypoints, BF matching with a ratio test, and RANSAC homography verification. This runs fully offline (with no required model downloads) and is tuned for high precision. While the initial use case is identifying the "Think Tank AI" prop from Star Trek: Voyager, the tool is designed to work with arbitrary inputs.
 
 ## Features
 
@@ -12,7 +14,6 @@ Frame Finder extracts frames from MP4 video files at regular intervals and compa
 - Drag-and-drop upload for references and videos
 - Extract frames from videos at configurable intervals (supports decimal values)
 - Compare frames against reference images using ORB feature matching + homography
-- Offline, zero-network analysis (no external models)
 - Efficient CPU-only processing; GPU not required
 - Temporal clustering to reduce duplicate detections
 - Adaptive thresholding per video for better accuracy
@@ -42,7 +43,13 @@ Frame Finder extracts frames from MP4 video files at regular intervals and compa
 
 4. Run the application:
    ```
+   With the venv active:
+   
    python app.py
+   
+   OR
+   
+   flask run
    ```
 
 5. Open your browser to http://localhost:5000
@@ -53,15 +60,25 @@ Frame Finder extracts frames from MP4 video files at regular intervals and compa
 2. Upload one or more reference images (JPG/PNG)
 3. Optionally drag-and-drop files into the upload areas
 4. Upload one or more video files (MP4)
-5. Adjust processing parameters if needed:
-   - Frame extraction interval (default: 1.0 frame/second, supports decimal values)
-   - Confidence threshold (default: 75%)
+5. Adjust processing parameters as desired:
+   - Frame Extraction Interval: The frequency of extracted frames for image analysis. Default is 1.0s.
+   - Scanning Mode: Choose from Fast, Balanced, or Thorough scanning modes. Defaults to Balanced.
+   - Top Images to Keep: Chose from 0-100 images to keep from each scanned video file. These top images are visible in the results page.
 6. Click "Analyze" to start processing
 7. View real-time progress during analysis
 8. View results with timestamps, confidence scores, and thumbnails
 9. Optionally export results
 
-## Technical Details
+### Results Page:
+
+![Frame Finder – Results Page](static/images/website--results-screenshot.png)
+
+- The results page lists all image matching results from the analysis engine, based on the input images and videos. 
+- By default, each video sorts the results by confidence score. A global confidence score filter at the top of the page can be used to actively filter the contents of all videos to the specified threshold. 
+- Each matching frame includes the Timestamp, Confidence Score, Reference Image, and a Preview image of that video frame. Only images that fall within the 'Top N' kept frames (as specified by the settings page, default 5) are preserved.
+- Each Video card is collapsible
+- Analysis results can be exported in `.json` format.
+
 
 ### Core Components
 
@@ -85,14 +102,6 @@ Frame Finder extracts frames from MP4 video files at regular intervals and compa
 - Fallback: If CUDA is unavailable, all processing runs on CPU with identical behavior.
 - Override: Set `FRAME_FINDER_USE_CUDA=1` to force-enable when supported, or `FRAME_FINDER_USE_CUDA=0` to force CPU.
 - Note: This path uses OpenCV’s CUDA modules; PyTorch is not required for GPU acceleration.
-
-### Configuration
-
-- Frame extraction interval: Configurable in UI (0.1-60 seconds, supports decimal values)
-- Confidence threshold: Adjustable slider (0-100%, default: 75%)
-- Thumbnail size: Configurable in image processing functions
-
-## Development
 
 ### Project Structure
 
@@ -137,9 +146,9 @@ The modular architecture allows for easy extension:
 
 ## License
 
-This project is licensed under the MIT License.
+## License
+MIT © 2025 [DienerTech LLC](https://diener.tech)
 
 ## Acknowledgments
-
 - OpenCV for computer vision primitives
 - Flask for the web framework

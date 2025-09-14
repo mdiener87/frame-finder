@@ -509,31 +509,3 @@ def process_videos(reference_paths: List[str],
         }
 
     return results
-
-
-if __name__ == "__main__":
-    # Simple local sanity check using the thinktank examples (if present)
-    # Test with different scanning modes
-    ref = ["examples/thinktank/ReferenceImage.png"]
-    vids = [
-        "examples/thinktank/TT_Positive.mp4",
-        "examples/thinktank/TT_Negative.mp4",
-    ]
-    existing_refs = [p for p in ref if os.path.exists(p)]
-    existing_vids = [v for v in vids if os.path.exists(v)]
-    if existing_refs and existing_vids:
-        # Test with thorough mode (default)
-        print("=== THOROUGH MODE ===")
-        out = process_videos(existing_refs, existing_vids, frame_interval=1.0, confidence_threshold=0.75, scanning_mode="thorough")
-        import json
-        print(json.dumps(out, indent=2))
-        
-        print("\n=== Available Scanning Modes ===")
-        for mode_key, mode_config in SCANNING_MODES.items():
-            print(f"{mode_key.upper()}: {mode_config['name']}")
-            print(f"  Description: {mode_config['description']}")
-            print(f"  When to use: {mode_config['when_to_use']}")
-            print(f"  Features: {mode_config['orb_params']['nfeatures']}, Scales: {len(mode_config['template_scales'])}, Preprocessing: {mode_config['enable_preprocessing']}")
-            print()
-    else:
-        print("Example files not found; nothing to run.")
