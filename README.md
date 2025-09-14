@@ -136,16 +136,6 @@ The modular architecture allows for easy extension:
 - `templates/`: HTML templates using Jinja2
 - `static/`: CSS, JavaScript, and other static assets
 
-## Future Enhancements
-
-- SQLite database for storing and querying results
-- Support for additional video formats
-- Advanced filtering and sorting of results
-- Optional second-stage verifier (e.g., CLIP) when network/GPU available
-- Micro-tuning around peaks
-
-## License
-
 ## License
 MIT © 2025 [DienerTech LLC](https://diener.tech)
 
