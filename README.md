@@ -1,6 +1,6 @@
 # Frame Finder
 
-A lightweight Flask-based web tool that identifies specific visual props in video files by comparing frames against reference images using OpenCV feature matching + geometric verification. Frame Finder is an open-source project by [DienerTech LLC](https://diener.tech), created and maintained by Michael Diener.
+A lightweight Flask-based web tool that identifies specific visual props in video files by comparing frames against reference images using OpenCV feature matching + geometric verification.
 
 ![Frame Finder – Analysis Settings](static/images/website-screenshot.png)
 
