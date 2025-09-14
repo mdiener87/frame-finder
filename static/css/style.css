@@ -16,6 +16,11 @@ body { padding-top: 56px; }
 .navbar-brand {
     font-weight: bold;
 }
+.navbar-brand .brand-logo {
+    height: 28px;
+    width: auto;
+    display: inline-block;
+}
 
 .card {
     box-shadow: 0 0.125rem 0.25rem rgba(0, 0, 0, 0.075);

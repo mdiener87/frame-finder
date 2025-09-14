@@ -4,7 +4,7 @@ import uuid
 import threading
 import json
 import datetime
-from flask import Flask, request, render_template, redirect, url_for, flash, jsonify
+from flask import Flask, request, render_template, redirect, url_for, flash, jsonify, send_from_directory
 from werkzeug.utils import secure_filename
 from analyzer import process_videos, allowed_file, SCANNING_MODES
 
@@ -24,6 +24,12 @@ processing_tasks = {}
 
 # Create upload directory if it doesn't exist
 os.makedirs(UPLOAD_FOLDER, exist_ok=True)
+
+# Serve /favicon.ico for user agents that request it directly
+@app.route('/favicon.ico')
+def favicon():
+    return send_from_directory(os.path.join(app.root_path, 'static', 'images'),
+                               'favicon.ico', mimetype='image/vnd.microsoft.icon')
 
 # Custom filter to extract basename from path
 @app.template_filter('basename')
