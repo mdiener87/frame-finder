@@ -16,7 +16,14 @@ from PIL import Image
 # ==============================
 # Allowed extensions
 # ==============================
-ALLOWED_EXTENSIONS = {"png", "jpg", "jpeg", "mp4"}
+# Broaden support beyond MP4 so uploads can include common containers.
+# Non-MP4 inputs will be transcoded to MP4 on-the-fly by the web app.
+ALLOWED_EXTENSIONS = {
+    # Images
+    "png", "jpg", "jpeg",
+    # Videos
+    "mp4", "mov", "mkv", "avi", "webm", "m4v", "flv", "wmv", "mpg", "mpeg", "ts", "m2ts", "3gp", "ogv"
+}
 
 # ==============================
 # Scanning Mode Presets
@@ -359,7 +366,7 @@ def process_videos(reference_paths: List[str],
     """
     Args:
         reference_paths: paths to positive reference images
-        video_paths    : paths to mp4 files
+        video_paths    : paths to video files (non-MP4 inputs are transcoded upstream)
         frame_interval : seconds between frames extracted
         confidence_threshold: retained for UI compatibility; analyzer returns all matches
         scanning_mode: scanning intensity mode ("fast", "balanced", "thorough")

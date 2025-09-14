@@ -1,4 +1,6 @@
 import os
+import shutil
+import subprocess
 import tempfile
 import uuid
 import threading
@@ -14,7 +16,8 @@ app.secret_key = 'frame-finder-secret-key'  # In production, use a secure secret
 
 # Configuration
 UPLOAD_FOLDER = 'uploads'
-ALLOWED_EXTENSIONS = {'png', 'jpg', 'jpeg', 'mp4'}
+# Keep for reference only; validation uses analyzer.allowed_file
+ALLOWED_EXTENSIONS = {'png', 'jpg', 'jpeg', 'mp4', 'mov', 'mkv', 'avi', 'webm', 'm4v', 'flv', 'wmv', 'mpg', 'mpeg', 'ts', 'm2ts', '3gp', 'ogv'}
 
 app.config['UPLOAD_FOLDER'] = UPLOAD_FOLDER
 # Removed MAX_CONTENT_LENGTH to allow unlimited upload size for localhost
@@ -24,6 +27,52 @@ processing_tasks = {}
 
 # Create upload directory if it doesn't exist
 os.makedirs(UPLOAD_FOLDER, exist_ok=True)
+
+
+def _file_ext_lower(name: str) -> str:
+    return os.path.splitext(name)[1].lower().lstrip('.')
+
+
+def is_video_file(filename: str) -> bool:
+    ext = _file_ext_lower(filename)
+    return ext in {"mp4", "mov", "mkv", "avi", "webm", "m4v", "flv", "wmv", "mpg", "mpeg", "ts", "m2ts", "3gp", "ogv"}
+
+
+def transcode_to_mp4(input_path: str, output_dir: str) -> str:
+    """Transcode or remux input video to an MP4 suitable for OpenCV.
+
+    Strategy:
+    - Try fast remux first (-c copy) to change container only.
+    - If that fails, fall back to ultrafast H.264 video, no audio to speed up.
+    Returns path to the MP4, or the original path if ffmpeg is unavailable or both attempts fail.
+    """
+    # Ensure ffmpeg exists
+    ffmpeg_bin = shutil.which("ffmpeg")
+    if not ffmpeg_bin:
+        return input_path
+
+    base = os.path.splitext(os.path.basename(input_path))[0]
+    out_path = os.path.join(output_dir, f"{base}.transcoded.mp4")
+
+    # 1) Try remux (container copy)
+    try:
+        subprocess.run(
+            [ffmpeg_bin, "-y", "-loglevel", "error", "-i", input_path, "-c:v", "copy", "-c:a", "copy", "-movflags", "+faststart", out_path],
+            check=True,
+        )
+        return out_path
+    except Exception:
+        pass
+
+    # 2) Fallback to fast transcode to H.264 (no audio)
+    try:
+        subprocess.run(
+            [ffmpeg_bin, "-y", "-loglevel", "error", "-i", input_path, "-an", "-c:v", "libx264", "-preset", "ultrafast", "-crf", "28", "-movflags", "+faststart", out_path],
+            check=True,
+        )
+        return out_path
+    except Exception:
+        return input_path
 
 # Serve /favicon.ico for user agents that request it directly
 @app.route('/favicon.ico')
@@ -182,7 +231,12 @@ def upload_files():
             filename = secure_filename(video.filename)
             filepath = os.path.join(videos_dir, filename)
             video.save(filepath)
-            video_paths.append(filepath)
+            # If not MP4, attempt fast remux/transcode to MP4 in-place in temp dir
+            if is_video_file(filename) and _file_ext_lower(filename) != 'mp4':
+                mp4_path = transcode_to_mp4(filepath, videos_dir)
+                video_paths.append(mp4_path)
+            else:
+                video_paths.append(filepath)
     
     # Process video directory files
     for video in video_directory_files:
@@ -192,7 +246,11 @@ def upload_files():
             filename = secure_filename(video.filename)
             filepath = os.path.join(videos_dir, filename)
             video.save(filepath)
-            video_paths.append(filepath)
+            if is_video_file(filename) and _file_ext_lower(filename) != 'mp4':
+                mp4_path = transcode_to_mp4(filepath, videos_dir)
+                video_paths.append(mp4_path)
+            else:
+                video_paths.append(filepath)
     
     if not reference_paths or not video_paths:
         error_msg = 'No valid files uploaded'
