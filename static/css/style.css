@@ -225,9 +225,70 @@ img.result-thumb:hover {
 
 /* Settings panel should be scrollable if content gets too long */
 #settingsPanel .card-body {
-    max-height: calc(100vh - 200px);
+    /* Leave room for header, sticky actions, and next card header */
+    max-height: calc(100vh - 260px);
     overflow-y: auto;
 }
+
+/* Keep Analyze/Reset visible within scrollable settings */
+#settingsPanel .card-body .settings-actions {
+    position: sticky;
+    bottom: 0;
+    background: var(--bs-body-bg);
+    padding: .5rem 0 .25rem 0;
+    border-top: 1px solid var(--bs-border-color);
+    z-index: 3;
+}
+
+/* Lightly separate settings sections for clarity (custom class, not Bootstrap utility) */
+.settings-section {
+    background: var(--bs-tertiary-bg);
+    border: 1px solid var(--bs-border-color);
+    border-radius: .5rem;
+    padding: .75rem;
+    margin-bottom: .5rem; /* tighter spacing between settings */
+}
+.settings-section + .settings-section { margin-top: .25rem; }
+
+/* Compact badge list for selected videos */
+#videoList .video-badges,
+#referencePreview .ref-badges {
+    display: flex;
+    flex-wrap: wrap;
+    gap: .5rem;
+}
+.video-badge,
+.ref-badge {
+    display: inline-flex;
+    align-items: center;
+    gap: .35rem;
+    max-width: 320px;
+    padding: .35rem .5rem;
+    border-radius: 999px;
+    background: var(--bs-secondary-bg);
+    border: 1px solid var(--bs-border-color);
+    font-size: .875rem;
+}
+.video-badge .name,
+.ref-badge .name {
+    display: inline-block;
+    max-width: 200px;
+    overflow: hidden;
+    white-space: nowrap;
+    text-overflow: ellipsis;
+}
+.video-badge .size,
+.ref-badge .size { color: var(--bs-secondary-color); }
+.video-badge .remove,
+.ref-badge .remove {
+    border: 0;
+    background: transparent;
+    line-height: 1;
+    opacity: .6;
+    cursor: pointer;
+}
+.video-badge .remove:hover,
+.ref-badge .remove:hover { opacity: 1; }
 
 /* Progress panel positioning */
 #progressPanel {

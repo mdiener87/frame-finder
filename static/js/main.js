@@ -1,104 +1,150 @@
 // Frame Finder JavaScript functionality
 
 
-// Preview reference images
+// Reference images as removable badges with hover preview
+let removedReferenceKeys = new Set();
 function previewReferenceImages() {
     const referenceInput = document.getElementById('reference_images');
-    const preview = document.getElementById('referencePreview');
-    
-    if (referenceInput && preview) {
-        preview.innerHTML = '';
-        
-        for (let i = 0; i < referenceInput.files.length; i++) {
-            const file = referenceInput.files[i];
-            if (file.type.startsWith('image/')) {
-                const reader = new FileReader();
-                reader.onload = function(e) {
-                    const img = document.createElement('img');
-                    img.src = e.target.result;
-                    img.className = 'thumbnail-preview img-thumbnail me-2 mb-2';
-                    img.alt = file.name;
-                    preview.appendChild(img);
-                };
-                reader.readAsDataURL(file);
-            }
+    const container = document.getElementById('referencePreview');
+    if (!container) return;
+    container.innerHTML = '';
+    const all = [];
+    if (referenceInput && referenceInput.files) {
+        for (let i = 0; i < referenceInput.files.length; i++) all.push(referenceInput.files[i]);
+    }
+    if (typeof droppedReferences !== 'undefined' && droppedReferences.length) {
+        all.push(...droppedReferences);
+    }
+    const visible = all.filter(f => !removedReferenceKeys.has(fileKey(f)));
+    if (visible.length === 0) return;
+
+    const header = document.createElement('h6');
+    header.className = 'mb-2';
+    header.textContent = `Reference Images (${visible.length}):`;
+    container.appendChild(header);
+
+    const badges = document.createElement('div');
+    badges.className = 'ref-badges';
+
+    let refPreviewEl;
+    function ensureRefPreview() {
+        if (!refPreviewEl) {
+            refPreviewEl = document.createElement('div');
+            refPreviewEl.style.position = 'fixed';
+            refPreviewEl.style.pointerEvents = 'none';
+            refPreviewEl.style.border = '1px solid rgba(0,0,0,0.15)';
+            refPreviewEl.style.boxShadow = '0 4px 12px rgba(0,0,0,0.2)';
+            refPreviewEl.style.background = '#fff';
+            refPreviewEl.style.padding = '4px';
+            refPreviewEl.style.zIndex = '9999';
+            refPreviewEl.style.display = 'none';
+            const img = document.createElement('img');
+            img.style.maxWidth = '320px';
+            img.style.maxHeight = '240px';
+            img.style.display = 'block';
+            refPreviewEl.appendChild(img);
+            document.body.appendChild(refPreviewEl);
         }
     }
+
+    visible.forEach((file) => {
+        const key = fileKey(file);
+        const name = file.name;
+        const sizeKB = (file.size / 1024).toFixed(0);
+        const badge = document.createElement('span');
+        badge.className = 'ref-badge';
+        badge.title = name;
+        badge.innerHTML = `
+            <span class="name">${name}</span>
+            <span class="size">- ${sizeKB} KB</span>
+            <button type="button" class="remove" aria-label="Remove" title="Remove">×</button>
+        `;
+        // Remove
+        badge.querySelector('.remove').addEventListener('click', function(){
+            removedReferenceKeys.add(key);
+            previewReferenceImages();
+        });
+        // Hover preview
+        badge.addEventListener('mouseenter', function(e){
+            ensureRefPreview();
+            const reader = new FileReader();
+            reader.onload = function(ev){
+                refPreviewEl.firstChild.src = ev.target.result;
+                refPreviewEl.style.display = 'block';
+            };
+            reader.readAsDataURL(file);
+        });
+        badge.addEventListener('mousemove', function(e){
+            if (!refPreviewEl) return;
+            const margin = 12;
+            let x = e.clientX + margin;
+            let y = e.clientY + margin;
+            const rect = refPreviewEl.getBoundingClientRect();
+            if (x + rect.width > window.innerWidth) x = e.clientX - rect.width - margin;
+            if (y + rect.height > window.innerHeight) y = e.clientY - rect.height - margin;
+            refPreviewEl.style.left = x + 'px';
+            refPreviewEl.style.top = y + 'px';
+        });
+        badge.addEventListener('mouseleave', function(){
+            if (refPreviewEl) refPreviewEl.style.display = 'none';
+        });
+        badges.appendChild(badge);
+    });
+    container.appendChild(badges);
 }
 
 // List selected videos
+// Track removed videos (by unique key) to allow badge removal
+let removedVideoKeys = new Set();
+function fileKey(file) { return `${file.name}|${file.size}|${file.lastModified}`; }
 function listSelectedVideos() {
     const videoInput = document.getElementById('videos');
     const directoryInput = document.getElementById('videoDirectory');
     const list = document.getElementById('videoList');
-    
-    if (list) {
-        // Clear existing content first
-        list.innerHTML = '';
-        
-        let totalFiles = 0;
-        if (videoInput && videoInput.files.length > 0) {
-            totalFiles += videoInput.files.length;
-        }
-        if (directoryInput && directoryInput.files.length > 0) {
-            totalFiles += directoryInput.files.length;
-        }
-        
-        if (totalFiles === 0) {
-            return; // No videos to display
-        }
-        
-        // Create header with file count
-        const header = document.createElement('h6');
-        header.className = 'mb-2';
-        header.textContent = `Selected Videos (${totalFiles}):`;
-        list.appendChild(header);
-        
-        // Create scrollable container
-        const scrollContainer = document.createElement('div');
-        scrollContainer.className = 'border rounded';
-        scrollContainer.style.maxHeight = '300px';
-        scrollContainer.style.overflowY = 'auto';
-        
-        const videoList = document.createElement('ul');
-        videoList.className = 'list-group list-group-flush';
-        
-        // Handle individual file selection
-        if (videoInput && videoInput.files.length > 0) {
-            for (let i = 0; i < videoInput.files.length; i++) {
-                const file = videoInput.files[i];
-                const fileSizeMB = (file.size / (1024*1024)).toFixed(2);
-                
-                const listItem = document.createElement('li');
-                listItem.className = 'list-group-item d-flex justify-content-between align-items-center';
-                listItem.innerHTML = `
-                    <span class="text-truncate me-2" title="${file.name}">${file.name}</span>
-                    <span class="badge bg-primary rounded-pill">${fileSizeMB} MB</span>
-                `;
-                videoList.appendChild(listItem);
-            }
-        }
-        
-        // Handle directory selection
-        if (directoryInput && directoryInput.files.length > 0) {
-            for (let i = 0; i < directoryInput.files.length; i++) {
-                const file = directoryInput.files[i];
-                const fileSizeMB = (file.size / (1024*1024)).toFixed(2);
-                const displayName = file.webkitRelativePath || file.name;
-                
-                const listItem = document.createElement('li');
-                listItem.className = 'list-group-item d-flex justify-content-between align-items-center';
-                listItem.innerHTML = `
-                    <span class="text-truncate me-2" title="${displayName}">${displayName}</span>
-                    <span class="badge bg-primary rounded-pill">${fileSizeMB} MB</span>
-                `;
-                videoList.appendChild(listItem);
-            }
-        }
-        
-        scrollContainer.appendChild(videoList);
-        list.appendChild(scrollContainer);
+    if (!list) return;
+
+    // Build a combined array from input files + directory files + dropped files
+    const combined = [];
+    if (videoInput && videoInput.files) {
+        for (let i = 0; i < videoInput.files.length; i++) combined.push(videoInput.files[i]);
     }
+    if (directoryInput && directoryInput.files) {
+        for (let i = 0; i < directoryInput.files.length; i++) combined.push(directoryInput.files[i]);
+    }
+    if (window.droppedVideos && window.droppedVideos.length) {
+        combined.push(...window.droppedVideos);
+    }
+
+    // Filter out removed items
+    const visible = combined.filter(f => !removedVideoKeys.has(fileKey(f)));
+
+    // Clear and render badges; keep section header persistent and update count
+    list.innerHTML = '';
+    const countEl = document.getElementById('selectedVideosCount');
+    if (countEl) countEl.textContent = visible.length.toString();
+    if (visible.length === 0) return;
+
+    const badges = document.createElement('div');
+    badges.className = 'video-badges';
+    visible.forEach((file) => {
+        const key = fileKey(file);
+        const name = file.webkitRelativePath || file.name;
+        const sizeMB = (file.size / (1024*1024)).toFixed(2);
+        const badge = document.createElement('span');
+        badge.className = 'video-badge';
+        badge.title = name;
+        badge.innerHTML = `
+            <span class="name">${name}</span>
+            <span class="size">- ${sizeMB} MB</span>
+            <button type="button" class="remove" aria-label="Remove" title="Remove">×</button>
+        `;
+        badge.querySelector('.remove').addEventListener('click', function(){
+            removedVideoKeys.add(key);
+            listSelectedVideos();
+        });
+        badges.appendChild(badge);
+    });
+    list.appendChild(badges);
 }
 
 
@@ -117,8 +163,7 @@ function handleFormSubmission() {
             analyzeBtn.innerHTML = '<span class="spinner-border spinner-border-sm" role="status" aria-hidden="true"></span> Processing...';
             analyzeBtn.disabled = true;
             
-            // Disable all settings
-            disableSettings(true);
+            // Disable all settings (after capturing form values below)
             
             // Collapse settings panel and expand progress panel
             const settingsPanel = document.getElementById('settingsPanel');
@@ -139,32 +184,46 @@ function handleFormSubmission() {
             }
             
             // Submit form via AJAX
+            // IMPORTANT: Disabled inputs are excluded from FormData. Build it before disabling.
             const formData = new FormData(form);
+            // Ensure topPreviewCount is included even if control becomes disabled
+            const topPreviewSlider = document.getElementById('topPreviewCount');
+            if (topPreviewSlider) {
+                formData.set('topPreviewCount', topPreviewSlider.value);
+            }
+            // Now it is safe to disable settings
+            disableSettings(true);
             
             // Remove confidenceThreshold from formData since we removed the slider
             formData.delete('confidenceThreshold');
             
-            // Handle reference images properly
+            // Handle reference images properly (respect removed badges)
             const referenceInput = document.getElementById('reference_images');
             if (referenceInput && referenceInput.files.length > 0) {
                 // Clear the existing reference_images entries
                 formData.delete('reference_images');
                 // For multiple file uploads, we need to append all files individually
                 for (let i = 0; i < referenceInput.files.length; i++) {
-                    formData.append('reference_images', referenceInput.files[i]);
+                    const f = referenceInput.files[i];
+                    if (!removedReferenceKeys.has(fileKey(f))) {
+                        formData.append('reference_images', f);
+                    }
                 }
             }
             
             // No negative references anymore
             
-            // Handle video files properly
+            // Handle video files properly (respect removed badges)
             const videoInput = document.getElementById('videos');
             if (videoInput && videoInput.files.length > 0) {
                 // Clear the existing videos entries
                 formData.delete('videos');
                 // For multiple file uploads, we need to append all files individually
                 for (let i = 0; i < videoInput.files.length; i++) {
-                    formData.append('videos', videoInput.files[i]);
+                    const f = videoInput.files[i];
+                    if (!removedVideoKeys.has(fileKey(f))) {
+                        formData.append('videos', f);
+                    }
                 }
             }
             
@@ -175,7 +234,10 @@ function handleFormSubmission() {
                 formData.delete('videoDirectory');
                 // For directory uploads, we need to append all files individually
                 for (let i = 0; i < directoryInput.files.length; i++) {
-                    formData.append('videoDirectory', directoryInput.files[i]);
+                    const f = directoryInput.files[i];
+                    if (!removedVideoKeys.has(fileKey(f))) {
+                        formData.append('videoDirectory', f);
+                    }
                 }
             }
             
@@ -220,6 +282,41 @@ function handleFormSubmission() {
                 alert('Error starting processing: ' + error.message);
                 resetUI();
             });
+        });
+
+        // Comprehensive reset: clear files, settings, and UI state
+        form.addEventListener('reset', function(e){
+            e.preventDefault();
+            // Clear file inputs
+            const refIn = document.getElementById('reference_images');
+            const vidIn = document.getElementById('videos');
+            const dirIn = document.getElementById('videoDirectory');
+            if (refIn) refIn.value = '';
+            if (vidIn) vidIn.value = '';
+            if (dirIn) dirIn.value = '';
+            // Clear previews and lists
+            const refPrev = document.getElementById('referencePreview');
+            if (refPrev) refPrev.innerHTML = '';
+            const vidList = document.getElementById('videoList');
+            if (vidList) vidList.innerHTML = '';
+            const selCount = document.getElementById('selectedVideosCount');
+            if (selCount) selCount.textContent = '0';
+            // Clear dropped and removed state
+            try { droppedReferences = []; } catch(_) {}
+            try { window.droppedVideos = []; } catch(_) {}
+            removedVideoKeys = new Set();
+            // Reset sliders and selects to defaults
+            const frameInterval = document.getElementById('frameInterval');
+            if (frameInterval) frameInterval.value = '1.0';
+            const scanningMode = document.getElementById('scanningMode');
+            if (scanningMode) scanningMode.value = 'balanced';
+            const topPreviewSlider = document.getElementById('topPreviewCount');
+            const topPreviewValue = document.getElementById('topPreviewCountValue');
+            if (topPreviewSlider) topPreviewSlider.value = '5';
+            if (topPreviewValue) topPreviewValue.textContent = '5';
+            // Clear localStorage settings
+            try { localStorage.removeItem('frameFinderSettings'); } catch(_) {}
+            try { localStorage.removeItem('frameFinderTopPreviewCount'); } catch(_) {}
         });
     }
 }
@@ -474,7 +571,8 @@ document.addEventListener('DOMContentLoaded', function() {
 
     // --- Drag & drop support ---
     let droppedReferences = [];
-    let droppedVideos = [];
+    // Expose droppedVideos globally so listSelectedVideos can read it
+    window.droppedVideos = [];
 
     function setupDropzone(zoneId, onFiles) {
         const dz = document.getElementById(zoneId);
@@ -500,7 +598,7 @@ document.addEventListener('DOMContentLoaded', function() {
     function addVideoFiles(files){
         const vids = files.filter(f => f.type === 'video/mp4' || f.name.toLowerCase().endsWith('.mp4'));
         if (vids.length === 0) return;
-        droppedVideos = droppedVideos.concat(vids);
+        window.droppedVideos = (window.droppedVideos || []).concat(vids);
         listSelectedVideos();
     }
 
@@ -508,71 +606,10 @@ document.addEventListener('DOMContentLoaded', function() {
     setupDropzone('vidDrop', addVideoFiles);
 
     // Override previews to include dropped files
-    const _origPreviewRefs = previewReferenceImages;
-    window.previewReferenceImages = function(){
-        _origPreviewRefs();
-        const preview = document.getElementById('referencePreview');
-        if (!preview) return;
-        droppedReferences.forEach(file => {
-            const reader = new FileReader();
-            reader.onload = function(e){
-                const img = document.createElement('img');
-                img.src = e.target.result;
-                img.className = 'thumbnail-preview img-thumbnail me-2 mb-2';
-                img.alt = file.name;
-                preview.appendChild(img);
-            };
-            reader.readAsDataURL(file);
-        });
-    }
+    // No need to override reference preview now; previewReferenceImages handles dropped refs
 
     const _origListVideos = listSelectedVideos;
-    window.listSelectedVideos = function(){
-        _origListVideos();
-        const list = document.getElementById('videoList');
-        if (!list || droppedVideos.length === 0) return;
-        
-        // If the list is empty but we have dropped videos, create the structure
-        if (list.children.length === 0) {
-            const header = document.createElement('h6');
-            header.className = 'mb-2';
-            header.textContent = `Selected Videos (${droppedVideos.length}):`;
-            list.appendChild(header);
-            
-            const scrollContainer = document.createElement('div');
-            scrollContainer.className = 'border rounded';
-            scrollContainer.style.maxHeight = '300px';
-            scrollContainer.style.overflowY = 'auto';
-            
-            const videoList = document.createElement('ul');
-            videoList.className = 'list-group list-group-flush';
-            
-            scrollContainer.appendChild(videoList);
-            list.appendChild(scrollContainer);
-        }
-        
-        // Find the video list container and add dropped videos
-        const videoList = list.querySelector('ul.list-group');
-        if (videoList) {
-            // Update header count
-            const header = list.querySelector('h6');
-            const totalCount = videoList.children.length + droppedVideos.length;
-            if (header) {
-                header.textContent = `Selected Videos (${totalCount}):`;
-            }
-            
-            droppedVideos.forEach(file => {
-                const fileSizeMB = (file.size / (1024*1024)).toFixed(2);
-                const listItem = document.createElement('li');
-                listItem.className = 'list-group-item d-flex justify-content-between align-items-center';
-                listItem.innerHTML = `
-                    <span class="text-truncate me-2" title="${file.name}">${file.name}</span>
-                    <span class="badge bg-success rounded-pill" title="Drag & dropped">${fileSizeMB} MB</span>
-                `;
-                videoList.appendChild(listItem);
-            });
-        }
-    }
+    window.listSelectedVideos = function(){ _origListVideos(); }
 
     // Hook FormData assembly to include dropped files too
     const form = document.getElementById('uploadForm');
@@ -584,10 +621,18 @@ document.addEventListener('DOMContentLoaded', function() {
             window.fetch = function(input, init){
                 try {
                     if (init && init.body instanceof FormData) {
-                        // Append dropped references
-                        droppedReferences.forEach(f => init.body.append('reference_images', f));
-                        // Append dropped videos
-                        droppedVideos.forEach(f => init.body.append('videos', f));
+                        // Append dropped references (respect removed badges)
+                        droppedReferences.forEach(f => {
+                            if (!removedReferenceKeys.has(fileKey(f))) {
+                                init.body.append('reference_images', f);
+                            }
+                        });
+                        // Append dropped videos (respect removed badges)
+                        (window.droppedVideos || []).forEach(f => {
+                            if (!removedVideoKeys.has(fileKey(f))) {
+                                init.body.append('videos', f);
+                            }
+                        });
                     }
                 } catch(e){}
                 return origFetch(input, init);
