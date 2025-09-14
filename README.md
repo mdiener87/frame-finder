@@ -6,11 +6,11 @@ A lightweight Flask-based web tool that identifies specific visual props in vide
 
 ## Overview
 
-Frame Finder extracts frames from MP4 video files at regular intervals and compares them against reference images using ORB keypoints, BF matching with a ratio test, and RANSAC homography verification. This runs fully offline (with no required model downloads) and is tuned for high precision. While the initial use case is identifying the "Think Tank AI" prop from Star Trek: Voyager, the tool is designed to work with arbitrary inputs.
+Frame Finder extracts frames from video files at regular intervals and compares them against reference images using ORB keypoints, BF matching with a ratio test, and RANSAC homography verification. This runs fully offline (with no required model downloads) and is tuned for high precision. While the initial use case is identifying the "Think Tank AI" prop from Star Trek: Voyager, the tool is designed to work with arbitrary inputs.
 
 ## Features
 
-- Upload reference images (JPG/PNG) and video files (MP4)
+- Upload reference images (JPG/PNG) and video files (MP4, MOV, MKV, AVI, WEBM, etc.)
 - Drag-and-drop upload for references and videos
 - Extract frames from videos at configurable intervals (supports decimal values)
 - Compare frames against reference images using ORB feature matching + homography
@@ -59,7 +59,7 @@ Frame Finder extracts frames from MP4 video files at regular intervals and compa
 1. Navigate to the web interface
 2. Upload one or more reference images (JPG/PNG)
 3. Optionally drag-and-drop files into the upload areas
-4. Upload one or more video files (MP4)
+4. Upload one or more video files (MP4 preferred; other formats are converted on-the-fly for analysis)
 5. Adjust processing parameters as desired:
    - Frame Extraction Interval: The frequency of extracted frames for image analysis. Default is 1.0s.
    - Scanning Mode: Choose from Fast, Balanced, or Thorough scanning modes. Defaults to Balanced.
@@ -102,6 +102,11 @@ Frame Finder extracts frames from MP4 video files at regular intervals and compa
 - Fallback: If CUDA is unavailable, all processing runs on CPU with identical behavior.
 - Override: Set `FRAME_FINDER_USE_CUDA=1` to force-enable when supported, or `FRAME_FINDER_USE_CUDA=0` to force CPU.
 - Note: This path uses OpenCV’s CUDA modules; PyTorch is not required for GPU acceleration.
+
+### Video Format Support
+
+- Accepts common containers: MP4, MOV, MKV, AVI, WEBM, M4V, and more. The app attempts a fast remux to MP4; if that fails, it performs a lightweight, temporary transcode to H.264 for analysis. No permanent conversion is stored.
+- For non-MP4 inputs, ffmpeg must be installed and available on your PATH. On macOS: `brew install ffmpeg`; on Linux: `sudo apt-get install ffmpeg` (or your distro’s equivalent); on Windows: install ffmpeg and add it to PATH.
 
 ### Project Structure
 
