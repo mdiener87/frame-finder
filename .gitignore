@@ -10,6 +10,7 @@ venv/
 .env/
 
 # Copyright stuff
+examples/
 *.mp4
 
 # Image Extraction
@@ -33,6 +34,7 @@ instance/
 .idea/
 *.sublime-project
 *.sublime-workspace
+.claude
 
 # Uploads and generated assets
 uploads/

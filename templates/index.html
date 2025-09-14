@@ -19,7 +19,7 @@
             <div id="settingsPanel" class="collapse show" aria-labelledby="settingsHeading">
                 <div class="card-body">
                     <form id="uploadForm" action="/upload" method="POST" enctype="multipart/form-data">
-                        <div class="mb-3">
+                        <div class="settings-section">
                             <label for="reference_images" class="form-label">Reference Images</label>
                             <div id="refDrop" class="dropzone">
                                 <div class="dz-instructions">
@@ -31,7 +31,7 @@
                             <div id="referencePreview" class="mt-2"></div>
                         </div>
                     
-                    <div class="mb-3">
+                    <div class="settings-section">
                         <label for="videos" class="form-label">Video Files</label>
                         <div id="vidDrop" class="dropzone">
                             <div class="dz-instructions">
@@ -42,21 +42,24 @@
                         <div class="form-text">Upload one or more video files (MP4)</div>
                     </div>
                     
-                    <div class="mb-3">
+                    <div class="settings-section">
                         <label for="videoDirectory" class="form-label">Or Select Video Directory</label>
                         <input class="form-control" type="file" id="videoDirectory" name="videoDirectory" webkitdirectory directory>
                         <div class="form-text">Select a directory containing video files</div>
                     </div>
                     
-                    <div id="videoList" class="mt-2"></div>
+                    <div class="settings-section">
+                        <label class="form-label">Selected Videos (<span id="selectedVideosCount">0</span>):</label>
+                        <div id="videoList" class="mt-2"></div>
+                    </div>
                     
-                    <div class="mb-3">
+                    <div class="settings-section">
                         <label for="frameInterval" class="form-label">Frame Extraction Interval</label>
                         <input type="number" class="form-control" id="frameInterval" name="frameInterval" value="1.0" min="0.1" max="60" step="0.1">
                         <div class="form-text">Extract one frame every X seconds (default: 1.0)</div>
                     </div>
                     
-                    <div class="mb-3">
+                    <div class="settings-section">
                         <label for="scanningMode" class="form-label">Scanning Mode</label>
                         <select class="form-control" id="scanningMode" name="scanningMode">
                             {% for mode_key, mode_config in scanning_modes.items() %}
@@ -71,9 +74,20 @@
                             </div>
                         </div>
                     </div>
+
+                    <div class="settings-section">
+                        <label for="topPreviewCount" class="form-label">Top Images to Keep</label>
+                        <div class="d-flex align-items-center gap-3">
+                            <input type="range" class="form-range" id="topPreviewCount" name="topPreviewCount" min="0" max="100" value="5" step="1" style="max-width: 380px;">
+                            <div class="form-text m-0">Count: <span id="topPreviewCountValue">5</span></div>
+                        </div>
+                        <div class="form-text">Controls how many top matches to save as previews (0 disables).</div>
+                    </div>
                     
-                    <button type="submit" class="btn btn-primary" id="analyzeBtn">Analyze Videos</button>
-                    <button type="reset" class="btn btn-secondary">Reset</button>
+                    <div class="settings-actions d-flex gap-2">
+                        <button type="submit" class="btn btn-primary" id="analyzeBtn">Analyze Videos</button>
+                        <button type="reset" class="btn btn-secondary">Reset</button>
+                    </div>
                 </form>
             </div>
         </div>
@@ -116,6 +130,8 @@
     document.addEventListener('DOMContentLoaded', function() {
         const scanningModeSelect = document.getElementById('scanningMode');
         const scanningModeHelp = document.getElementById('scanningModeHelp');
+        const topPreviewSlider = document.getElementById('topPreviewCount');
+        const topPreviewValue = document.getElementById('topPreviewCountValue');
         
         const modeDescriptions = {
             {% for mode_key, mode_config in scanning_modes.items() %}
@@ -141,6 +157,23 @@
         // Update help text on page load and when selection changes
         updateHelpText();
         scanningModeSelect.addEventListener('change', updateHelpText);
+
+        // Initialize top preview slider value display
+        if (topPreviewSlider && topPreviewValue) {
+            // Persist last choice in localStorage
+            try {
+                const storedTop = localStorage.getItem('frameFinderTopPreviewCount');
+                if (storedTop !== null) {
+                    topPreviewSlider.value = storedTop;
+                    topPreviewValue.textContent = storedTop;
+                }
+            } catch (e) {}
+
+            topPreviewSlider.addEventListener('input', function() {
+                topPreviewValue.textContent = this.value;
+                try { localStorage.setItem('frameFinderTopPreviewCount', this.value); } catch(e) {}
+            });
+        }
     });
 </script>
 {% endblock %}
